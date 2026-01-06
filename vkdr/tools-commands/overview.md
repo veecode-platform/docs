@@ -14,6 +14,8 @@ These commands are related to installing and managing supporting tools in your `
 
 - **[keycloak](./keycloak)** - Identity and access management (IAM)
 - **[vault](./vault)** - HashiCorp Vault for secrets management
+- **[minio](./minio)** - S3-compatible object storage
+- **[eso](./eso)** - External Secrets Operator for syncing secrets
 
 ## Quick Start
 
@@ -68,4 +70,23 @@ vkdr vault install --dev
 vkdr postgres install -w
 vkdr postgres createdb -d myapp -u myuser --vault
 # Vault manages database credentials automatically
+```
+
+### Object Storage with MinIO
+
+```bash
+vkdr infra up
+vkdr nginx install --default-ic
+vkdr minio install --api
+# Console: http://minio.localhost:8000
+# API: http://minio-api.localhost:8000
+```
+
+### External Secrets with ESO + Vault
+
+```bash
+vkdr infra up
+vkdr vault install --dev
+vkdr eso install
+# ESO can now sync secrets from Vault to Kubernetes
 ```
