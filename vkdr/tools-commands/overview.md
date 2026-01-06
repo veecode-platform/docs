@@ -16,6 +16,8 @@ These commands are related to installing and managing supporting tools in your `
 - **[vault](./vault)** - HashiCorp Vault for secrets management
 - **[minio](./minio)** - S3-compatible object storage
 - **[eso](./eso)** - External Secrets Operator for syncing secrets
+- **[mirror](./mirror)** - Container image registry mirrors
+- **[openldap](./openldap)** - LDAP directory service
 
 ## Quick Start
 
@@ -89,4 +91,22 @@ vkdr infra up
 vkdr vault install --dev
 vkdr eso install
 # ESO can now sync secrets from Vault to Kubernetes
+```
+
+### Container Image Mirrors
+
+```bash
+vkdr infra up
+vkdr mirror add --host docker.io
+vkdr mirror add --host ghcr.io
+# Image pulls are now cached locally to avoid rate limits
+```
+
+### LDAP Authentication with OpenLDAP
+
+```bash
+vkdr infra start --nodeports 1
+vkdr nginx install --default-ic
+vkdr openldap install --ldap-admin
+# phpLDAPadmin: http://ldapadmin.localhost:8000
 ```
