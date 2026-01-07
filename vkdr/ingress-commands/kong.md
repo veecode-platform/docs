@@ -15,7 +15,7 @@ Kong Gateway is a powerful API gateway that can be used as an ingress controller
 Install Kong Gateway in your cluster.
 
 ```bash
-vkdr kong install [-ehsV] [--acme] [--api] [--default-ic] [--oidc] [--silent] \
+vkdr kong install [-es] [--acme] [--api] [--default-ic] [--oidc] \
   [--use-nodeport] [--acme-server=<acme_server>] [-d=<domain>] \
   [-i=<image_name>] [-l=<license>] [--log-level=<log_level>] \
   [-m=<kong_mode>] [-p=<admin_password>] [--proxy-tls-secret=<proxy_tls_secret>] \
@@ -119,7 +119,7 @@ vkdr kong install --default-ic \
 Remove Kong Gateway from your cluster.
 
 ```bash
-vkdr kong remove [-hV] [--silent]
+vkdr kong remove
 ```
 
 ### Example
@@ -131,12 +131,6 @@ vkdr kong remove
 ## vkdr kong explain
 
 Explain Kong install formulas and configuration options.
-
-```bash
-vkdr kong explain [-hV] [--silent]
-```
-
-### Example
 
 ```bash
 vkdr kong explain
@@ -215,8 +209,6 @@ vkdr kong install -m standard --default-ic
 ```
 
 ## Formula Examples
-
-The following examples are from `vkdr kong explain` and show common installation patterns.
 
 ### Kong OSS in db-less mode
 

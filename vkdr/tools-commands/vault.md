@@ -13,7 +13,7 @@ Use these commands to manage HashiCorp Vault for secrets management in your `vkd
 Install HashiCorp Vault in your cluster.
 
 ```bash
-vkdr vault install [-hsV] [--dev] [--silent] [--tls] [-d=<domain>] \
+vkdr vault install [-s] [--dev] [--tls] [-d=<domain>] \
   [--dev-root-token=<dev_root_token>]
 ```
 
@@ -64,7 +64,7 @@ vkdr vault install --tls
 Remove Vault from your cluster.
 
 ```bash
-vkdr vault remove [-hV] [--silent]
+vkdr vault remove
 ```
 
 ### Example
@@ -78,7 +78,7 @@ vkdr vault remove
 Initialize and unseal HashiCorp Vault. Required after installing Vault in production mode.
 
 ```bash
-vkdr vault init [-hV] [--silent]
+vkdr vault init
 ```
 
 ### Example
@@ -89,16 +89,14 @@ vkdr vault install
 vkdr vault init
 ```
 
-:::note
-In development mode (`--dev`), Vault is automatically initialized and unsealed. The `init` command is only needed for production mode installations.
-:::
+**Note:** In development mode (`--dev`), Vault is automatically initialized and unsealed. The `init` command is only needed for production mode installations.
 
 ## vkdr vault generate-tls
 
 Generate TLS certificates for Vault.
 
 ```bash
-vkdr vault generate-tls [-hV] [--force] [--save] [--silent] \
+vkdr vault generate-tls [--force] [--save] \
   [--cn=<commonName>] [--days=<validityDays>]
 ```
 
@@ -140,12 +138,6 @@ vkdr vault generate-tls --force --save
 ## vkdr vault explain
 
 Explain Vault install formulas and configuration options.
-
-```bash
-vkdr vault explain [-hV] [--silent]
-```
-
-### Example
 
 ```bash
 vkdr vault explain
@@ -213,8 +205,6 @@ vkdr postgres createdb -d myapp -u myuser --vault
 ```
 
 ## Formula Examples
-
-The following examples are from `vkdr vault explain`.
 
 ### Install Vault in Dev Mode
 

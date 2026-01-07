@@ -15,7 +15,7 @@ Container image mirrors help avoid rate limits from public registries like Docke
 List all configured container image mirrors.
 
 ```bash
-vkdr mirror list [-hV] [--silent]
+vkdr mirror list
 ```
 
 ### Example
@@ -29,7 +29,7 @@ vkdr mirror list
 Add a container image mirror for a specific registry.
 
 ```bash
-vkdr mirror add [-hV] [--silent] --host=<host>
+vkdr mirror add --host=<host>
 ```
 
 ### Flags
@@ -63,7 +63,7 @@ vkdr mirror add --host quay.io
 Remove a container image mirror.
 
 ```bash
-vkdr mirror remove [-hV] [--silent] --host=<host>
+vkdr mirror remove --host=<host>
 ```
 
 ### Flags
@@ -81,12 +81,6 @@ vkdr mirror remove --host docker.io
 ## vkdr mirror explain
 
 Explain mirror configuration and usage.
-
-```bash
-vkdr mirror explain [-hV] [--silent]
-```
-
-### Example
 
 ```bash
 vkdr mirror explain
@@ -134,11 +128,11 @@ kubectl run nginx --image=nginx:latest
 ```
 ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
 │  Pod requests   │     │  Local Mirror   │     │  Remote         │
-│  image from     │────▶│  Registry       │────▶│  Registry       │
+│  image from     │────>│  Registry       │────>│  Registry       │
 │  docker.io      │     │  (port 6000)    │     │  (docker.io)    │
 └─────────────────┘     └─────────────────┘     └─────────────────┘
                               │
-                              ▼
+                              v
                         ┌─────────────┐
                         │  Local      │
                         │  Cache      │
@@ -170,11 +164,7 @@ You can mirror any container registry:
 - **Reliability**: Local cache works even if remote registry is slow/down
 - **Air-gapped environments**: Pre-populate cache for offline use
 
-## Formula Examples
-
-The following examples are from `vkdr mirror explain`.
-
-### Configuration File
+## Configuration File
 
 The mirror configuration is stored at:
 ```
@@ -197,7 +187,7 @@ mirrors:
 
 Port numbers are automatically incremented for each new endpoint, starting from 6000.
 
-### Important Notes
+## Important Notes
 
 - Mirrors are started during `vkdr infra start` (or `vkdr infra up`)
 - You need to restart the cluster after adding a new mirror

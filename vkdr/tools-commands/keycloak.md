@@ -13,7 +13,7 @@ Use these commands to manage Keycloak identity and access management in your `vk
 Install Keycloak in your cluster.
 
 ```bash
-vkdr keycloak install [-hsV] [--silent] [-d=<domain>] \
+vkdr keycloak install [-s] [-d=<domain>] \
   [-p=<admin_password>] [-u=<admin_user>]
 ```
 
@@ -54,7 +54,7 @@ vkdr keycloak install -u myadmin -p mysecretpassword
 Remove Keycloak from your cluster.
 
 ```bash
-vkdr keycloak remove [-hV] [--silent]
+vkdr keycloak remove
 ```
 
 ### Example
@@ -68,7 +68,7 @@ vkdr keycloak remove
 Export a Keycloak realm configuration to a file.
 
 ```bash
-vkdr keycloak export [-hV] [--silent] [-a=<admin_password>] \
+vkdr keycloak export  [-a=<admin_password>] \
   [-f=<export_file>] [-r=<realm_name>]
 ```
 
@@ -99,7 +99,7 @@ vkdr keycloak export -a adminpassword -r vkdr -f vkdr-realm.json
 Import a Keycloak realm configuration from a file.
 
 ```bash
-vkdr keycloak import [-hV] [--silent] [-a=<admin_password>] \
+vkdr keycloak import  [-a=<admin_password>] \
   [-f=<import_file>]
 ```
 
@@ -122,6 +122,14 @@ Import with admin password:
 
 ```bash
 vkdr keycloak import -a adminpassword -f my-realm.json
+```
+
+## vkdr keycloak explain
+
+Explain Keycloak formulas and configuration options.
+
+```bash
+vkdr keycloak explain
 ```
 
 ## Complete Example
@@ -164,8 +172,6 @@ vkdr keycloak install
 ```
 
 ## Formula Examples
-
-The following examples are from `vkdr keycloak explain`.
 
 ### Basic Installation
 

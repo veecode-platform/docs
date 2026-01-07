@@ -15,7 +15,7 @@ Traefik is a modern HTTP reverse proxy and load balancer that makes deploying mi
 Install Traefik ingress controller in your cluster.
 
 ```bash
-vkdr traefik install [-hsV] [--default-ic] [--silent] [-d=<domain>] \
+vkdr traefik install [-s] [--default-ic] [-d=<domain>] \
   [--node-ports=<node_ports>]
 ```
 
@@ -76,7 +76,7 @@ vkdr traefik install --node-ports '*' --default-ic
 Remove Traefik from your cluster.
 
 ```bash
-vkdr traefik remove [-hV] [--silent]
+vkdr traefik remove
 ```
 
 ### Example
@@ -88,12 +88,6 @@ vkdr traefik remove
 ## vkdr traefik explain
 
 Explain Traefik ingress controller setup and configuration options.
-
-```bash
-vkdr traefik explain [-hV] [--silent]
-```
-
-### Example
 
 ```bash
 vkdr traefik explain
@@ -177,11 +171,7 @@ curl http://whoami.localhost
 - VeeCode DevPortal (requires Kong)
 - Enterprise features needed
 
-## Formula Examples
-
-The following examples are from `vkdr traefik explain`.
-
-### Differences from Bundled Traefik
+## Differences from Bundled Traefik
 
 When you run `vkdr infra start --traefik`, k3d includes a basic Traefik instance. The standalone Traefik installed by `vkdr traefik install`:
 - Uses the official Traefik Helm chart

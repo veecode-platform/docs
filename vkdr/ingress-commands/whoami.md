@@ -15,7 +15,7 @@ The whoami service is a simple HTTP server that returns information about the re
 Install the whoami test service in your cluster.
 
 ```bash
-vkdr whoami install [-hsV] [--silent] [-d=<domain>] [--label=<String=String>]...
+vkdr whoami install [-s] [-d=<domain>] [--label=<String=String>]...
 ```
 
 ### Flags
@@ -64,13 +64,21 @@ vkdr whoami install --label app=test --label version=v1
 Remove the whoami service from your cluster.
 
 ```bash
-vkdr whoami remove [-hV] [--silent]
+vkdr whoami remove
 ```
 
 ### Example
 
 ```bash
 vkdr whoami remove
+```
+
+## vkdr whoami explain
+
+Explain whoami service setup and configuration options.
+
+```bash
+vkdr whoami explain
 ```
 
 ## Complete Examples
@@ -140,3 +148,14 @@ This information helps verify:
 - Which pod is handling the request (Hostname)
 - Request headers are being passed correctly
 - Ingress proxy headers are set properly
+
+## Resources Created
+
+- **Namespace**: `vkdr`
+- **Deployment**: `whoami` (1 replica)
+- **Service**: `whoami` (ClusterIP, port 80)
+- **Ingress**: `whoami` (with configured host)
+
+## Helm Chart
+
+Uses the [cowboysysop/whoami](https://github.com/cowboysysop/charts/tree/master/charts/whoami) Helm chart.

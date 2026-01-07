@@ -8,16 +8,14 @@ title: devportal
 
 Use these commands to install and manage VeeCode DevPortal, a ready-to-use Backstage distribution.
 
-:::note
-DevPortal currently requires Kong Gateway as the ingress controller.
-:::
+**Note:** DevPortal currently requires Kong Gateway as the ingress controller.
 
 ## vkdr devportal install
 
 Install VeeCode DevPortal in your cluster.
 
 ```bash
-vkdr devportal install [-hsV] [--load-env] [--samples] [--silent] \
+vkdr devportal install [-s] [--load-env] [--samples] \
   [-d=<domain>] [--profile=<profile>] [--location=<location>] \
   [--merge=<mergeValues>] [--npm=<npmRegistry>] \
   [--github-org=<github_org>] [--github-token=<github_token>] \
@@ -146,7 +144,7 @@ vkdr devportal install \
 Remove VeeCode DevPortal from your cluster.
 
 ```bash
-vkdr devportal remove [-hV] [--silent]
+vkdr devportal remove
 ```
 
 ### Example
@@ -158,12 +156,6 @@ vkdr devportal remove
 ## vkdr devportal explain
 
 Explain VeeCode DevPortal formulas and configuration options.
-
-```bash
-vkdr devportal explain [-hV] [--silent]
-```
-
-### Example
 
 ```bash
 vkdr devportal explain
@@ -246,8 +238,6 @@ curl -I https://github.com/myorg/catalog/blob/main/catalog-info.yaml
 ```
 
 ## Formula Examples
-
-The following examples are from `vkdr devportal explain`.
 
 ### Pre-requisites
 

@@ -13,7 +13,7 @@ Use these commands to manage a PostgreSQL database in your `vkdr` cluster.
 Install a PostgreSQL database in your cluster.
 
 ```bash
-vkdr postgres install [-hVw] [--silent] [-p=<admin_password>]
+vkdr postgres install [-w] [-p=<admin_password>]
 ```
 
 ### Flags
@@ -43,7 +43,7 @@ vkdr postgres install -p mypassword -w
 Remove PostgreSQL from your cluster.
 
 ```bash
-vkdr postgres remove [-dhV] [--silent]
+vkdr postgres remove [-d]
 ```
 
 ### Flags
@@ -71,7 +71,7 @@ vkdr postgres remove -d
 Create a new database with an optional user/password as its owner.
 
 ```bash
-vkdr postgres createdb [-hsV] [--drop] [--silent] [--vault] \
+vkdr postgres createdb [-s] [--drop] [--vault] \
   [-a=<admin_password>] -d=<database_name> \
   [-p=<password>] [-u=<user_name>] \
   [--vault-rotation=<vault_rotation_schedule>]
@@ -115,7 +115,7 @@ vkdr postgres createdb -d myapp -u myuser --vault
 Drop a database and its associated secrets in Kubernetes.
 
 ```bash
-vkdr postgres dropdb [-hV] [--silent] -d=<database_name> [-u=<user_name>]
+vkdr postgres dropdb  -d=<database_name> [-u=<user_name>]
 ```
 
 ### Flags
@@ -144,7 +144,7 @@ vkdr postgres dropdb -d myapp -u myuser
 List all databases managed by the PostgreSQL cluster.
 
 ```bash
-vkdr postgres listdbs [-hV] [--json] [--silent]
+vkdr postgres listdbs [--json]
 ```
 
 ### Flags
@@ -172,7 +172,7 @@ vkdr postgres listdbs --json
 Test database connectivity by running a simple SELECT query.
 
 ```bash
-vkdr postgres pingdb [-hV] [--silent] -d=<database_name> -u=<user_name>
+vkdr postgres pingdb  -d=<database_name> -u=<user_name>
 ```
 
 ### Flags
@@ -193,12 +193,6 @@ vkdr postgres pingdb -d myapp -u myuser
 ## vkdr postgres explain
 
 Explain PostgreSQL install formulas and configuration options.
-
-```bash
-vkdr postgres explain [-hV] [--silent]
-```
-
-### Example
 
 ```bash
 vkdr postgres explain
@@ -230,8 +224,6 @@ vkdr postgres remove -d
 ```
 
 ## Formula Examples
-
-The following examples are from `vkdr postgres explain`.
 
 ### Install Postgres with admin password
 

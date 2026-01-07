@@ -15,7 +15,7 @@ External Secrets Operator synchronizes secrets from external secret management s
 Install External Secrets Operator in your cluster.
 
 ```bash
-vkdr eso install [-hV] [--silent]
+vkdr eso install
 ```
 
 ### Example
@@ -30,13 +30,21 @@ vkdr eso install
 Remove External Secrets Operator from your cluster.
 
 ```bash
-vkdr eso remove [-hV] [--silent]
+vkdr eso remove
 ```
 
 ### Example
 
 ```bash
 vkdr eso remove
+```
+
+## vkdr eso explain
+
+Explain External Secrets Operator setup and configuration options.
+
+```bash
+vkdr eso explain
 ```
 
 ## Complete Examples
@@ -141,7 +149,7 @@ vkdr postgres createdb -d myapp -u myuser --vault
 ```
 ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
 │  External       │     │  External       │     │  Kubernetes     │
-│  Secret Store   │────▶│  Secrets        │────▶│  Secret         │
+│  Secret Store   │────>│  Secrets        │────>│  Secret         │
 │  (Vault, AWS)   │     │  Operator       │     │                 │
 └─────────────────┘     └─────────────────┘     └─────────────────┘
 ```

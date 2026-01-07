@@ -15,7 +15,7 @@ NGinx is a widely-used, high-performance ingress controller that's simple to con
 Install NGinx ingress controller in your cluster.
 
 ```bash
-vkdr nginx install [-hV] [--default-ic] [--silent] [--node-ports=<node_ports>]
+vkdr nginx install [--default-ic] [--node-ports=<node_ports>]
 ```
 
 ### Flags
@@ -66,13 +66,21 @@ vkdr nginx install --default-ic --node-ports '*'
 Remove NGinx ingress controller from your cluster.
 
 ```bash
-vkdr nginx remove [-hV] [--silent]
+vkdr nginx remove
 ```
 
 ### Example
 
 ```bash
 vkdr nginx remove
+```
+
+## vkdr nginx explain
+
+Explain NGinx ingress controller setup and configuration options.
+
+```bash
+vkdr nginx explain
 ```
 
 ## Complete Examples

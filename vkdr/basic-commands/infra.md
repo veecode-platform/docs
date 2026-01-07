@@ -15,7 +15,7 @@ Start the local `vkdr` cluster with configurable options. The cluster is a singl
 This command also starts a pass-through local registry on port 6000. All image pulls from the cluster are redirected to this local registry transparently, helping avoid Docker Hub rate limits.
 
 ```bash
-vkdr infra start [-hV] [--silent] [--traefik] [--agents=<k3d_agents>] \
+vkdr infra start [--traefik] [--agents=<k3d_agents>] \
   [--http=<http_port>] [--https=<https_port>] [-k=<api_port>] \
   [--nodeport-base=<nodeport_base>] [--nodeports=<nodeports>] [-v=<volumes>]
 ```
@@ -73,7 +73,7 @@ vkdr infra start --traefik --agents 2
 Shortcut for `vkdr infra start` with all defaults. Starts the cluster without an ingress controller.
 
 ```bash
-vkdr infra up [-hV] [--silent]
+vkdr infra up
 ```
 
 ### Example
@@ -88,7 +88,7 @@ vkdr infra up
 Stop the local `vkdr` cluster with options.
 
 ```bash
-vkdr infra stop [-hV] [--registry] [--silent]
+vkdr infra stop [--registry]
 ```
 
 ### Flags
@@ -116,7 +116,7 @@ vkdr infra stop --registry
 Shortcut for `vkdr infra stop` with all defaults.
 
 ```bash
-vkdr infra down [-hV] [--silent]
+vkdr infra down
 ```
 
 ### Example
@@ -130,7 +130,7 @@ vkdr infra down
 Expose the local `vkdr` cluster admin port to the internet using a public Cloudflare tunnel.
 
 ```bash
-vkdr infra expose [-hV] [--off] [--silent]
+vkdr infra expose [--off]
 ```
 
 ### Flags
@@ -154,16 +154,14 @@ Stop the tunnel:
 vkdr infra expose --off
 ```
 
-:::warning
-Exposing your cluster to the internet has security implications. This is useful for testing remote access, but be aware of the risks. The tunnel provides a public URL to your cluster's Kubernetes API.
-:::
+**Warning:** Exposing your cluster to the internet has security implications. This is useful for testing remote access, but be aware of the risks. The tunnel provides a public URL to your cluster's Kubernetes API.
 
 ## vkdr infra createToken
 
 Create a service account token for accessing the cluster.
 
 ```bash
-vkdr infra createToken [-hV] [--json] [--silent] [--duration=<duration>]
+vkdr infra createToken [--json] [--duration=<duration>]
 ```
 
 ### Flags
@@ -198,7 +196,7 @@ vkdr infra createToken --json --duration 24h
 Get the CA (Certificate Authority) data from the vkdr cluster.
 
 ```bash
-vkdr infra getca [-hV] [--json] [--silent]
+vkdr infra getca [--json]
 ```
 
 ### Flags

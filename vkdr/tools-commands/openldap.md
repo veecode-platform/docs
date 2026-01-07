@@ -15,7 +15,7 @@ OpenLDAP provides a directory service for user authentication and authorization.
 Install OpenLDAP in your cluster.
 
 ```bash
-vkdr openldap install [-hsV] [--ldap-admin] [--silent] [--ssp] \
+vkdr openldap install [-s] [--ldap-admin] [--ssp] \
   [-d=<domain>] [--nodePort=<nodePort>] [-p=<admin_password>] [-u=<admin_user>]
 ```
 
@@ -76,7 +76,7 @@ vkdr openldap install -d example.com -s --ldap-admin --ssp
 Remove OpenLDAP from your cluster.
 
 ```bash
-vkdr openldap remove [-dhV] [--silent]
+vkdr openldap remove [-d]
 ```
 
 ### Flags
@@ -97,6 +97,14 @@ Remove OpenLDAP and delete all data:
 
 ```bash
 vkdr openldap remove -d
+```
+
+## vkdr openldap explain
+
+Explain OpenLDAP setup and configuration options.
+
+```bash
+vkdr openldap explain
 ```
 
 ## Complete Examples
