@@ -228,3 +228,42 @@ vkdr postgres listdbs
 vkdr postgres dropdb -d myapp -u appuser
 vkdr postgres remove -d
 ```
+
+## Formula Examples
+
+The following examples are from `vkdr postgres explain`.
+
+### Install Postgres with admin password
+
+```sh
+vkdr infra up
+vkdr postgres install -p mypassword
+```
+
+### Create database with user and password
+
+```sh
+vkdr postgres createdb -d mydb -u myuser -p mypassword -s
+```
+
+The new "user" will own the new database and be granted all permissions on it. If `-s` is provided the password will be stored in a secret named `myuser-pg-secret`.
+
+### Vault integration
+
+If you have installed Vault, you can use it to generate and store the user's password:
+
+```sh
+vkdr vault install
+vkdr vault init
+vkdr postgres install
+vkdr postgres createdb -d mydb -u myuser --vault
+```
+
+### External Secrets Operator
+
+When both Vault and ESO are installed, storing the password in a secret relies on the ESO+Vault integration:
+
+```sh
+vkdr eso install
+vkdr postgres createdb -d mydb -u myuser --vault -s
+```

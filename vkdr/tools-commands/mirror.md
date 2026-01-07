@@ -169,3 +169,37 @@ You can mirror any container registry:
 - **Bandwidth savings**: Images are only downloaded once
 - **Reliability**: Local cache works even if remote registry is slow/down
 - **Air-gapped environments**: Pre-populate cache for offline use
+
+## Formula Examples
+
+The following examples are from `vkdr mirror explain`.
+
+### Configuration File
+
+The mirror configuration is stored at:
+```
+~/.vkdr/scripts/.util/configs/mirror-registry.yaml
+```
+
+Example configuration:
+```yaml
+mirrors:
+  "docker.io":
+    endpoint:
+      - http://host.k3d.internal:6000
+  "gcr.io":
+    endpoint:
+      - http://host.k3d.internal:6001
+  "quay.io":
+    endpoint:
+      - http://host.k3d.internal:6002
+```
+
+Port numbers are automatically incremented for each new endpoint, starting from 6000.
+
+### Important Notes
+
+- Mirrors are started during `vkdr infra start` (or `vkdr infra up`)
+- You need to restart the cluster after adding a new mirror
+- The mirror process is transparent to users and applications
+- Images not in the cache are pulled from the original registry and cached for future use

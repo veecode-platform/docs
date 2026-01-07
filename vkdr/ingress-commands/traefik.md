@@ -176,3 +176,40 @@ curl http://whoami.localhost
 - API gateway features needed (rate limiting, auth, etc.)
 - VeeCode DevPortal (requires Kong)
 - Enterprise features needed
+
+## Formula Examples
+
+The following examples are from `vkdr traefik explain`.
+
+### Differences from Bundled Traefik
+
+When you run `vkdr infra start --traefik`, k3d includes a basic Traefik instance. The standalone Traefik installed by `vkdr traefik install`:
+- Uses the official Traefik Helm chart
+- Provides more configuration options
+- Includes a secured dashboard UI
+- Allows custom domain and TLS settings
+- Can be configured as the default ingress controller
+
+### Dashboard Access
+
+After installation, the Traefik dashboard is available at:
+```
+https://traefik-ui.<your-domain>
+```
+
+Default credentials:
+- Username: admin
+- Password: vkdr123
+
+### NodePort Options
+
+```sh
+vkdr traefik install --node-ports 30000,30001  # Specific ports
+vkdr traefik install --node-ports '*'          # Default 30000,30001
+```
+
+Using `--node-ports` changes service type from LoadBalancer to NodePort.
+
+### Compatibility
+
+This Traefik installation is compatible with all VKDR services and can be used alongside other ingress controllers like Nginx.

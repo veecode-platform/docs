@@ -244,3 +244,51 @@ Ensure the catalog URL is accessible and the YAML is valid:
 ```bash
 curl -I https://github.com/myorg/catalog/blob/main/catalog-info.yaml
 ```
+
+## Formula Examples
+
+The following examples are from `vkdr devportal explain`.
+
+### Pre-requisites
+
+- Start `vkdr` bound to ports 80/443
+- Have a valid GitHub PAT token
+- Add entries to `/etc/hosts`: devportal.localhost, petclinic.localhost → 127.0.0.1
+
+```sh
+vkdr infra start --http 80 --https 443
+export GITHUB_TOKEN=your_github_pat_token
+```
+
+### Basic Installation
+
+```sh
+vkdr devportal install --github-token $GITHUB_TOKEN
+```
+
+This installs DevPortal with dependencies (Kong Gateway, Postgres). Available at http://devportal.localhost in guest mode.
+
+### With Sample Applications
+
+```sh
+vkdr devportal install --github-token $GITHUB_TOKEN --samples
+```
+
+Sample apps included:
+- ViaCEP API: `curl localhost/cep/20020080/json`
+- Petclinic: http://petclinic.localhost/
+
+### Custom Catalog
+
+```sh
+vkdr devportal install --github-token $GITHUB_TOKEN --location $YOUR_CATALOG_URL
+```
+
+### Plugin Development with Local NPM
+
+Use with a local NPM registry (like Verdaccio) for dynamic plugin development:
+
+```sh
+verdaccio -l 0.0.0.0:4873
+vkdr devportal install --github-token $GITHUB_TOKEN --npm http://host.k3d.internal:4873
+```

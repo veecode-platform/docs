@@ -162,3 +162,23 @@ vkdr keycloak install
 # Kong Admin UI will use Keycloak for authentication
 # Requires 'vkdr' realm with 'kong-admin' OpenID Connect client
 ```
+
+## Formula Examples
+
+The following examples are from `vkdr keycloak explain`.
+
+### Basic Installation
+
+```sh
+vkdr infra up
+vkdr postgres install
+vkdr nginx install --default-ic
+vkdr keycloak install
+```
+
+### Notes
+
+- The "install" command installs the Keycloak operator first, then the Keycloak server
+- If PostgreSQL is not present, it will be installed automatically
+- The Keycloak database is also created automatically
+- The "remove" command does NOT remove the Keycloak operator, only the server and database

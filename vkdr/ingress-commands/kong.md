@@ -213,3 +213,78 @@ vkdr postgres install -w
 # Install Kong in standard mode
 vkdr kong install -m standard --default-ic
 ```
+
+## Formula Examples
+
+The following examples are from `vkdr kong explain` and show common installation patterns.
+
+### Kong OSS in db-less mode
+
+```sh
+vkdr infra up
+vkdr kong install
+```
+
+- Kong: http://localhost:8000
+- Kong Manager: http://manager.localhost:8000/manager
+- Kong Admin API: http://manager.localhost:8000
+
+### Kong OSS in standard (traditional) mode
+
+```sh
+vkdr infra up
+vkdr kong install -m standard
+```
+
+A Postgres database is also deployed in the cluster automatically, passwords are generated randomly.
+
+### Kong OSS with shared database
+
+```sh
+vkdr infra up
+vkdr postgres install
+vkdr postgres createdb -d kong -u kong -p kong -s
+vkdr kong install -m standard
+```
+
+The "kong" database user's password is kept in a secret named `kong-pg-secret`.
+
+### Kong OSS with custom domain
+
+```sh
+vkdr infra start --http 80 --https 443
+vkdr kong install -m standard -d mydomain.com -s
+```
+
+- Kong: ports 80 and 443 on host's public IP
+- Kong Manager: https://manager.mydomain.com/manager
+
+The `-d` domain flag is a suffix for "manager.DOMAIN" endpoints. The `-s` flag generates self-signed TLS certificates.
+
+### Kong Enterprise as secondary Ingress Controller
+
+```sh
+vkdr infra start --traefik --nodeports=2
+vkdr kong install -e -l /path/license.json -m standard -p mypassword --use-nodeport
+```
+
+Two ingress controllers: Traefik (8000/8001) and Kong (9000/9001). If license is provided, RBAC is enabled (user "kong_admin").
+
+### Kong Enterprise with custom domain
+
+```sh
+vkdr infra start --http 80 --https 443
+vkdr kong install -e -l /path/license.json -m standard -p mypassword --default-ic -d mydomain.com -s
+```
+
+Kong is the default ingress controller with RBAC enabled.
+
+### Kong with custom image (custom plugins)
+
+```sh
+vkdr infra up
+vkdr kong install -m standard -i veecode/kong-cred -t 3.6.1-r1 \
+  --env "plugins=bundled,oidc,oidc-acl,mtls-auth,mtls-acl,late-file-log"
+```
+
+Custom image with additional plugins pulled from Docker Hub.
