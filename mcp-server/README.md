@@ -2,38 +2,48 @@
 
 MCP server exposing the VeeCode Platform documentation (DevPortal, Platform, Admin-UI, VKDR-CLI) to CLI agents over stdio.
 
-## Install
+## Use with Claude Code
+
+One command, no global install:
 
 ```bash
-npm install -g @veecode-platform/docs-mcp
+claude mcp add veecode-docs --scope user \
+  -- npx -y @veecode-platform/docs-mcp
 ```
 
-## Use it with Claude Code
+That's it. `npx` downloads the package on first call (~5s) and caches it for subsequent runs.
 
-```bash
-claude mcp add --transport stdio --scope user veecode-docs veecode-docs-mcp
-```
-
-Or add manually to `~/.mcp.json`:
+Or add to `~/.mcp.json` manually:
 
 ```json
 {
   "mcpServers": {
     "veecode-docs": {
-      "type": "stdio",
-      "command": "veecode-docs-mcp"
+      "command": "npx",
+      "args": ["-y", "@veecode-platform/docs-mcp"]
     }
   }
 }
 ```
 
-## Use it with Codex CLI
+## Use with Codex CLI
 
 `~/.codex/config.toml`:
 
 ```toml
 [mcp_servers.veecode-docs]
-command = "veecode-docs-mcp"
+command = "npx"
+args = ["-y", "@veecode-platform/docs-mcp"]
+```
+
+## Other install methods
+
+If you'd rather not depend on `npx` resolution at launch:
+
+```bash
+npm install -g @veecode-platform/docs-mcp
+# then point the MCP at the global binary
+claude mcp add veecode-docs --scope user -- veecode-docs-mcp
 ```
 
 ## Tools exposed
