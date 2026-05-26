@@ -6638,9 +6638,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@veecode/docs-mcp@workspace:mcp-server":
+"@veecode-platform/docs-mcp@workspace:mcp-server":
   version: 0.0.0-use.local
-  resolution: "@veecode/docs-mcp@workspace:mcp-server"
+  resolution: "@veecode-platform/docs-mcp@workspace:mcp-server"
   dependencies:
     "@modelcontextprotocol/sdk": "npm:^1.0.0"
     "@types/node": "npm:^20.14.0"
