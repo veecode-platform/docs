@@ -18,8 +18,8 @@
     "write-heading-ids": "docusaurus write-heading-ids",
     "version": "docusaurus doc:version",
     "detect-secrets": "detect-secrets scan --exclude-files 'yarn.*cjs'",
-    "mcp:ci": "yarn workspace @veecode/docs-mcp ci",
-    "mcp:build": "yarn workspace @veecode/docs-mcp build",
+    "mcp:ci": "yarn workspace @veecode-platform/docs-mcp ci",
+    "mcp:build": "yarn workspace @veecode-platform/docs-mcp build",
     "snapshot:test": "yarn workspace mcp-snapshot test"
   },
   "dependencies": {

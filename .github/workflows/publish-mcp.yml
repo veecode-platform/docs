@@ -1,4 +1,4 @@
-name: Publish @veecode/docs-mcp
+name: Publish @veecode-platform/docs-mcp
 
 on:
   push:
@@ -64,7 +64,7 @@ jobs:
           cd mcp-server
           yarn version ${{ steps.bump.outputs.level }}
       - name: Publish
-        run: yarn workspace @veecode/docs-mcp npm publish --access public
+        run: yarn workspace @veecode-platform/docs-mcp npm publish --access public
         env:
           NPM_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           YARN_NPM_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -73,7 +73,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
           git add mcp-server/package.json
-          git commit -m "chore(release): @veecode/docs-mcp $(node -p "require('./mcp-server/package.json').version")"
+          git commit -m "chore(release): @veecode-platform/docs-mcp $(node -p "require('./mcp-server/package.json').version")"
           # Avoid non-FF on race with unrelated main pushes
           git pull --rebase origin main
           git push

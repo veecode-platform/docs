@@ -1,11 +1,11 @@
-# @veecode/docs-mcp
+# @veecode-platform/docs-mcp
 
 MCP server exposing the VeeCode Platform documentation (DevPortal, Platform, Admin-UI, VKDR-CLI) to CLI agents over stdio.
 
 ## Install
 
 ```bash
-npm install -g @veecode/docs-mcp
+npm install -g @veecode-platform/docs-mcp
 ```
 
 ## Use it with Claude Code
