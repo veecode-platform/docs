@@ -1,6 +1,6 @@
 {
   "name": "@veecode-platform/docs-mcp",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "MCP server exposing VeeCode Platform documentation to CLI agents",
   "license": "Apache-2.0",
   "type": "module",
