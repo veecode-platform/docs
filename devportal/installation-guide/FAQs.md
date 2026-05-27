@@ -14,7 +14,7 @@ The marketplace catalog is downloaded from an OCI image at startup. If the downl
 Force a fresh download on the next startup:
 
 ```bash
-docker run ... -e CATALOG_INDEX_REFRESH=true veecode/devportal:latest
+docker run ... -e CATALOG_INDEX_REFRESH=true veecode/devportal:2.0.0
 ```
 
 The default catalog image is `quay.io/veecode/plugin-catalog-index:latest`. Override it with `CATALOG_INDEX_IMAGE` if you host it internally.
@@ -28,7 +28,8 @@ docker logs devportal
 ```
 
 Common causes:
-- A required environment variable for the selected `VEECODE_PROFILE` is missing (e.g., `GITLAB_HOST` is unset for the `gitlab` profile).
+- A required environment variable for one of the selected presets is missing (e.g., `GITLAB_HOST` is unset for the `gitlab` preset). The entrypoint logs exactly which variable is missing before exiting with code 78.
+- Two identity presets were selected at once (e.g., `github-auth,gitlab`). Only one identity preset can be active. The container exits with code 78 and names the conflicting presets.
 - The `app-config.local.yaml` mount path is wrong or the file has a syntax error. Backstage will fail to start if any mounted config file is invalid YAML.
 - Port 7007 is already in use on the host.
 
@@ -42,29 +43,20 @@ Config files are merged in a 7-layer order. Your `app-config.local.yaml` is laye
 
 ### GitLab OAuth sign-in is not working
 
-Check that you are using the correct variable names. The GitLab profile reads `GITLAB_AUTH_CLIENT_ID` and `GITLAB_AUTH_CLIENT_SECRET`. Using `GITLAB_CLIENT_ID` or `GITLAB_CLIENT_SECRET` will not work.
+Check that you are using the correct variable names. The `gitlab` preset reads `GITLAB_AUTH_CLIENT_ID` and `GITLAB_AUTH_CLIENT_SECRET`. Using `GITLAB_CLIENT_ID` or `GITLAB_CLIENT_SECRET` will not work.
 
 Also verify the redirect URI in your GitLab OAuth Application matches exactly:
 ```
 http://localhost:7007/api/auth/gitlab/handler/frame
 ```
 
-### GitHub sign-in fails with "Bad credentials"
+### GitHub sign-in is not working
 
-The `github` profile uses two separate credential sets:
-- **Sign-in (OAuth)**: `GITHUB_AUTH_CLIENT_ID` / `GITHUB_AUTH_CLIENT_SECRET`
-- **Integration (GitHub App)**: `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` + `GITHUB_APP_ID` + `GITHUB_PRIVATE_KEY`
+The `github-auth` preset uses GitHub OAuth App credentials for sign-in:
+- `GITHUB_AUTH_CLIENT_ID` — OAuth App client ID
+- `GITHUB_AUTH_CLIENT_SECRET` — OAuth App client secret
 
-If `GITHUB_AUTH_CLIENT_ID` is unset, the entrypoint automatically copies `GITHUB_CLIENT_ID` to it. Make sure your OAuth App credentials (not GitHub App credentials) are set for sign-in.
-
-### `GITHUB_PRIVATE_KEY` causes errors due to newlines
-
-Use `GITHUB_PRIVATE_KEY_BASE64` instead. Base64-encode the PEM file and set that variable. The entrypoint decodes it automatically:
-
-```bash
-base64 -w 0 < github-app.private-key.pem
-# paste the output as GITHUB_PRIVATE_KEY_BASE64
-```
+Also include the `github` preset (which provides SCM catalog access via `GITHUB_PAT` + `GITHUB_ORG`). The typical combination is `VEECODE_PRESETS=recommended,veecode-theme,github,github-auth`.
 
 ### Keycloak authentication fails at sign-in
 
@@ -77,24 +69,27 @@ http://localhost:7007/api/auth/oidc/handler/frame
 
 ---
 
-## Profiles
+## Presets
 
-### Which profile should I use?
+### Which preset combination should I use?
 
-| Situation | Recommended profile |
+| Situation | Recommended `VEECODE_PRESETS` |
 |---|---|
-| Just exploring, no auth needed | (no profile — use guest) |
-| GitHub repos, simple token access | `github-pat` |
-| GitHub repos + team sign-in | `github` |
-| GitLab repos + sign-in | `gitlab` |
-| Azure DevOps repos + sign-in | `azure` |
-| Keycloak SSO | `keycloak` |
-| OpenLDAP / FreeIPA | `ldap` |
-| Microsoft Active Directory | `ldap-ad` |
+| Just exploring, no auth | `recommended,veecode-theme` |
+| GitHub repos + team sign-in | `recommended,veecode-theme,github,github-auth` |
+| GitLab repos + sign-in | `recommended,veecode-theme,gitlab` |
+| Azure DevOps repos + sign-in | `recommended,veecode-theme,azure,azure-auth` |
+| Keycloak SSO | `recommended,veecode-theme,keycloak` |
+| OpenLDAP / FreeIPA | `recommended,veecode-theme,ldap` |
+| Microsoft Active Directory | `recommended,veecode-theme,ldap-ad` |
 
-### I set `VEECODE_PROFILE` but it has no effect
+### I set `VEECODE_PRESETS` but nothing changed
 
-Profile names are case-sensitive and lowercase. Supported values: `github-pat`, `github`, `gitlab`, `keycloak`, `azure`, `ldap`, `ldap-ad`. Verify the container log shows `VEECODE: Loading <profile> configuration...` during startup.
+Preset names are case-sensitive and lowercase. Check the container logs at startup — the entrypoint logs `VEECODE: applying preset "<name>"` for each active preset. If the line is absent, the variable was not passed to the container.
+
+:::note
+If you migrated from V1 and still have `VEECODE_PROFILE` in your environment, the entrypoint ignores it and emits a warning. Replace it with `VEECODE_PRESETS`.
+:::
 
 ---
 
@@ -102,28 +97,33 @@ Profile names are case-sensitive and lowercase. Supported values: `github-pat`, 
 
 ### How do I enable a bundled plugin?
 
-Add an entry to your `dynamic-plugins.yaml` with `disabled: false`. You do not need to rebuild the image or run `yarn add`. Example:
+The easiest path is the in-portal Marketplace — search for the plugin and click **Enable**. Alternatively, add an entry to your operator `dynamic-plugins.yaml`:
 
 ```yaml
+includes:
+  - dynamic-plugins.default.resolved.yaml
+
 plugins:
   - package: './dynamic-plugins/dist/backstage-plugin-kubernetes-dynamic'
     disabled: false
 ```
 
-See [Dynamic Plugins](./docker-local/custom-plugins) for details.
+See [Dynamic Plugins](./docker-local/custom-plugins) for mount instructions.
 
 ### My `dynamic-plugins.yaml` disables all plugins unexpectedly
 
-If your custom `dynamic-plugins.yaml` does not include `dynamic-plugins.default.yaml`, all built-in plugins revert to their default state (disabled). Add the `includes:` key:
+If your custom `dynamic-plugins.yaml` does not include the built-in defaults, all pre-installed plugins revert to their default state (disabled). Use the resolved shadow:
 
 ```yaml
 includes:
-  - dynamic-plugins.default.yaml
+  - dynamic-plugins.default.resolved.yaml
 
 plugins:
   - package: './dynamic-plugins/dist/my-plugin-dynamic'
     disabled: false
 ```
+
+(`dynamic-plugins.default.resolved.yaml` is the image-defaults shadow with `${BACKSTAGE_VERSION}` and `${PLUGIN_REGISTRY}` substituted by the entrypoint.)
 
 ---
 

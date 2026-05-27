@@ -13,23 +13,21 @@ All frontend plugins **must** bring their own settings in the `pluginConfig:` fi
 The sample frontend plugin we have just built and [packaged](packaging.md) defined a page and a sidebar link, so it can be wired to DevPortal by a configuration like the one below:
 
 ```yaml
-global:
-  dynamic:
-    plugins:
-      - package: '@your-org/plugin-my-front-plugin-dynamic@x.y.z'
-        disabled: false
-        integrity: sha512-xxxxxxxxx
-        pluginConfig:
-          dynamicPlugins:
-            frontend:
-              your-org.plugin-my-front-plugin:
-                dynamicRoutes:
-                  - path: /my-front-plugin
-                    importName: MyFrontPluginPage
-                    menuItem:
-                      icon: SomeIcon
-                      text: My Plugin Page
-                      enabled: true
+plugins:
+  - package: '@your-org/plugin-my-front-plugin-dynamic@x.y.z'
+    disabled: false
+    integrity: sha512-xxxxxxxxx
+    pluginConfig:
+      dynamicPlugins:
+        frontend:
+          your-org.plugin-my-front-plugin:
+            dynamicRoutes:
+              - path: /my-front-plugin
+                importName: MyFrontPluginPage
+                menuItem:
+                  icon: SomeIcon
+                  text: My Plugin Page
+                  enabled: true
 ```
 
 ## Testing with VKDR

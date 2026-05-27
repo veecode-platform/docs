@@ -89,7 +89,7 @@ Your `dynamic-plugins.yaml` merges with the image defaults via an `includes:` ke
 
 ```yaml
 includes:
-  - dynamic-plugins.default.yaml
+  - dynamic-plugins.default.resolved.yaml
 
 plugins:
   # Your overrides below
@@ -97,7 +97,7 @@ plugins:
     disabled: false
 ```
 
-The `dynamic-plugins.default.yaml` file (pre-installed plugins, all `disabled: true` by default) is baked into the image. You can also mount it from the distro repo to inspect or override individual entries.
+The `dynamic-plugins.default.resolved.yaml` file is the entrypoint-owned shadow of the image defaults, with `${BACKSTAGE_VERSION}` and `${PLUGIN_REGISTRY}` already substituted. Always reference this resolved shadow (not `dynamic-plugins.default.yaml`) in your operator override to ensure plugin OCI refs match.
 
 After the plugin install script runs, it generates `dynamic-plugins-root/app-config.dynamic-plugins.yaml` from the `pluginConfig` blocks of all enabled plugins. This generated file is loaded last in the config chain (after your `app-config.local.yaml`).
 

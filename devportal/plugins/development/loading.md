@@ -8,66 +8,47 @@ Dynamic plugins can be loaded by VeeCode DevPortal at start time. They are usual
 
 ## Configuration
 
-There are two configuration surfaces depending on your deployment model:
-
-### `dynamic-plugins.yaml` (distro container / SaaS)
-
-For the standard DevPortal container (docker-compose, SaaS, or VKDR), edit `dynamic-plugins.yaml` directly:
+Mount a `dynamic-plugins.yaml` file at `/app/dynamic-plugins.yaml` and include the default chain so pre-installed plugins are preserved:
 
 ```yaml
+includes:
+  - dynamic-plugins.default.resolved.yaml
+
 plugins:
   # npm plugin
   - package: '@yourorg/yourplugin@x.y.z'
     disabled: false
     integrity: sha512-xxxxxxxxx
-  # preloaded plugin (uses path relative to the dynamic-plugins directory)
+  # preloaded plugin (path relative to the dynamic-plugins directory)
   - package: ./dynamic-plugins/dist/another-plugin-dynamic
     disabled: false
 ```
 
-### Helm `values.yaml` (Kubernetes deployment)
-
-For Kubernetes deployments using the VeeCode Helm chart, configure plugins under `global.dynamic.plugins`:
-
-```yaml
-global:
-  dynamic:
-    plugins:
-      # npm plugin
-      - package: '@yourorg/yourplugin@x.y.z'
-        disabled: false
-        integrity: sha512-xxxxxxxxx
-      # preloaded plugin
-      - package: ./dynamic-plugins/dist/another-plugin-dynamic
-        disabled: false
-```
-
-Both surfaces accept the same plugin entry format. The `dynamic-plugins.yaml` approach is recommended for non-Helm deployments.
+Mount it in your compose file or Kubernetes Deployment manifest — see [Adding Plugins](../adding) for the exact volume/ConfigMap syntax.
 
 ## Private npm registry
 
 Due to security and compliance reasons you may not want VeeCode DevPortal to load plugins from public npm registries. You may prefer to use a private npm registry, like Nexus, Artifactory or even Verdaccio.
 
-VeeCode DevPortal can be configured to rely on a private npm registry - you just have to configure a special secret named "veecode-devportal-dynamic-plugins-npmrc" (where "veecode-devportal" is the Helm release name) in the same namespace as the DevPortal deployment:
-
-```yaml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: veecode-devportal-dynamic-plugins-npmrc
-  namespace: <your-namespace>
-type: Opaque
-stringData:
-  .npmrc: |
-    registry=<registry-url>
-    //<registry-url>:_authToken=<auth-token>
-```
-
-Alternatively you can create the secret using the `kubectl` command:
+Mount a `.npmrc` file into the container at `/app/.npmrc` (or the path the install script reads from). For Kubernetes, create a Secret and mount it as a volume:
 
 ```bash
-kubectl create secret generic veecode-devportal-dynamic-plugins-npmrc \
-  "--from-literal=.npmrc=registry=your-registry-url"
+kubectl create secret generic devportal-npmrc \
+  --namespace platform \
+  "--from-literal=.npmrc=registry=https://your-registry-url/"
+```
+
+```yaml
+# Deployment volumeMount
+- mountPath: /app/.npmrc
+  name: npmrc
+  subPath: .npmrc
+  readOnly: true
+
+# Volume
+- name: npmrc
+  secret:
+    secretName: devportal-npmrc
 ```
 
 ## Wiring plugins
@@ -79,18 +60,16 @@ Backend plugins should be detected and loaded automatically, but frontend plugin
 All dynamic plugins can bring their own settings in the `pluginConfig:` field:
 
 ```yaml
-  dynamic:
-    plugins:
-      # npm plugin
-      - package: '@yourorg/yourplugin@x.y.z'
-        disabled: false
-        integrity: sha512-xxxxxxxxx
-        pluginConfig:
-          dynamicPlugins:
-            something:
-              morethings:
-                - foo
-                - bar
+plugins:
+  - package: '@yourorg/yourplugin@x.y.z'
+    disabled: false
+    integrity: sha512-xxxxxxxxx
+    pluginConfig:
+      dynamicPlugins:
+        something:
+          morethings:
+            - foo
+            - bar
 ```
 
 :::important

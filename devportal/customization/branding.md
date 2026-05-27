@@ -8,36 +8,7 @@ There is an entire branding section in the `appConfig` section of DevPortal conf
 
 ## The default config
 
-The default branding values are defined in `app-config.yaml` (base layer). For a Helm install, override them under `upstream.backstage.appConfig`; for a Docker/distro install, place them at the top level in `app-config.local.yaml`.
-
-**Helm chart format:**
-
-```yaml
-upstream:
-  backstage:
-    appConfig:
-      app:
-        branding:
-          fullLogo: https://veecode-platform.github.io/support/logos/logo.svg
-          iconLogo: https://veecode-platform.github.io/support/logos/logo-mobile.png
-          fullLogoWidth: 150
-          theme:
-            light:
-              variant: "backstage"
-              palette:
-                navigation:
-                  background: "#222222"
-            dark:
-              variant: "backstage"
-              palette:
-                navigation:
-                  background: "#222222"
-      backend:
-        csp:
-          img-src: ["'self'","data:","https://raw.githubusercontent.com/","https://avatars.githubusercontent.com/","https://veecode-platform.github.io","https://platform.vee.codes"]
-```
-
-**Direct app-config format (Docker/distro):**
+The default branding values are defined in `app-config.yaml` (base layer). Override them in `app-config.local.yaml` (mounted at `/app/app-config.local.yaml`):
 
 ```yaml
 app:

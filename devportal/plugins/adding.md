@@ -86,50 +86,49 @@ The workspace tag must match the Backstage version of your DevPortal instance. T
 
 For a complete list of bundled (preloaded) plugins that do not require an OCI reference, see [Bundled Plugins](./bundled).
 
-### VKDR (local setup)
+### Self-hosted (Docker / Kubernetes)
 
-If you are using VKDR to manage your local DevPortal instance, add plugins using the `--merge` argument during install:
-
-```bash
-vkdr devportal install \
-  --github-token=$GITHUB_TOKEN \
-  --samples \
-  --merge ./my-plugins.yaml
-```
-
-The `my-plugins.yaml` file should have a `global.dynamic.plugins` section:
+Mount a `dynamic-plugins.yaml` override file. Keep the `includes:` chain so the built-in defaults and preset fragments are preserved, then add your entries under `plugins:`:
 
 ```yaml
-global:
-  dynamic:
-    plugins:
-      - package: '@veecode-platform/backstage-plugin-global-floating-action-button-dynamic@1.4.0'
-        disabled: false
-        integrity: sha512-...
-        pluginConfig:
-          dynamicPlugins:
-            frontend:
-              red-hat-developer-hub.backstage-plugin-global-floating-action-button:
-                mountPoints:
-                  - mountPoint: application/listener
-                    importName: DynamicGlobalFloatingActionButton
+includes:
+  - dynamic-plugins.default.resolved.yaml
+
+plugins:
+  - package: 'oci://quay.io/veecode/gitlab:bs_${BACKSTAGE_VERSION}!immobiliarelabs-backstage-plugin-gitlab'
+    disabled: false
+    pluginConfig: {}
 ```
 
-### Helm
+Mount the file in your compose file or Deployment manifest:
 
-Add the plugin to the `global.dynamic.plugins` array in your `values.yaml`:
-
+**Docker Compose:**
 ```yaml
-global:
-  dynamic:
-    plugins:
-      - package: 'oci://quay.io/veecode/gitlab:bs_1.48.4!immobiliarelabs-backstage-plugin-gitlab'
-        disabled: false
-        pluginConfig: {}
+volumes:
+  - ./dynamic-plugins.yaml:/app/dynamic-plugins.yaml:ro
 ```
 
-:::warning
-`global.dynamic.plugins` is an array that overrides the chart default. Check the chart's [values.yaml](https://github.com/veecode-platform/next-charts/blob/main/veecode-devportal-chart/values.yaml) to understand what the baseline includes before overriding.
+**Kubernetes (ConfigMap approach):**
+```yaml
+# ConfigMap
+data:
+  dynamic-plugins.yaml: |
+    includes:
+      - dynamic-plugins.default.resolved.yaml
+    plugins:
+      - package: 'oci://...'
+        disabled: false
+
+# Deployment volumeMount
+- mountPath: /app/dynamic-plugins.yaml
+  name: dp-override
+  subPath: dynamic-plugins.yaml
+```
+
+After mounting, restart the container to apply the change (`docker compose restart devportal` or `kubectl rollout restart deployment/devportal`).
+
+:::note
+`dynamic-plugins.default.resolved.yaml` is the entrypoint-owned shadow of the image defaults (with `${BACKSTAGE_VERSION}` and `${PLUGIN_REGISTRY}` already substituted). Always include it so your override doesn't inadvertently disable the baseline plugin set.
 :::
 
 ## Configuring credentials
