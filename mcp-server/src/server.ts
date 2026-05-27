@@ -18,6 +18,7 @@ import { getDocOutline } from "./tools/get-doc-outline.js";
 import { listProducts } from "./tools/list-products.js";
 import { listDocs } from "./tools/list-docs.js";
 import { getSnapshotInfo } from "./tools/get-snapshot-info.js";
+import { bundledFileName, resolveRemoteUrl, resolveCacheDir } from "./options.js";
 
 const TOOLS = [
   {
@@ -81,13 +82,13 @@ const TOOLS = [
   },
 ] as const;
 
-function defaultBundledPath(): string {
+function defaultBundledPath(v1: boolean): string {
   const here = dirname(fileURLToPath(import.meta.url));
-  return join(here, "..", "bundled", "snapshot.json");
+  return join(here, "..", "bundled", bundledFileName(v1));
 }
 
-function resolveBundledPath(opt?: string): string {
-  return opt ?? process.env.VEECODE_DOCS_MCP_BUNDLED_PATH ?? defaultBundledPath();
+function resolveBundledPath(opt: string | undefined, v1: boolean): string {
+  return opt ?? process.env.VEECODE_DOCS_MCP_BUNDLED_PATH ?? defaultBundledPath(v1);
 }
 
 function defaultCacheDir(): string {
@@ -102,21 +103,28 @@ export interface CreateServerOptions {
   cacheDir?: string | null;
   remoteUrl?: string | null;
   offline?: boolean;
+  version?: "current" | "v1";
 }
 
 export async function createServer(opts: CreateServerOptions = {}): Promise<{
   server: Server;
   dispose: () => Promise<void>;
 }> {
-  const bundledPath = resolveBundledPath(opts.bundledPath);
+  const v1 = opts.version === "v1";
+  const bundledPath = resolveBundledPath(opts.bundledPath, v1);
   const cacheDir =
     opts.cacheDir === null
       ? null
-      : opts.cacheDir ?? process.env.VEECODE_DOCS_MCP_CACHE_DIR ?? defaultCacheDir();
-  const remoteUrl =
-    opts.remoteUrl ??
-    process.env.VEECODE_DOCS_MCP_SNAPSHOT_URL ??
-    "https://docs.platform.vee.codes/mcp-snapshot.json";
+      : resolveCacheDir(
+          opts.cacheDir ?? process.env.VEECODE_DOCS_MCP_CACHE_DIR,
+          defaultCacheDir(),
+          v1,
+        );
+  const remoteUrl = resolveRemoteUrl(
+    opts.remoteUrl,
+    process.env.VEECODE_DOCS_MCP_SNAPSHOT_URL,
+    v1,
+  );
   const offline =
     opts.offline ?? process.env.VEECODE_DOCS_MCP_OFFLINE === "1";
 
@@ -175,7 +183,8 @@ export async function createServer(opts: CreateServerOptions = {}): Promise<{
 }
 
 export async function startServer(): Promise<void> {
-  const { server } = await createServer();
+  const version = process.argv.includes("--v1") ? "v1" : undefined;
+  const { server } = await createServer({ version });
   const transport = new StdioServerTransport();
   await server.connect(transport);
 }
