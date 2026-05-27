@@ -43,11 +43,15 @@ const config = {
 
         // https://docusaurus.io/docs/docs-multi-instance
         docs: {
-          // id: 'product', // omitted => default instance
+          // id: 'product', // omitted => default instance (devportal)
           path: "devportal",
           routeBasePath: "devportal",
           sidebarPath: require.resolve("./sidebars.js"),
-          // ... other options
+          lastVersion: "current",
+          versions: {
+            current: { label: "v2", path: "" },
+            "v1": { label: "v1", path: "v1" },
+          },
         },
         // docs: {
         //   sidebarPath: require.resolve('./sidebars.js'),
@@ -150,10 +154,10 @@ const config = {
           //   type: 'localeDropdown',
           //   position: 'right',
           // },
-          // {
-          //   type: 'docsVersionDropdown',
-          //   position: 'right',
-          // },
+          {
+            type: "docsVersionDropdown",
+            position: "right",
+          },
           {
             href: "https://github.com/veecode-platform/support",
             label: "GitHub",
