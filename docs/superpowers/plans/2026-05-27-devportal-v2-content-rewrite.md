@@ -10,6 +10,18 @@
 
 **Baseline:** worktree `worktree-v2-docs` on branch off `origin/main`.
 
+> ⚠ **Execution gate — re-baseline against PR #14 first.** PR #14
+> (`docs/devportal-accuracy-overhaul` → develop, the modernized V1) rewrites all
+> 77 `devportal/` files and ADDS structure this plan didn't account for:
+> `integrations/{Azure,GitLab,Keycloak,LDAP}/` and a `plugins/bundled/` section.
+> This plan's substance (codedb sources, key facts, IA philosophy) holds, but its
+> concrete file ops — the Phase-0 deletes/redirects and the per-page "modify"
+> targets — MUST be re-pinned to the post-PR#14 tree before executing. Do not run
+> the V2 content rewrite until: (1) PR #14 is merged, and (2) the V1 cut has
+> frozen it (mechanism plan Tasks 1-2). The new per-integration and bundled-plugin
+> pages PR #14 adds are a *better* skeleton to map presets onto — fold them into
+> the Target IA at re-baseline time.
+
 ---
 
 ## Conventions for this plan
