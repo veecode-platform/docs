@@ -1,7 +1,8 @@
 # DevPortal V1/V2 docs versioning + MCP — Design
 
 Date: 2026-05-27
-Status: Approved (pending written-spec review)
+Status: Approved — content design added (pending written-spec review)
+Source of truth: devportal-platform repo (cloned to `/tmp/devportal-platform`)
 
 ## Problem
 
@@ -114,30 +115,78 @@ package; the flag only selects which snapshot it consumes.
 Trade-off noted: `--v1` is boolean and won't scale to a hypothetical V3; if/when
 that happens, migrate to `--docs-version <v>`. Accepted for simplicity now.
 
-## Content rework (V2 / current surface)
+## Content design (V2 / current surface) — the bulk of the work
 
-22 HIGH-impact pages move from Helm/`values.yaml`/`dynamic-plugins.yaml`/
-`VEECODE_PROFILE` to presets + Docker Compose + OCI bundles +
-`app-config.local.yaml`. Top reworks:
+The mechanism above is the easy part. The labor is rewriting the DevPortal
+install/config/plugin docs to the preset model, sourced from the
+**devportal-platform repo**, which carries authoritative docs we adapt from
+(not copy verbatim). Source files (cloned to `/tmp/devportal-platform`):
 
-1. `installation-guide/simple-setup/create-values-file.md` — `values.yaml` →
-   `app-config.local.yaml` + `.env`/presets.
-2. `installation-guide/simple-setup/deploy-devportal.md` — `helm upgrade` →
-   `docker compose up -d`.
-3. `installation-guide/production-setup/setup.md` — bundle image + chart gone.
-4. `installation-guide/understand-chart.md` — replace with presets/single-image
-   architecture page.
-5. `plugins/adding.md` — `dynamic-plugins.yaml`/`global.dynamic.plugins`/`vkdr
-   --merge` → runtime OCI bundles under presets.
-6. `installation-guide/docker-local/custom-plugins.md` — same conversion.
-7. `installation-guide/docker-local/profiles.md` — `VEECODE_PROFILE` (singular)
-   → composable `VEECODE_PRESETS`.
-8. `plugins/plugins.md` — base/distro split → single image + OCI bundles.
-9. `customization/theme-hack.md` — `global.theme` Helm values → app-config.
-10. `admin-ui/Settings/05-plugins.md` — realign with preset/OCI selection.
+- `docs/topics/{installing,presets,configuration-layering,dynamic-plugins,plugin-selection-surfaces,plugin-authoring,plugin-packaging,theming}.md`
+- `docs/reference/{shipped-presets,env-vars,preset-schema,glossary,tech-stack}.md`
+- `docs/UPGRADING_FROM_BASE_DISTRO.md` — the profile→preset translation table
+- `docs/adr/010-013` — rationale
+- Concrete artifacts: `.env.example`, `docker-compose.yml`,
+  `app-config.local.template.yaml`, `presets/*.yaml`, `entrypoint.sh`
 
-The full per-file classification (22 HIGH / ~18 LOW / ~52 NONE) is the input to
-the implementation plan. V1 keeps all current content frozen.
+### IA reshape (decided)
+
+The current install IA is organized around Helm/`values.yaml`/profiles and does
+not fit the preset model. The DevPortal install section is **reshaped** to the
+preset model (URLs change → client redirects required):
+
+| New / reshaped V2 page | Source |
+|---|---|
+| `installation-guide/` hub — single image + presets | README, `topics/installing.md` |
+| quickstart (compose) — `cp .env.example`, `VEECODE_PRESETS`, `docker compose up -d` | `installing.md`, `docker-compose.yml`, `.env.example` |
+| presets (concept) — what they are, tiers, composition | `topics/presets.md` |
+| shipped-presets (reference) — preset → required vars table | `reference/shipped-presets.md` |
+| env-vars (reference) | `reference/env-vars.md` |
+| configuration — `app-config.local.yaml` layering | `topics/configuration-layering.md` |
+| `plugins/` — OCI dynamic plugins + the 4 selection surfaces | `topics/dynamic-plugins.md`, `plugin-selection-surfaces.md` |
+| migrating-from-v1 — profile→preset translation | `UPGRADING_FROM_BASE_DISTRO.md` |
+| `production-setup` → k8s manifests (no Helm chart shipped yet) | `UPGRADING…` §Helm/K8s, `examples/deploy/k8s.yaml` |
+| `understand-chart` → "architecture" page (or redirect) | ADR-010 |
+
+### Image name (decided, provisional)
+
+The repo contradicts itself: `docs/topics` say
+`docker.io/veecode/devportal-platform`; the actual `docker-compose.yml` ships
+`image: veecode/devportal:2.0.0`. **Decision: use `veecode/devportal:2.0.0`**
+in the docs for now, with a TODO to verify against the published registry before
+release. Do not invent a tag.
+
+### Key facts the V2 content must get right (from source, not invented)
+
+- Quickstart = `cp .env.example .env` → set `VEECODE_PRESETS` → `docker compose up -d`.
+- Minimal portal: `VEECODE_PRESETS=recommended,veecode-theme`; open `:7007`.
+- Two named volumes: `dp-data:/app/data`, `dp-plugins:/app/dynamic-plugins-root`.
+- Preset tiers: Core (always on) / `recommended` / integration presets.
+- 14 integration presets; SCM and identity are **separate composable** presets
+  (`github` ≠ `github-auth`); `identity` is an exclusive group.
+- Required-var failures = exit 78, named per preset; `up -d` masks it (check `ps`).
+- Plugins = OCI bundles pulled at boot by `install-dynamic-plugins.py`; 4
+  selection surfaces (preset / file `dynamic-plugins.yaml` / marketplace UI / built-in).
+- `app-config.local.yaml` layers **after** preset config and wins; `app.title`
+  is baked at build time and cannot be overridden at runtime.
+- Migration: `VEECODE_PROFILE=x` → `VEECODE_PRESETS=…`; image name changes
+  (not a tag bump); `GITHUB_TOKEN` → `GITHUB_PAT`; no automated migration tool.
+
+### Per-page scope
+
+Full classification: **22 HIGH / ~18 LOW / ~52 NONE** across 92 files.
+`platform/` (16) is untouched. `vkdr/` and `admin-ui/` get small edits (profile
+→ preset wording, the `vkdr devportal install` wrapper, admin-ui plugin UI).
+V1 keeps all current content frozen. The full list drives the implementation
+plan, sequenced by section: installation → plugins → customization →
+integrations/mcp → admin-ui/vkdr edits.
+
+### Execution principle
+
+Adapt, don't copy. Factual content (preset tables, env vars, boot sequence,
+exit codes) transfers directly; voice and Docusaurus conventions are ours.
+Every claim is verifiable against `/tmp/devportal-platform`. No invented preset,
+env var, flag, command, or path.
 
 ## Components touched
 
@@ -151,15 +200,15 @@ the implementation plan. V1 keeps all current content frozen.
 - `mcp-server/README.md`, `devportal/integrations/mcp.md` — document `--v1`.
 - ~22 HIGH + ~18 LOW DevPortal pages — V2 content rewrite.
 
-## Open question (to resolve before the cut)
+## Resolved decisions
 
-The survey found the docs are **already partway migrated**: `docker-local/`
-already uses the single image + compose + `app-config.local.yaml`, but still on
-`VEECODE_PROFILE` (singular) and `dynamic-plugins.yaml`. So `devportal/` today is
-a **hybrid**, not pure V1. Freezing it as-is may misrepresent what the POC teams
-actually run. Before running `docs:version v1`, confirm whether the current tree
-should be restored to a faithful V1 state first, or whether the hybrid is an
-acceptable "V1" snapshot.
+- **Hybrid-as-V1 (accepted).** The current `devportal/` tree is partway migrated
+  (compose + `app-config.local.yaml` but still `VEECODE_PROFILE` + legacy
+  `dynamic-plugins.yaml`). It is **not** worth restoring a "pure" V1 first — we
+  freeze the current tree as `version-v1` as-is.
+- **Image name = `veecode/devportal:2.0.0`** provisionally (see Content design).
+- **MCP package name** confirmed at MCP-edit time against npm
+  (`@veecode/docs-mcp` vs `@veecode-platform/docs-mcp` diverge today).
 
 ## Out of scope
 
