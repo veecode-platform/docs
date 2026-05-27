@@ -4,6 +4,18 @@ sidebar_label: GitLab Auth & Integration
 title: GitLab Authentication & Integration
 ---
 
+In V2, GitLab authentication is not a separate preset from GitLab SCM integration — both are provided by the single `gitlab` preset. This page documents the authentication-specific steps and configuration details. For the full activation guide including SCM and org sync, see [GitLab Auth & Integrations](./gitlab.md).
+
+## How GitLab auth works in V2
+
+The `gitlab` preset configures:
+
+- **OAuth 2.0 sign-in** via a GitLab OAuth application (`GITLAB_AUTH_CLIENT_ID` / `GITLAB_AUTH_CLIENT_SECRET`)
+- **Org sync** via the `catalog-backend-module-gitlab` provider, which ingests GitLab groups and users as Backstage `Group`/`User` entities
+- **SCM integration** via `GITLAB_TOKEN` (Personal or Group Access Token) used for catalog discovery and scaffolder operations
+
+All three are part of the same `gitlab` preset. You cannot activate GitLab auth without also activating the SCM integration and org sync.
+
 ## Prerequisites
 
 1. A GitLab account with owner access to your group or instance.
@@ -26,41 +38,53 @@ The backend integration requires a token with `read_api` scope so the catalog an
 2. Select scopes: `read_api` (and `write_repository` if scaffolder needs to create branches/PRs).
 3. Save the token — you will not see it again.
 
-## Step 3: Configure auth and integration
+## Step 3: Activate the preset
 
-Add the following to your `app-config.yaml` (or pass via environment variables):
+```sh
+VEECODE_PRESETS=recommended,gitlab
+GITLAB_HOST=gitlab.com
+GITLAB_AUTH_CLIENT_ID=<app-id>
+GITLAB_AUTH_CLIENT_SECRET=<app-secret>
+GITLAB_TOKEN=<access-token>
+GITLAB_GROUP=<root-group>
+```
+
+## The generated auth configuration
+
+At boot, the `gitlab` preset writes the following auth block:
 
 ```yaml
 signInPage: gitlab
 
+platform:
+  guest:
+    enabled: false
+  signInProviders:
+    - gitlab
+
 auth:
-  environment: development
+  environment: production
   providers:
     gitlab:
-      development:
+      production:
         clientId: ${GITLAB_AUTH_CLIENT_ID}
         clientSecret: ${GITLAB_AUTH_CLIENT_SECRET}
-        # For self-hosted GitLab, uncomment and set your instance URL:
+        # For self-hosted GitLab uncomment:
         # audience: https://${GITLAB_HOST}
         signIn:
           resolvers:
             - resolver: usernameMatchingUserEntityName
             - resolver: emailMatchingUserEntityProfileEmail
             - resolver: emailLocalPartMatchingUserEntityName
-
-integrations:
-  gitlab:
-    - host: ${GITLAB_HOST}
-      token: ${GITLAB_TOKEN}
 ```
 
 :::note
-The `audience` field is only required for self-hosted instances. For `gitlab.com`, it can be omitted.
+The `audience` field is only required for self-hosted instances. For `gitlab.com`, it can be omitted. To override this for a self-hosted instance, add an `app-config.local.yaml` that sets `auth.providers.gitlab.production.audience`.
 :::
 
-## Step 4: Configure org sync (catalog provider)
+## Org sync
 
-Org sync ingests groups and users from a root GitLab group into the Backstage catalog.
+Org sync ingests groups and users from a root GitLab group into the Backstage catalog. The `catalog-backend-module-gitlab` provider is static (compiled into the backend) and is configured by the preset's `appConfig` block:
 
 ```yaml
 catalog:
@@ -84,25 +108,8 @@ catalog:
         rules:
           - allow: [Group, User]
         schedule:
-          frequency:
-            minutes: 5
-          timeout:
-            minutes: 3
-```
-
-## Using the `gitlab` profile
-
-Set `VEECODE_PROFILE=gitlab` and provide the required env vars. DevPortal loads the pre-bundled `app-config.gitlab.yaml` which includes all sections above.
-
-```bash
-docker run -p 7007:7007 \
-  -e VEECODE_PROFILE=gitlab \
-  -e GITLAB_HOST=gitlab.com \
-  -e GITLAB_AUTH_CLIENT_ID=<app-id> \
-  -e GITLAB_AUTH_CLIENT_SECRET=<app-secret> \
-  -e GITLAB_TOKEN=<access-token> \
-  -e GITLAB_GROUP=<root-group> \
-  veecode/devportal:latest
+          frequency: { minutes: 5 }
+          timeout: { minutes: 3 }
 ```
 
 ## Troubleshooting
@@ -111,6 +118,7 @@ docker run -p 7007:7007 \
 - **Sign-in resolvers failing**: Ensure users in the catalog have `spec.profile.email` or `metadata.name` matching their GitLab username. The three resolvers are tried in order; the first match wins.
 - **Catalog not ingesting repos**: Verify the `GITLAB_TOKEN` has `read_api` scope and is scoped to the correct group.
 - **Self-hosted instance**: Set `audience: https://${GITLAB_HOST}` in the auth provider config. Without it, token validation may fail.
+- **Exclusive-group conflict**: `gitlab` belongs to the `identity` group. Combining it with `github-auth`, `azure-auth`, `keycloak`, or `ldap` will fail at boot.
 
 ## References
 

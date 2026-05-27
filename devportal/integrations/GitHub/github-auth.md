@@ -18,7 +18,14 @@ DO NOT ERASE THIS BLOCK COMMENT
 
 ## GitHub Authentication Provider
 
-The GitHub Authentication Provider enables users to sign in to VeeCode DevPortal using their GitHub accounts. This integration provides a secure and familiar authentication experience leveraging OAuth 2.0.
+The GitHub Authentication Provider enables users to sign in to VeeCode DevPortal using their GitHub accounts. In V2, it is activated by the `github-auth` preset. This preset belongs to the exclusive `identity` group — only one identity preset can be active per deployment.
+
+The `github-auth` preset configures:
+
+- GitHub OAuth sign-in (OAuth App credentials)
+- The `githubOrg` catalog provider, which syncs org members and teams as `User`/`Group` catalog entities
+- Sign-in resolvers that map authenticated GitHub identities to catalog User entities
+- Disables the guest fallback so the login screen presents GitHub OAuth
 
 import styles from '../../style.module.css';
 
@@ -33,66 +40,75 @@ import styles from '../../style.module.css';
   </figcaption>
 </figure>
 
-## Authentication Options
-
-VeeCode DevPortal supports two methods for GitHub authentication: **GitHub App** and **GitHub OAuth App**.
-
-- Both are OAuth 2.0 based authentication and SSO
-- Both have better rate limits against GitHub APIs (GitHub App even better)
-- Both allow organization and team-based access control (see integrations)
-
 ## Prerequisites
 
-1. A GitHub account with admin access to your organization
-2. Choose what authentication method you want to use:
-   - OAuth App (simpler)
-   - GitHub App (better rate limits and organization access)
+1. A GitHub account with admin access to your organization.
+2. A GitHub OAuth App (not a GitHub App) for sign-in.
 
-## Option A: OAuth App Authentication (recommended)
-
-A **GitHub OAuth App** provides a simpler setup:
-
-- Users complete a classic OAuth flow
-- They receive user tokens with the requested scopes (e.g., `read:user`, `user:email`)
-- Scopes are good enough for authentication
-- Rate limits are also good
-
-<figure className={styles['image-container']}>
-  <img 
-    src="/img/github/consent-screen.png" 
-    alt="GitHub Login"
-    style={{ display: 'block', maxWidth: '100%', height: 'auto' }}
-  />
-  <figcaption className={styles['caption']}>
-    GitHub Login (OAuth consent screen)
-  </figcaption>
-</figure>
-
-### Step 1: Create an OAuth App
+## Step 1: Create a GitHub OAuth App
 
 1. Go to [GitHub Developer Settings](https://github.com/settings/developers)
-2. Click on "New OAuth App"
+2. Click **New OAuth App**
 3. Fill in the application details:
    - **Application name**: VeeCode DevPortal
-   - **Homepage URL**: `https://your-veecode-instance.com` (local setup is usually "http://localhost:7777")
-   - **Authorization callback URL**: `https://your-veecode-instance.com/api/auth/github/handler/frame`
-4. Click "Register application"
-5. Note down the **Client ID** and generate a new **Client Secret**
+   - **Homepage URL**: `https://your-devportal-instance.com` (local setup is usually `http://localhost:7007`)
+   - **Authorization callback URL**: `https://your-devportal-instance.com/api/auth/github/handler/frame`
+4. Click **Register application**
+5. Note the **Client ID** and generate a new **Client Secret**
 
 :::note
-This can be done at organization level (recommended) or at user level (not recommended). Just use the "Developer Settings" link at organization settings instead.
+This can be done at organization level (recommended) or at user level. Use **Settings → Developer settings** at the organization level for an org-scoped OAuth App.
 :::
 
-### Step 2. Configure OAuth App Authentication
+## Step 2: Create a Personal Access Token
 
-Add the following configuration to your `app-config.yaml`:
+The `github-auth` preset also requires a PAT to power the `githubOrg` catalog provider, which reads org members and team membership.
+
+Create a classic PAT (or fine-grained PAT scoped to your org) with at least:
+- `read:org` — to read org members and teams
+
+See the [GitHub Tokens](./github-tokens.md) page for detailed steps.
+
+## Step 3: Activate the preset
+
+Set the following environment variables and include `github-auth` in `VEECODE_PRESETS`:
+
+```sh
+VEECODE_PRESETS=recommended,github-auth
+GITHUB_PAT=ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+GITHUB_ORG=my-org
+GITHUB_AUTH_CLIENT_ID=Iv1.abcdef0123456789
+GITHUB_AUTH_CLIENT_SECRET=github-oauth-secret
+```
+
+For a full GitHub stack (auth + SCM), also add `github`:
+
+```sh
+VEECODE_PRESETS=recommended,github,github-auth
+GITHUB_PAT=ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+GITHUB_ORG=my-org
+GITHUB_AUTH_CLIENT_ID=Iv1.abcdef0123456789
+GITHUB_AUTH_CLIENT_SECRET=github-oauth-secret
+```
+
+## What the preset configures
+
+The `github-auth` preset (`presets/github-auth.yaml`) produces the following `app-config` block at boot:
 
 ```yaml
+signInPage: github
+
+platform:
+  guest:
+    enabled: false
+  signInProviders:
+    - github
+
 auth:
-  environment: development
+  environment: production
   providers:
     github:
-      development:
+      production:
         clientId: ${GITHUB_AUTH_CLIENT_ID}
         clientSecret: ${GITHUB_AUTH_CLIENT_SECRET}
         signIn:
@@ -100,94 +116,52 @@ auth:
             - resolver: usernameMatchingUserEntityName
             - resolver: emailMatchingUserEntityProfileEmail
             - resolver: emailLocalPartMatchingUserEntityName
-        scope:
-          - read:user
-          - user:email
-          - read:org
-```
 
-:::tip
-If you use the `github` profile, it will configure both authentication and integrations for you using a bundled `app-config.yaml` file.
-:::
+integrations:
+  github:
+    - host: github.com
+      token: ${GITHUB_PAT}
 
-## Option B: GitHub App Authentication
-
-A **GitHub App** provides enhanced security, better rate limits, and more granular permissions. When users sign in via a GitHub App:
-
-- Users complete an OAuth flow through the GitHub App
-- They receive short-lived user access tokens scoped by the App's permissions
-- The App can be installed organization-wide with fine-grained repository access
-- Rate limits are significantly higher
-
-:::important
-In production scenarios you will most likely use GitHub Apps for integrations and an OAuth App for authentication. Integrations not only need better rate limits but also organization access that you usually don't want in a consent screen at all.
-:::
-
-### Step 1: Create a GitHub App
-
-To use GitHub App authentication:
-
-1. Go to [GitHub Developer Settings](https://github.com/settings/developers)
-2. Click on "New Github App"
-3. Fill in the application details:
-   - **GitHub App name**: VeeCode DevPortal Auth
-   - **Homepage URL**: `https://your-veecode-instance.com`
-   - **Authorization callback URL**: `https://your-veecode-instance.com/api/auth/github/handler/frame`
-   - **Permissions**:
-     - Account Permissions
-       - Email addresses: Read-only
-   - **Where can this GitHub App be installed**: only your account or any organization
-4. Click "Register application"
-5. Create a GitHub App in your organization
-6. Install the app to your organization
-
-### Step 2. Configure GitHub App Authentication
-
-Add the following configuration to your `app-config.yaml`:
-
-```yaml
-auth:
-  environment: development
+catalog:
   providers:
-    github:
-      development:
-        clientId: ${GITHUB_AUTH_CLIENT_ID}
-        clientSecret: ${GITHUB_AUTH_CLIENT_SECRET}
-        signIn:
-          resolvers:
-            - resolver: usernameMatchingUserEntityName
-            - resolver: emailMatchingUserEntityProfileEmail
-            - resolver: emailLocalPartMatchingUserEntityName
-        scope:
-          - read:user
-          - user:email
-          - read:org
+    githubOrg:
+      default:
+        id: production
+        githubUrl: https://github.com
+        orgs:
+          - ${GITHUB_ORG}
+        schedule:
+          frequency: { minutes: 30 }
+          timeout: { minutes: 3 }
 ```
 
-## About VeeCode Profiles
+## Sign-in resolvers
 
-We created VeeCode Profiles as a simple way to configure authentication and integrations for your VeeCode DevPortal instance. A profile relies on bundled configuration snippets that are activated by environment variables. Once you have the credentials and tokens you can use a profile to configure your DevPortal instance without the need to deal with the `app-config.yaml` configuration file syntax.
+The three resolvers are tried in order; the first match establishes the Backstage identity:
 
-You will find more information about VeeCode Profiles in:
+| Resolver | What it matches |
+|---|---|
+| `usernameMatchingUserEntityName` | GitHub username → `metadata.name` on the User entity |
+| `emailMatchingUserEntityProfileEmail` | GitHub primary email → `spec.profile.email` |
+| `emailLocalPartMatchingUserEntityName` | Email local part → `metadata.name` |
 
-- [Quick Setup with Profiles](/devportal/installation-guide/docker-local/profiles)
+The `usernameMatchingUserEntityName` resolver requires the org sync to have run at least once so that `User` entities exist in the catalog.
 
 ## Troubleshooting
 
-- **Callback URL Mismatch**: Ensure the callback URL in your GitHub OAuth app matches exactly with your VeeCode DevPortal URL.
-- **Insufficient Permissions**: Verify that the OAuth app has the required scopes (`read:user`, `user:email`, `read:org`). Missing `read:org` prevents org/team resolution.
-- **Rate Limiting**: Consider using GitHub App authentication for higher rate limits.
+- **Callback URL mismatch**: Ensure the callback URL in your GitHub OAuth App matches exactly `https://<your-instance>/api/auth/github/handler/frame`.
+- **Sign-in resolvers all fail**: Wait for the first org sync to complete, or ensure the User entity's `metadata.name` matches the GitHub username.
+- **Missing `read:org` scope on PAT**: The `githubOrg` provider needs this scope to read organization members and teams. Without it, no `User`/`Group` entities are ingested and the sign-in resolvers that rely on them will fail.
+- **Exclusive-group conflict at boot**: You have more than one identity preset in `VEECODE_PRESETS`. Keep only `github-auth` or switch to a different identity preset.
 
-## Security Considerations
+## Security considerations
 
-- Never commit client secrets or private keys to version control
-- Use environment variables for sensitive configuration
-- Regularly rotate your client secrets and private keys
-- Enable 2FA for your GitHub organization
+- Never commit client secrets or PATs to version control.
+- Use environment variables or a secret management system (Vault, AWS Secrets Manager, etc.).
+- Regularly rotate your OAuth client secret.
 
 ## References
 
 - [Backstage GitHub Auth Provider Docs](https://backstage.io/docs/auth/github/provider/)
-- [BackstageGitHub Authentication Provider 'README'](https://github.com/backstage/backstage/blob/master/docs/auth/github/provider.md)
-- [GitHub OAuth Documentation](https://docs.github.com/en/developers/apps/building-oauth-apps/authorizing-oauth-apps)
-- [GitHub App Authentication](https://docs.github.com/en/developers/apps/getting-started-with-apps/about-apps)
+- [Backstage GitHub Authentication Provider README](https://github.com/backstage/backstage/blob/master/docs/auth/github/provider.md)
+- [GitHub OAuth Applications Documentation](https://docs.github.com/en/developers/apps/building-oauth-apps/authorizing-oauth-apps)

@@ -44,37 +44,42 @@ After connecting, the card shows:
 **Disabling AI Chat only** (without disconnecting MCP):
 Use the switch on the connected card. This removes `mcp-chat-backend`, `mcp-chat`, the `mcpChat:` block, and the LLM API key — without affecting the MCP server or external clients.
 
-### Self-hosted (dynamic plugin config)
+### Self-hosted (preset activation)
 
-Add the following to your `dynamic-plugins.yaml`:
+Activate the `mcp` preset (and optionally `mcp-chat`) via `VEECODE_PRESETS`:
 
-```yaml
-plugins:
-  # MCP Actions Backend — exposes Backstage actions as MCP tools
-  - package: oci://quay.io/veecode/backstage:bs_1.49.4!backstage-plugin-mcp-actions-backend
-    disabled: false
-    pluginConfig:
-      backend:
-        actions:
-          pluginSources:
-            - mcp-actions
-            - software-catalog-mcp-extras
-            - techdocs-mcp-extras
-            - scaffolder-mcp-extras
-            - catalog
-            - scaffolder
+```sh
+# MCP server only — no LLM API key required
+VEECODE_PRESETS=recommended,mcp
 
-  # MCP Tool Plugins — must be enabled individually so the plugin packages are loaded
-  - package: oci://quay.io/veecode/mcp-integrations:bs_1.49.4!red-hat-developer-hub-backstage-plugin-software-catalog-mcp-extras
-    disabled: false
-  - package: oci://quay.io/veecode/mcp-integrations:bs_1.49.4!red-hat-developer-hub-backstage-plugin-techdocs-mcp-extras
-    disabled: false
-  - package: oci://quay.io/veecode/mcp-integrations:bs_1.49.4!red-hat-developer-hub-backstage-plugin-scaffolder-mcp-extras
-    disabled: false
+# MCP server + in-portal AI Chat
+VEECODE_PRESETS=recommended,mcp,mcp-chat
+MCP_CHAT_PROVIDER=openai
+MCP_CHAT_API_KEY=sk-xxxx
+MCP_CHAT_MODEL=gpt-5.4
 ```
 
+The `mcp` preset (`presets/mcp.yaml`) has no required variables — the OAuth/DCR configuration is already baked into the base image's `app-config.production.yaml`. It enables the following plugins at boot:
+
+- `backstage-plugin-mcp-actions-backend` (exposes `/api/mcp-actions/v1`)
+- `red-hat-developer-hub-backstage-plugin-software-catalog-mcp-extras`
+- `red-hat-developer-hub-backstage-plugin-techdocs-mcp-extras`
+- `red-hat-developer-hub-backstage-plugin-scaffolder-mcp-extras`
+
+The `mcp-chat` preset (`presets/mcp-chat.yaml`) requires:
+
+| Variable | Description |
+|---|---|
+| `MCP_CHAT_PROVIDER` | LLM provider ID: `openai` or `claude` |
+| `MCP_CHAT_API_KEY` | API key for the selected provider |
+| `MCP_CHAT_MODEL` | Model name (e.g., `gpt-5.4` for openai, `claude-sonnet-4-6-latest` for claude) |
+
 :::warning
-Do not activate `mcp-actions-backend` via both a static import in `src/index.ts` **and** `dynamic-plugins.yaml`. Duplicate registration causes a boot failure: `Plugin 'mcp-actions' is already registered`.
+`mcp-chat` talks loopback to `mcp-actions-backend`. Without the `mcp` preset, the MCP backend does not mount and every tool invocation in chat will fail. Always compose as `mcp,mcp-chat`.
+:::
+
+:::warning
+Do not also activate `mcp-actions-backend` via a raw `dynamic-plugins.yaml` mount when using the `mcp` preset. Duplicate registration causes a boot failure: `Plugin 'mcp-actions' is already registered`.
 :::
 
 **Available toolsets:**
@@ -90,7 +95,7 @@ Do not activate `mcp-actions-backend` via both a static import in `src/index.ts`
 
 ### OAuth / DCR configuration (self-hosted)
 
-External clients authenticate via OAuth 2.1 with Dynamic Client Registration (DCR). Required app-config:
+External clients authenticate via OAuth 2.1 with Dynamic Client Registration (DCR). This configuration is already baked into the base image when using the V2 unified image. For reference, the relevant app-config blocks are:
 
 ```yaml
 auth:

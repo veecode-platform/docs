@@ -4,25 +4,47 @@ sidebar_label: Auth & Integrations
 title: Auth & Integrations
 ---
 
-An usually confusing topic in Backstage world are its backend integrations and authentication mechanisms. This section explains a bit of this and prepares you to understand common scenarios and to read deeper documentation.
+An usually confusing topic in Backstage world are its backend integrations and authentication mechanisms. This section explains how V2 DevPortal activates and configures each provider, and prepares you to read the per-provider pages.
 
-## Supported providers
+## How integrations are activated in V2
 
-VeeCode DevPortal ships pre-configured profiles for the following identity and SCM providers. Each provider page covers the required env vars, auth config, sign-in resolvers, org-sync config, and a minimal deployment example.
+In V2, every integration is activated by adding a **preset** name to the `VEECODE_PRESETS` environment variable. A preset is a YAML file (`presets/<name>.yaml`) that carries three things: the env vars the operator must supply, the dynamic plugins the integration needs (as OCI references), and the `app-config` block those plugins expect.
 
-| Provider | Profile | Auth type | Org sync |
-|---|---|---|---|
-| [GitHub](./GitHub/github.md) | `github` | OAuth 2.0 (OAuth App or GitHub App) | GitHub Org / Teams |
-| [GitHub PAT](./GitHub/github-integrations.md) | `github-pat` | Guest (no auth) | GitHub Org catalog sync only |
-| [GitLab](./GitLab/gitlab.md) | `gitlab` | OAuth 2.0 | GitLab Groups |
-| [Azure / Microsoft](./Azure/azure.md) | `azure` | Microsoft OIDC | Microsoft Graph (Azure AD) |
-| [Keycloak](./Keycloak/keycloak-auth.md) | `keycloak` | OIDC | Keycloak Realm |
-| [LDAP / Active Directory](./LDAP/ldap.md) | `ldap` / `ldap-ad` | LDAP bind | LDAP org sync |
-| [MCP (AI Tooling)](./mcp.md) | any | OAuth 2.1 + DCR | n/a |
+```sh
+VEECODE_PRESETS=recommended,github,github-auth
+```
 
-## Why should I read this?
+The entrypoint validates all required variables across all selected presets at startup. If any are missing, the process exits with code 78 and lists every missing variable before the backend boots.
 
-Even if you are using **VeeCode Profiles** to simplify your setup you still need to create tokens and credentials for authentication and integrations. DevPortal cannot do this for you and there are a few decisions you must take. This document will help you understand the options and make the right choices.
+See [Presets](/devportal/concepts/presets) for how composition and layering work.
+
+## SCM vs identity presets
+
+DevPortal splits **source-control** (SCM) capabilities from **identity** (who can sign in) into separate presets. This lets you mix and match — for example, GitHub repositories with Keycloak sign-in, or Azure DevOps repos with GitHub OAuth.
+
+| Axis | Presets | What they configure |
+|---|---|---|
+| SCM / backend | `github`, `azure` | Catalog discovery, scaffolder, CI/CD UI tabs, integration token |
+| Identity | `github-auth`, `azure-auth`, `gitlab`, `keycloak`, `ldap`, `ldap-ad` | OAuth/OIDC/LDAP sign-in + org sync (Users + Groups in the catalog) |
+
+:::important
+**The `identity` group is exclusive**: you can only activate one identity preset per deployment. Selecting two (e.g., `github-auth,keycloak`) will fail at boot with an exclusive-group conflict error. The presets in the identity group are: `github-auth`, `gitlab`, `azure-auth`, `keycloak`, `ldap`. (`ldap-ad` is an override layer that composes with `ldap`, not a standalone identity choice.)
+:::
+
+## Provider overview
+
+| Provider | SCM preset | Identity preset | Auth type | Org sync |
+|---|---|---|---|---|
+| [GitHub](./GitHub/github.md) | `github` | `github-auth` | OAuth 2.0 (OAuth App) | GitHub Org / Teams |
+| [GitLab](./GitLab/gitlab.md) | — | `gitlab` | OAuth 2.0 | GitLab Groups |
+| [Azure / Microsoft](./Azure/azure.md) | `azure` | `azure-auth` | Microsoft OIDC (Entra ID) | Microsoft Graph |
+| [Keycloak](./Keycloak/keycloak-auth.md) | — | `keycloak` | OIDC | Keycloak Realm |
+| [LDAP / Active Directory](./LDAP/ldap.md) | — | `ldap` / `ldap-ad` | LDAP bind | LDAP org sync |
+| [MCP (AI Tooling)](./mcp.md) | — | — | OAuth 2.1 + DCR | n/a |
+
+:::note
+GitLab is a single preset (`gitlab`) that covers both SCM and identity. There is no separate `gitlab-auth` preset — the OAuth sign-in and catalog discovery are wired together.
+:::
 
 ## Authentication overview
 
@@ -56,19 +78,19 @@ sequenceDiagram
 	BE-->>FE: Session/identity established
 ```
 
-To enable this, you must register an OAuth application on the target platform (e.g., create an OAuth App (or GitHub App) on GitHub, or an Application on GitLab) and generate credentials such as a `clientId` and `clientSecret`. These values are then configured in Backstage (usually in your `app-config.yaml`) for the corresponding auth provider, along with the correct callback/redirect URL expected by your Backstage instance.
+To enable this, you must register an OAuth application on the target platform (e.g., create an OAuth App on GitHub, or an Application on GitLab) and generate credentials such as a `clientId` and `clientSecret`. These values are then supplied as environment variables consumed by the identity preset.
 
 :::note
-The LDAP auth flow is different, as it typically involves direct communication between the Backstage backend and the LDAP server, without redirects. It is actually kinda simpler and yet uglier and unsafe, but some customers ask for it anyway.
+The LDAP auth flow is different: the Backstage backend binds directly to the LDAP server using an admin credential, then validates user credentials by attempting a bind as the authenticating user. There is no redirect flow.
 :::
 
 ## Integrations overview
 
-In Backstage, an **integration** is the configuration that lets the backend (and sometimes specific plugins) talk to external systems like source control providers (GitHub/GitLab/Bitbucket), artifact registries, CI/CD systems, cloud APIs, etc.
+In Backstage, an **integration** is the configuration that lets the backend (and sometimes specific plugins) talk to external systems like source control providers (GitHub/GitLab/Azure DevOps), artifact registries, CI/CD systems, cloud APIs, etc.
 
 Most integrations are configured in `app-config.yaml` (or environment variables) and then reused by multiple plugins. For example, the catalog and scaffolder can use SCM integrations to read `catalog-info.yaml`, fetch templates, open pull requests, or query repository metadata.
 
-Credential-wise, integrations usually fall into one of these simple patterns:
+Credential-wise, integrations usually fall into one of these patterns:
 
 - **OAuth application credentials** (for example `clientId` / `clientSecret`), commonly used when a plugin needs OAuth flows or token exchange.
 - **Personal Access Tokens (PATs) or similar static tokens**, commonly used for server-to-server API calls.
@@ -82,21 +104,20 @@ This matters because many Backstage features assume your organization exists as 
 
 - **Ownership and metadata**: entities often declare owners like `spec.owner: group:default/platform-team`.
 - **Search and discovery**: users and teams can be browsed like any other catalog entity.
-- **Permissions/RBAC**: the permission system can make authorization decisions based on “who is this user?” and “which groups are they in?”.
+- **Permissions/RBAC**: the permission system can make authorization decisions based on "who is this user?" and "which groups are they in?".
 
 In practice, the flow is usually:
 
 - An org data provider syncs users/groups into the catalog.
 - When a user signs in, Backstage maps the authenticated identity to a catalog **User** entity.
-- Permission policies and permission-enabled plugins can then check group membership (from the catalog) to allow/deny actions (for example: “only members of `group:default/platform-team` can register new components”).
-- Permissions can also be based on `roles` assigned to users/groups in the catalog.
+- Permission policies and permission-enabled plugins can then check group membership (from the catalog) to allow/deny actions.
 
 ## Understand the differences
 
 Integrations configuration are different than authentication configuration, even if they sometimes share similar concepts (like OAuth apps or tokens).
 
-- **Authentication** answers “who is the user?” and is mostly about the frontend sign-in flow and establishing a Backstage session.
-- **Integrations** answer “how can Backstage call external APIs?” and are typically used by both **core** and **third-party** plugins to fetch data, read repositories, validate URLs, enrich entities, or trigger actions.
+- **Authentication** answers "who is the user?" and is mostly about the frontend sign-in flow and establishing a Backstage session.
+- **Integrations** answer "how can Backstage call external APIs?" and are typically used by both **core** and **third-party** plugins to fetch data, read repositories, validate URLs, enrich entities, or trigger actions.
 
 :::important
 Integrations are most likely to be reused by both core Backstage and multiple plugins, while authentication is exclusively used by its identity provider.
