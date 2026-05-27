@@ -46,6 +46,29 @@ npm install -g @veecode-platform/docs-mcp
 claude mcp add veecode-docs --scope user -- veecode-docs-mcp
 ```
 
+## Pinning the docs version (V1)
+
+By default the server serves the **current** (V2) documentation. Teams still
+running DevPortal V1 can pin the V1 docs by appending `--v1`:
+
+```bash
+claude mcp add veecode-docs --scope user \
+  -- npx -y @veecode-platform/docs-mcp --v1
+```
+
+Codex CLI (`~/.codex/config.toml`):
+
+```toml
+[mcp_servers.veecode-docs]
+command = "npx"
+args = ["-y", "@veecode-platform/docs-mcp", "--v1"]
+```
+
+A session is bound to one version for its whole lifetime — V1 and V2 are never
+mixed. With `--v1` the server loads the bundled `snapshot-v1.json`, refreshes
+from `https://docs.platform.vee.codes/mcp-snapshot-v1.json`, and caches under a
+separate `v1/` namespace. Omit the flag for the current docs.
+
 ## Tools exposed
 
 | Tool | Purpose |
