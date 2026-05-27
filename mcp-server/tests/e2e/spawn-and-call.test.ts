@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 
@@ -24,6 +26,8 @@ describe("e2e: spawn binary and call tools", () => {
         ...sanitizeEnv(),
         VEECODE_DOCS_MCP_OFFLINE: "1",
         VEECODE_DOCS_MCP_BUNDLED_PATH: fixturePath,
+        // Isolate from any populated developer cache so the bundled fixture is served.
+        VEECODE_DOCS_MCP_CACHE_DIR: mkdtempSync(join(tmpdir(), "veecode-docs-mcp-e2e-")),
       },
     });
     const client = new Client({ name: "e2e", version: "0.0.0" }, { capabilities: {} });

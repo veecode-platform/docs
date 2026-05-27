@@ -10,7 +10,7 @@ const bundledPath = join(here, "..", "fixtures", "snapshot.json");
 
 describe("MCP protocol", () => {
   it("lists all six tools", async () => {
-    const { server, dispose } = await createServer({ bundledPath, offline: true });
+    const { server, dispose } = await createServer({ bundledPath, offline: true, cacheDir: null });
 
     const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
     const client = new Client({ name: "test", version: "0.0.0" }, { capabilities: {} });
@@ -31,7 +31,7 @@ describe("MCP protocol", () => {
   });
 
   it("calls search_docs through the protocol", async () => {
-    const { server, dispose } = await createServer({ bundledPath, offline: true });
+    const { server, dispose } = await createServer({ bundledPath, offline: true, cacheDir: null });
     const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
     const client = new Client({ name: "test", version: "0.0.0" }, { capabilities: {} });
     await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
