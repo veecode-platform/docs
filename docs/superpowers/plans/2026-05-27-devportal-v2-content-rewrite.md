@@ -53,7 +53,7 @@ PR #14 gave the V1 docs a deliberate Information Architecture (folder/URL/sideba
 This is a **docs** plan: each task specifies **disposition / files / source / outline / key facts / verification** rather than full prose (prose is the deliverable produced at execution). Hard rules for every page touched:
 
 - **No invented facts.** Every preset name, env var, command, path, port, exit code, and OCI ref must trace to a cited `codedb` source. Read the source (`presets/<name>.yaml`, `entrypoint.sh`, `dynamic-plugins.default.yaml`) before writing.
-- **Image reference:** use the tag the source `docker-compose.yml` ships. Leave one `<!-- TODO: confirm published image name/tag -->` on the install hub only. Open question still unconfirmed: published name/tag (`veecode/devportal:2.0.0` vs `veecode/devportal-platform`).
+- **Image reference = `veecode/devportal:2.0.0`** — CONFIRMED against the source `docker-compose.yml` (`image: veecode/devportal:2.0.0`). No TODO needed; use this tag verbatim.
 - **Keep Docusaurus conventions:** frontmatter (`sidebar_position`, `title`, `sidebar_label`), `:::note/:::warning` admonitions, relative doc links, fenced code with language tags. Preserve each page's existing frontmatter `sidebar_position` unless the section is re-ordered.
 - **Per-page verification:** the page builds (covered by the phase-level `yarn build`), internal links resolve, and every command/var/preset on the page appears in its cited source.
 
@@ -87,8 +87,8 @@ Legend: **KEEP** / **REWRITE** / **RENAME** / **REMOVE** / **FLAG** (verify firs
 | `docker-local/custom-config.md` | REWRITE | `app-config.local.yaml` layering for compose; drop profile-merge wording, point at `concepts/configuration-hierarchy`. (Task 2.4.) |
 | `docker-local/custom-plugins.md` | REWRITE | Enable via presets / mounted `dynamic-plugins.yaml` / marketplace. (Task 2.4.) |
 | `docker-local/custom-catalog.md` | REWRITE-light | Catalog YAML + bind-mount survives; drop any profile framing. (Task 2.4.) |
-| `understand-chart.md` | FLAG → likely REMOVE/RENAME | "Understand the Helm chart." V2 has no first-party Helm chart yet. If confirmed: REMOVE, redirect to a new `architecture.md` (unified image + presets + OCI). **Verify** no chart in V2 before deleting. (Task 2.5.) |
-| `simple-setup/*` (7 pages) | FLAG → likely REMOVE | The `values.yaml`/Helm install flow. If V2 ships no Helm chart, this whole dir's concept is gone → REMOVE, redirect the section root to `docker-local/intro`. **Verify** before deleting; if a chart exists, downgrade to REWRITE. (Task 2.6.) |
+| `understand-chart.md` | REMOVE → redirect | CONFIRMED: V2 ships **no** Helm chart (no `Chart.yaml`/`values.yaml` in devportal-platform; zero "helm" mentions in installing.md/UPGRADING). Delete; create `architecture.md` (unified image + presets + OCI) and redirect to it. (Task 2.5.) |
+| `simple-setup/*` (7 pages) | REMOVE → redirect | CONFIRMED: the `values.yaml`/Helm install flow has no V2 equivalent. Delete the dir; redirect the section root + children to `docker-local/intro`. (Task 2.6.) |
 | `production-setup/*` (plan, production-setup, setup) | REWRITE | Production path becomes plain k8s manifests (Deployment + Service + PVCs for `/app/data` and `/app/dynamic-plugins-root`), presets via env. Source `examples/deploy/k8s.yaml`. Collapse 3 pages if the flow no longer warrants plan/setup split. (Task 2.7.) |
 | `vkdr-local/*` (7 pages) | FLAG → REWRITE-light | Depends on whether VKDR wraps the legacy chart or has a preset path. Update `--profile`→preset wording **only where VKDR exposes it**; if VKDR still targets legacy images, state that explicitly. **Do not invent a compose path.** Flag uncertainty for the user. (Task 2.8.) |
 | `FAQs.md` | KEEP/light | Spot-check for profile/chart mentions. |
@@ -99,7 +99,7 @@ Legend: **KEEP** / **REWRITE** / **RENAME** / **REMOVE** / **FLAG** (verify firs
 |---|---|---|
 | `integrations.md` | REWRITE | Overview reframed around presets (SCM vs identity axis; `github` ≠ `github-auth`; `identity` exclusive group). (Task 3.1.) |
 | `GitHub/*` (github, github-auth, github-integrations, github-tokens) | REWRITE | Keep valid `app-config` snippets; activation via `github`/`github-auth` presets; `VEECODE_PROFILE`→`VEECODE_PRESETS`; env var changes. (Task 3.2.) |
-| `GitLab/*` (gitlab, gitlab-auth) | REWRITE | `gitlab` preset; `GITLAB_*` required vars from `presets/gitlab.yaml`. (Task 3.3.) |
+| `GitLab/*` (gitlab, gitlab-auth) | REWRITE | Single `gitlab` preset — **there is no separate `gitlab-auth` preset** (unlike GitHub/Azure which split SCM vs auth). `GITLAB_*` required vars from `presets/gitlab.yaml`. The V1 `gitlab-auth.md` page may merge into `gitlab.md` or stay as the auth-focused half of the one preset. (Task 3.3.) |
 | `Azure/azure.md` | REWRITE | `azure`/`azure-auth` presets; vars from `presets/azure*.yaml`. (Task 3.4.) |
 | `Keycloak/keycloak-auth.md` | REWRITE | `keycloak` preset (identity group); vars from `presets/keycloak.yaml`. (Task 3.5.) |
 | `LDAP/ldap.md` | REWRITE | `ldap`/`ldap-ad` presets; vars from `presets/ldap*.yaml`. (Task 3.6.) |
@@ -146,14 +146,14 @@ Only RENAME/REMOVE pages need redirects. Add them to the `@docusaurus/plugin-cli
 ### Phase 1 — concepts (presets, layering, dynamic plugins)
 Tasks 1.1 (RENAME configuration-profiles→presets), 1.2 (configuration-hierarchy), 1.3 (dynamic-plugins). These three are the conceptual spine the rest links to — do them first.
 
-**Task 1.1 key facts (verify against `presets/*.yaml`, `docs/topics/presets.md`):** preset = `presets/<name>.yaml` with `requires.variables` + `plugins:` (OCI refs) + `appConfig:`; selected via `VEECODE_PRESETS=a,b,c`; boot validates the **union** of required vars (all missing listed at once → exit 78); deep-merge in preset order, last wins; `identity` is an exclusive group; SCM (`github`) is separate from identity (`github-auth`); `mcp,mcp-chat` is a dependent pair. ~14 shipped presets — render the full table here or in a `shipped-presets` reference, your call at execution.
+**Task 1.1 key facts (verify against `presets/*.yaml`, `docs/topics/presets.md`):** preset = `presets/<name>.yaml` with `requires.variables` + `plugins:` (OCI refs) + `appConfig:`; selected via `VEECODE_PRESETS=a,b,c`; boot validates the **union** of required vars (all missing listed at once → exit 78); deep-merge in preset order, last wins; `identity` is an exclusive group; SCM (`github`) is separate from identity (`github-auth`); `mcp,mcp-chat` is a dependent pair. **15 shipped presets** (confirmed in `presets/`): azure, azure-auth, github, github-auth, gitlab, jenkins, keycloak, kubernetes, ldap, ldap-ad, mcp, mcp-chat, recommended, sonarqube, veecode-theme — render the full table here or in a `shipped-presets` reference, your call at execution.
 
 **Task 1.2 key facts:** precedence chain of `--config` files, last-wins; `${VAR}` / `${VAR:-default}` substitution; `app-config.local.yaml` wins over preset fragments; `app.title` baked at build time, not runtime-overridable (`:::warning`).
 
 **Task 1.3 key facts:** core static plugins always on; optional plugins ship `disabled:true` in `dynamic-plugins.default.yaml`; presets/operator/marketplace flip them; OCI ref shape `oci://${PLUGIN_REGISTRY}/<workspace>:bs_${BACKSTAGE_VERSION}!<selector>` (`PLUGIN_REGISTRY` default `quay.io/veecode`); distribution modes (OCI pull / mirror / air-gapped).
 
 ### Phase 2 — installation guide
-Tasks 2.1–2.9 per the disposition table. **Gate the two FLAG decisions first:** before Task 2.5/2.6, verify against codedb whether V2 ships a Helm chart. If no chart → REMOVE `understand-chart.md` and `simple-setup/` with redirects; if a chart exists → downgrade both to REWRITE and tell the user the assumption changed. Task 2.8 (vkdr) similarly: confirm VKDR's devportal install path before editing; flag uncertainty rather than inventing.
+Tasks 2.1–2.9 per the disposition table. The Helm-chart FLAG is **resolved**: V2 ships no chart, so `understand-chart.md` and `simple-setup/` are REMOVE+redirect (Tasks 2.5/2.6). Production path = the `examples/deploy/k8s.yaml` manifests (Task 2.7). Task 2.8 (vkdr) still needs verification: confirm VKDR's devportal install path before editing; flag uncertainty rather than inventing.
 
 ### Phase 3 — integrations
 Tasks 3.1–3.7. Read each `presets/<name>.yaml` for exact required vars before writing the page. The per-preset var sets differ from V1's profile vars (e.g. V1 `github` uses `GITHUB_CLIENT_ID`/`GITHUB_APP_ID`/`GITHUB_PRIVATE_KEY`; confirm the V2 `github`/`github-auth` split in source — do not assume).
@@ -184,5 +184,6 @@ Do **not** run this plan until the V1 cut has frozen the current tree (mechanism
 - **IA decision:** mirror the post-PR #14 tree, rewrite in place; renames/removals allowed with redirects; no forced 1:1 (per user, 2026-05-27).
 - **Coverage:** every current `devportal/` page appears in the disposition table with a disposition; KEEP pages need no task.
 - **Out of scope:** versioning + docs-MCP mechanism (separate plan); `platform/`/`admin-ui/`/`vkdr/` product instances except the explicit vkdr-local install pages; the V1 cut (final, gated).
-- **Flagged for the user, not guessed:** published image name/tag (TODO); whether V2 ships a Helm chart (gates `understand-chart`/`simple-setup` removal); VKDR's devportal install internals (Task 2.8).
+- **Resolved against codedb (2026-05-27):** image = `veecode/devportal:2.0.0`; V2 ships no Helm chart (→ `understand-chart`/`simple-setup` removed); 15 shipped presets; no separate `gitlab-auth` preset.
+- **Still flagged, not guessed:** VKDR's devportal install internals (Task 2.8) — confirm whether VKDR wraps legacy images or has a preset path before editing vkdr-local pages.
 - **Known V1→V2 var diffs to verify, not assume:** V1 `github` profile (`GITHUB_CLIENT_ID`/`GITHUB_APP_ID`/`GITHUB_PRIVATE_KEY`/`GITHUB_ORG`) vs V2 `github` preset; `GITHUB_TOKEN`→`GITHUB_PAT`.
