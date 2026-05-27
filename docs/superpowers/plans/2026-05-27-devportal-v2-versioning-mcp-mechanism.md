@@ -12,19 +12,33 @@
 
 ---
 
-## Coordination risk (read before Task 2)
+## Sequencing decision (READ FIRST) — the V1 cut is the FINAL step
 
 Running `docs:version v1` freezes whatever is in `devportal/` **at execution
 time** into `versioned_docs/version-v1/`. A parallel workstream (branch
 `docs/devportal-accuracy-overhaul`, the `.audit/` effort) is modernizing the
-**V1** content against the real base/-distro repos. If that audit has not landed
-on `main` when the real cut happens, the frozen V1 will be pre-audit. **Do not
-touch the audit branch or `.audit/`.** At integration time, the cut should run
-against the final (post-audit) V1, or the audit diff must be re-applied under
-`versioned_docs/version-v1/`. In this worktree we cut against current `main` to
-validate the mechanism end-to-end; that is acceptable because the cut is
-reproducible and reversible (`git rm -r versioned_docs versioned_sidebars
-versions.json`).
+**V1** content against the real base/-distro repos. Its output *is* the V1 we
+want to freeze. **Do not touch the audit branch or `.audit/`.**
+
+Therefore the order is fixed:
+
+1. **Now (this plan + the content plan):** Tasks 3-6 below (MCP dual-snapshot,
+   `--v1` flag, publish, docs) — all guarded so they are dormant until a cut
+   exists. In parallel, the **V2 content rewrite** (separate plan) rewrites
+   `devportal/` to V2.
+2. **Final phase, gated on the audit landing:** Tasks 1-2 (the `docs:version v1`
+   cut + version labels/dropdown). The audit lands its modernized V1 into
+   `devportal/`, **then** we cut (freezing the corrected V1), **then** the V2
+   content replaces `devportal/` as current.
+
+**Why the cut is last:** the V2 rewrite and the audit both edit the same
+`devportal/` directory. If we cut before the audit lands, the frozen V1 is
+stale; if we cut after the V2 rewrite, the snapshot captures V2 by mistake. The
+only correct order is audit → cut → V2-becomes-current. Execute Tasks 1-2 **after**
+Tasks 3-6 and the content plan, once the audit is merged.
+
+The cut is reproducible and reversible (`git rm -r versioned_docs
+versioned_sidebars versions.json`).
 
 ## File structure
 
@@ -253,7 +267,7 @@ Expected: PASS — both the original describe and the new "with a frozen V1" des
 - [ ] **Step 5: Verify against a real build**
 
 Run: `yarn build && ls build/mcp-snapshot*.json`
-Expected: both `build/mcp-snapshot.json` and `build/mcp-snapshot-v1.json` exist (Task 1 created `versioned_docs/version-v1/`).
+Expected: `build/mcp-snapshot.json` exists. `build/mcp-snapshot-v1.json` is **absent** for now — the V1 cut (Tasks 1-2) is deferred to the final phase, so `versioned_docs/version-v1/` does not exist yet and the `existsSync` guard correctly skips the V1 output. The dual-output logic is already proven by the unit tests in Step 4 (which use a fake `versioned_docs/version-v1/`). Once Tasks 1-2 run at the end, this command will show both files.
 
 - [ ] **Step 6: Commit**
 
