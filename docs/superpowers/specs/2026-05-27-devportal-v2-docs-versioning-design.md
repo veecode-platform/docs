@@ -120,7 +120,8 @@ that happens, migrate to `--docs-version <v>`. Accepted for simplicity now.
 The mechanism above is the easy part. The labor is rewriting the DevPortal
 install/config/plugin docs to the preset model, sourced from the
 **devportal-platform repo**, which carries authoritative docs we adapt from
-(not copy verbatim). Source files (cloned to `/tmp/devportal-platform`):
+(not copy verbatim). Read all source via the `codedb` MCP (project
+`/home/gio/devportal/devportal-platform`). Source files:
 
 - `docs/topics/{installing,presets,configuration-layering,dynamic-plugins,plugin-selection-surfaces,plugin-authoring,plugin-packaging,theming}.md`
 - `docs/reference/{shipped-presets,env-vars,preset-schema,glossary,tech-stack}.md`
@@ -185,8 +186,8 @@ integrations/mcp → admin-ui/vkdr edits.
 
 Adapt, don't copy. Factual content (preset tables, env vars, boot sequence,
 exit codes) transfers directly; voice and Docusaurus conventions are ours.
-Every claim is verifiable against `/tmp/devportal-platform`. No invented preset,
-env var, flag, command, or path.
+Every claim is verifiable against the devportal-platform repo via `codedb`. No
+invented preset, env var, flag, command, or path.
 
 ## Components touched
 
@@ -207,8 +208,21 @@ env var, flag, command, or path.
   `dynamic-plugins.yaml`). It is **not** worth restoring a "pure" V1 first — we
   freeze the current tree as `version-v1` as-is.
 - **Image name = `veecode/devportal:2.0.0`** provisionally (see Content design).
-- **MCP package name** confirmed at MCP-edit time against npm
-  (`@veecode/docs-mcp` vs `@veecode-platform/docs-mcp` diverge today).
+- **MCP package name = `@veecode-platform/docs-mcp`** (verified on npm @0.0.2,
+  bin `veecode-docs-mcp`; `@veecode/docs-mcp` returns 404). On our `main`
+  baseline, `mcp-server/package.json` and `README.md` already use the correct
+  name — the stale `@veecode/docs-mcp` references only exist on `develop`.
+
+## Workspace
+
+- Base branch: **`origin/main`** — per user, "what's written today" lives on
+  `main`. The parallel `.audit/` V1-accuracy work (branch
+  `docs/devportal-accuracy-overhaul`, reconciling V1 docs vs the real base/-distro
+  repos) is a **separate workstream, out of scope, not to be touched**.
+- Working in git worktree `worktree-v2-docs`.
+- **Source of truth for V2 = devportal-platform via the `codedb` MCP**
+  (indexed project `/home/gio/devportal/devportal-platform`) — not grep, not a
+  clone. `devportal-saas` is also indexed (SaaS path reference).
 
 ## Out of scope
 
