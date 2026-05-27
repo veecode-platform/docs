@@ -39,36 +39,54 @@ function loadValidator(schemaPath) {
   return ajv.compile(schema);
 }
 
+async function assembleSnapshot({ version, generatedAt, rootFor }) {
+  const products = [];
+  const allDocs = [];
+  for (const p of PRODUCTS) {
+    const docs = await walkProduct({ productId: p.id, productRoot: rootFor(p.id) });
+    products.push({ ...p, docCount: docs.length });
+    allDocs.push(...docs);
+  }
+  return { version, generatedAt, products, docs: allDocs };
+}
+
+async function validateAndWrite(snapshot, validate, outDir, fileName) {
+  if (!validate(snapshot)) {
+    const msg = JSON.stringify(validate.errors, null, 2);
+    throw new Error(`${fileName} failed schema validation:\n${msg}`);
+  }
+  await fs.mkdir(outDir, { recursive: true });
+  const outFile = path.join(outDir, fileName);
+  await fs.writeFile(outFile, JSON.stringify(snapshot, null, 2) + "\n", "utf8");
+  return outFile;
+}
+
 async function buildSnapshot({ repoRoot, outDir, version, generatedAt, schemaPath }) {
   const finalVersion = version ?? `${deriveVersion()}-${gitShortSha(repoRoot)}`;
   const finalGeneratedAt = generatedAt ?? new Date().toISOString();
   const finalSchemaPath = schemaPath ?? path.join(repoRoot, "schemas", "mcp-snapshot.schema.json");
+  const validate = loadValidator(finalSchemaPath);
 
-  const products = [];
-  const allDocs = [];
-  for (const p of PRODUCTS) {
-    const productRoot = path.join(repoRoot, p.id);
-    const docs = await walkProduct({ productId: p.id, productRoot });
-    products.push({ ...p, docCount: docs.length });
-    allDocs.push(...docs);
-  }
-
-  const snapshot = {
+  // Current = V2: every product walked from its own dir.
+  const current = await assembleSnapshot({
     version: finalVersion,
     generatedAt: finalGeneratedAt,
-    products,
-    docs: allDocs,
-  };
+    rootFor: (id) => path.join(repoRoot, id),
+  });
+  const outFile = await validateAndWrite(current, validate, outDir, "mcp-snapshot.json");
 
-  const validate = loadValidator(finalSchemaPath);
-  if (!validate(snapshot)) {
-    const msg = JSON.stringify(validate.errors, null, 2);
-    throw new Error(`mcp-snapshot.json failed schema validation:\n${msg}`);
+  // Frozen V1 (only if a version was cut): devportal from versioned_docs/version-v1,
+  // the other three products from their current (versionless) dirs.
+  const v1Root = path.join(repoRoot, "versioned_docs", "version-v1");
+  if (fsSync.existsSync(v1Root)) {
+    const v1 = await assembleSnapshot({
+      version: finalVersion,
+      generatedAt: finalGeneratedAt,
+      rootFor: (id) => (id === "devportal" ? v1Root : path.join(repoRoot, id)),
+    });
+    await validateAndWrite(v1, validate, outDir, "mcp-snapshot-v1.json");
   }
 
-  await fs.mkdir(outDir, { recursive: true });
-  const outFile = path.join(outDir, "mcp-snapshot.json");
-  await fs.writeFile(outFile, JSON.stringify(snapshot, null, 2) + "\n", "utf8");
   return outFile;
 }
 
