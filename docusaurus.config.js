@@ -130,6 +130,10 @@ const config = {
             to: '/devportal/installation-guide/production-setup'
           },
           {
+            from: '/devportal/installation-guide/simple-setup',
+            to: '/devportal/installation-guide/production-setup'
+          },
+          {
             from: '/devportal/installation-guide/simple-setup/simple-setup',
             to: '/devportal/installation-guide/production-setup'
           },

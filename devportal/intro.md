@@ -49,7 +49,7 @@ export const Card = ({children, title, link}) => (
 
 <!-- <Card title="📄️ Self-Service Demo" link="self-service-demo/prerequisites">Explore the platform's features through a simple interactive demo.</Card> -->
 
-<Card title="💻 Installation Guide" link="/devportal/installation-guide/simple-setup">Learn how to install the Developer Portal on your own infrastructure.</Card>
+<Card title="💻 Installation Guide" link="/devportal/installation-guide">Learn how to install the Developer Portal on your own infrastructure.</Card>
 
 <Card title="💡 Concepts" link="/devportal/concepts/catalog">Understand the core concepts and terminology related to the Developer Portal.</Card>
 
