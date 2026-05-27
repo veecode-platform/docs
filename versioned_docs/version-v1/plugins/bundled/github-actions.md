@@ -1,0 +1,72 @@
+---
+sidebar_position: 8
+sidebar_label: GitHub Actions
+title: GitHub Actions Plugin
+---
+
+# GitHub Actions Plugin
+
+The GitHub Actions plugin displays GitHub Actions workflow run history in the CI tab of catalog entities. It is the standard Backstage community plugin for GitHub Actions integration.
+
+**Status:** Preloaded in the DevPortal image, **disabled by default**. Enable via `dynamic-plugins.yaml` or Marketplace.
+
+---
+
+## Package
+
+`backstage-community-plugin-github-actions-dynamic`
+
+---
+
+## What it does
+
+- Adds a **CI** tab to entity pages showing recent GitHub Actions workflow runs
+- Displays run status, duration, branch, and commit
+- Links to the GitHub Actions run for logs and details
+- Shows only for entities with the `github.com/project-slug` annotation
+
+---
+
+## Enabling the plugin
+
+```yaml
+plugins:
+  - package: ./dynamic-plugins/dist/backstage-community-plugin-github-actions-dynamic
+    disabled: false
+    pluginConfig:
+      dynamicPlugins:
+        frontend:
+          backstage-community.plugin-github-actions:
+            mountPoints:
+              - mountPoint: entity.page.ci/cards
+                importName: EntityGithubActionsContent
+                config:
+                  layout:
+                    gridColumn: "1 / -1"
+                  if:
+                    allOf:
+                      - isGithubActionsAvailable
+```
+
+---
+
+## Required annotation
+
+```yaml
+metadata:
+  annotations:
+    github.com/project-slug: my-org/my-repo
+```
+
+---
+
+## GitHub integration
+
+The plugin uses `integrations.github` in `app-config.yaml`. Ensure a GitHub token or GitHub App is configured:
+
+```yaml
+integrations:
+  github:
+    - host: github.com
+      token: ${GITHUB_TOKEN}
+```
