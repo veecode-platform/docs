@@ -51,7 +51,7 @@ plugins:
 docker run --rm --name devportal -d \
   -p 7007:7007 \
   -v $(pwd)/dynamic-plugins.yaml:/app/dynamic-plugins.yaml:ro \
-  veecode/devportal:latest
+  veecode/devportal:2.0.0
 ```
 
 ## Mounting with Docker Compose
@@ -61,7 +61,7 @@ Update your `docker-compose.yml`:
 ```yaml
 services:
   devportal:
-    image: veecode/devportal:latest
+    image: veecode/devportal:2.0.0
     ports:
       - "7007:7007"
     volumes:
@@ -85,7 +85,7 @@ plugins:
 
 ## Plugin Configuration and the `includes` Mechanism
 
-Your `dynamic-plugins.yaml` merges with the image defaults via an `includes:` key. The distro's bundled `dynamic-plugins.yaml` already includes `dynamic-plugins.default.yaml` to preserve the image's built-in plugin set. If you mount your own `dynamic-plugins.yaml`, make sure it also includes the defaults so you do not lose the pre-installed plugins:
+Your `dynamic-plugins.yaml` merges with the image defaults via an `includes:` key. The image's `dynamic-plugins.yaml` already includes `dynamic-plugins.default.yaml` to preserve the built-in plugin set. If you mount your own `dynamic-plugins.yaml`, make sure it also includes the defaults so you do not lose the pre-installed plugins:
 
 ```yaml
 includes:
@@ -115,7 +115,7 @@ Dynamic plugins require a special kind of packaging. All DevPortal pre-installed
 
 ## Examples
 
-We have published several dynamic plugins examples on GitHub. Check the [OCI plugins guide](https://github.com/veecode-platform/devportal-distro/blob/main/docs/OCI_PLUGINS.md) in the distro repository for OCI registry usage examples.
+OCI plugins are fetched via `skopeo` at boot. See the [Dynamic Plugins](/devportal/plugins/) section for OCI registry usage examples.
 
 ## Viewing Available Plugins
 

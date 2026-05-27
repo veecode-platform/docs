@@ -23,7 +23,7 @@ You can simply run the following command to start a DevPortal instance locally:
 
 ```bash
 # check for latest release
-docker run --rm --name devportal -d -p 7007:7007 veecode/devportal:latest
+docker run --rm --name devportal -d -p 7007:7007 veecode/devportal:2.0.0
 ```
 
 This will start a DevPortal instance running on [http://localhost:7007](http://localhost:7007).
@@ -47,7 +47,7 @@ Create a `docker-compose.yml` file:
 ```yaml
 services:
   devportal:
-    image: veecode/devportal:latest
+    image: veecode/devportal:2.0.0
     ports:
       - "7007:7007"
 ```
@@ -78,8 +78,8 @@ Points to notice:
 
 - "Guest" authentication enabled as an admin user ("user:default/admin", "group:default/admins", "role:default/admin" with all permissions granted).
 - The catalog will be populated with a built-in catalog for demo purposes (folder "/app/examples" inside the containers).
-- The container loads several config files in a defined precedence order. Your custom file at `/app/app-config.local.yaml` overrides the base and profile defaults. See [Custom Configuration](./custom-config) for the full merge order.
-- There are many plugins already bundled in the container image, ready to be enabled. You can mount the `/app/dynamic-plugins.yaml` plugin file to enable those you want to use.
+- The container loads several config files in a defined precedence order. Your custom file at `/app/app-config.local.yaml` overrides the base and preset defaults. See [Custom Configuration](./custom-config) for the full merge order.
+- Plugins are activated via presets (`VEECODE_PRESETS`) — the image comes with many bundled plugins that presets enable at boot. You can also mount `/app/dynamic-plugins.yaml` to add operator-level plugin overrides on top.
 
 We will talk more about these subjects later on, but understand there are many possible ways to extend and configure DevPortal container without rebuilding it (or making a derived image).
 
@@ -87,7 +87,7 @@ We will talk more about these subjects later on, but understand there are many p
 
 Now that you have DevPortal running, you can customize it:
 
-- **[Quick Setup with Profiles](./profiles)**: Use `VEECODE_PROFILE` for quick GitHub, GitLab, or Azure DevOps integration
+- **[Quick Setup with Presets](./presets)**: Use `VEECODE_PRESETS` to activate GitHub, GitLab, Azure DevOps, and other integrations at boot
 - **[Custom Configuration](./custom-config)**: Mount custom `app-config.local.yaml` to configure integrations, authentication, and more
 - **[Dynamic Plugins](./custom-plugins)**: Enable, disable, and configure plugins using `dynamic-plugins.yaml`
 - **[Custom Catalog](./custom-catalog)**: Add your own components, APIs, and resources to the catalog

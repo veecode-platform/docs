@@ -34,9 +34,7 @@ export const Card = ({children, title, link}) => (
 
 <Card title="VKDR (Local Kubernetes)" link="./vkdr-local/vkdr-setup">Install DevPortal locally on a lightweight Kubernetes cluster using VKDR. Best for reproducing production scenarios.</Card>
 
-<Card title="Simple Setup" link="./simple-setup">Learn how to install a self-hosted Developer Portal with a simple setup (trial, demo or small production environment).</Card>
-
-<Card title="Production Setup" link="./production-setup">Learn how to install a self-hosted and production-ready Developer Portal on your own infrastructure.</Card>
+<Card title="Production Setup (Kubernetes)" link="./production-setup">Deploy DevPortal to a Kubernetes cluster using plain manifests — no Helm chart required.</Card>
 
 <Card title="Customization" link="/devportal/customization">Learn how to customize your Developer Portal.</Card>
 

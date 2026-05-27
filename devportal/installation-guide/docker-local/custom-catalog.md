@@ -72,7 +72,7 @@ docker run --rm --name devportal -d \
   -p 7007:7007 \
   -v $(pwd)/catalog-info.yaml:/app/catalog-info.yaml:ro \
   -v $(pwd)/app-config.local.yaml:/app/app-config.local.yaml:ro \
-  veecode/devportal:latest
+  veecode/devportal:2.0.0
 ```
 
 In your `app-config.local.yaml`:
@@ -91,7 +91,7 @@ Create a `docker-compose.yml`:
 ```yaml
 services:
   devportal:
-    image: veecode/devportal:latest
+    image: veecode/devportal:2.0.0
     ports:
       - "7007:7007"
     volumes:
@@ -113,7 +113,7 @@ Then mount the directory:
 ```yaml
 services:
   devportal:
-    image: veecode/devportal:latest
+    image: veecode/devportal:2.0.0
     ports:
       - "7007:7007"
     volumes:
@@ -189,7 +189,7 @@ catalog:
       target: https://github.com/my-org/my-repo/blob/main/catalog-info.yaml
 ```
 
-To discover catalog files across many repositories automatically, use the GitHub or GitLab catalog provider (configured via a `VEECODE_PROFILE` or in `app-config.local.yaml`). For example, using the GitHub provider in `app-config.local.yaml`:
+To discover catalog files across many repositories automatically, use the GitHub or GitLab catalog provider (activated via the `github` or `gitlab` preset in `VEECODE_PRESETS`, or configured manually in `app-config.local.yaml`). For example, using the GitHub provider in `app-config.local.yaml`:
 
 ```yaml
 catalog:

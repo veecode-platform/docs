@@ -121,6 +121,42 @@ const config = {
             from: '/devportal/concepts/configuration-profiles',
             to: '/devportal/concepts/presets'
           },
+          {
+            from: '/devportal/installation-guide/docker-local/profiles',
+            to: '/devportal/installation-guide/docker-local/presets'
+          },
+          {
+            from: '/devportal/installation-guide/understand-chart',
+            to: '/devportal/installation-guide/production-setup'
+          },
+          {
+            from: '/devportal/installation-guide/simple-setup/simple-setup',
+            to: '/devportal/installation-guide/production-setup'
+          },
+          {
+            from: '/devportal/installation-guide/simple-setup/check-prerequisites',
+            to: '/devportal/installation-guide/production-setup'
+          },
+          {
+            from: '/devportal/installation-guide/simple-setup/choose-template-catalog',
+            to: '/devportal/installation-guide/production-setup'
+          },
+          {
+            from: '/devportal/installation-guide/simple-setup/configure-git-integrations',
+            to: '/devportal/installation-guide/production-setup/setup'
+          },
+          {
+            from: '/devportal/installation-guide/simple-setup/create-values-file',
+            to: '/devportal/installation-guide/production-setup/setup'
+          },
+          {
+            from: '/devportal/installation-guide/simple-setup/deploy-devportal',
+            to: '/devportal/installation-guide/production-setup/setup'
+          },
+          {
+            from: '/devportal/installation-guide/simple-setup/target-organization-group',
+            to: '/devportal/installation-guide/production-setup'
+          },
         ],
       },
     ],

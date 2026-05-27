@@ -4,6 +4,10 @@ sidebar_label: VKDR (Kubernetes)
 title: Install with VKDR (Kubernetes)
 ---
 
+:::note
+VKDR deploys its own DevPortal instance whose version is managed by the VKDR release cycle. To try DevPortal V2 features specifically, use the [Docker local](../docker-local/intro) or [Kubernetes](../production-setup/setup) setup instead.
+:::
+
 **Get your DevPortal instance running in under 5 minutes**
 
 This guide provides a straightforward installation of VeeCode DevPortal in a local, containerized, and isolated environment.

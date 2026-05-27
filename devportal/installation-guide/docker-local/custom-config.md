@@ -16,13 +16,13 @@ All configuration files are loaded and merged in this order (later entries overr
 
 1. `app-config.yaml` — base image defaults
 2. `app-config.production.yaml` — production overrides baked into image
-3. `app-config.{profile}.yaml` — profile-specific config (if `VEECODE_PROFILE` is set)
-4. `app-config.distro.yaml` — distro-level overrides (baked in)
+3. `app-config.distro.yaml` — VeeCode distro defaults (baked in)
+4. `app-config.preset-{name}.yaml` — one file per active preset in `VEECODE_PRESETS` (resolved at boot from `/app/presets/`)
 5. **`app-config.local.yaml`** ← your custom file, mounted at `/app/app-config.local.yaml`
 6. `dynamic-plugins-root/app-config.dynamic-plugins.yaml` — generated at startup by the plugin install script
 7. `app-config.saas.yaml` — SaaS mode only; decoded from `VEECODE_APP_CONFIG`
 
-Your `app-config.local.yaml` (layer 5) wins over the base and profile defaults, but plugin-injected config (layer 6) is loaded after it. If a setting in `local.yaml` seems to be ignored, check whether an enabled plugin's `pluginConfig` block is overriding it.
+Your `app-config.local.yaml` (layer 5) wins over the base and preset defaults, but plugin-injected config (layer 6) is loaded after it. If a setting in `local.yaml` seems to be ignored, check whether an enabled plugin's `pluginConfig` block is overriding it.
 
 ## Creating a Custom Config File
 
@@ -66,7 +66,7 @@ Use the `-v` flag to mount your config file:
 docker run --rm --name devportal -d \
   -p 7007:7007 \
   -v $(pwd)/app-config.local.yaml:/app/app-config.local.yaml:ro \
-  veecode/devportal:latest
+  veecode/devportal:2.0.0
 ```
 
 ## Mounting with Docker Compose
@@ -76,7 +76,7 @@ Update your `docker-compose.yml`:
 ```yaml
 services:
   devportal:
-    image: veecode/devportal:latest
+    image: veecode/devportal:2.0.0
     ports:
       - "7007:7007"
     environment:
@@ -98,7 +98,7 @@ Set `DEVELOPMENT=true` to enable nodemon hot-reload. DevPortal will watch `app-c
 ```yaml
 services:
   devportal:
-    image: veecode/devportal:latest
+    image: veecode/devportal:2.0.0
     ports:
       - "7007:7007"
     environment:
@@ -154,7 +154,7 @@ docker run --rm --name devportal -d \
   -p 7007:7007 \
   -e GITHUB_TOKEN=your_token_here \
   -v $(pwd)/app-config.local.yaml:/app/app-config.local.yaml:ro \
-  veecode/devportal:latest
+  veecode/devportal:2.0.0
 ```
 
 ## Next Steps
