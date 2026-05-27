@@ -39,10 +39,14 @@ jobs:
         run: yarn install --immutable
       - name: Build site (generates snapshot)
         run: yarn build
-      - name: Copy snapshot into mcp-server/bundled/
+      - name: Copy snapshots into mcp-server/bundled/
         run: |
           mkdir -p mcp-server/bundled
           cp build/mcp-snapshot.json mcp-server/bundled/snapshot.json
+          # V1 snapshot only exists once versioned_docs/version-v1 has been cut.
+          if [ -f build/mcp-snapshot-v1.json ]; then
+            cp build/mcp-snapshot-v1.json mcp-server/bundled/snapshot-v1.json
+          fi
       - name: Build MCP server
         run: yarn mcp:build
       - name: MCP CI (typecheck + lint + test)
