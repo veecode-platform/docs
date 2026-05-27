@@ -6,118 +6,139 @@ title: Configuration Hierarchy
 
 # Configuration Hierarchy
 
-DevPortal uses a 7-layer configuration merge system. Each layer overrides values from the layers below it. Understanding this order is essential for diagnosing unexpected behavior and knowing where to put your custom settings.
+Backstage's native config system merges multiple `--config` files in the order
+they are supplied. The merge is **deep** (object keys are combined) and
+**last-wins** on scalar values: if two files set the same leaf key, the later
+file's value survives. DevPortal's entrypoint assembles that `--config` chain
+at boot from base distribution files, preset-generated files, and your
+overrides. Knowing the chain tells you exactly where to put a setting and why it
+takes effect — or why it doesn't.
 
 ---
 
-## The 7 Layers (lowest to highest priority)
+## The precedence chain
 
-```
-1. app-config.yaml                          (base defaults, shipped in the image)
-2. app-config.production.yaml               (production overrides, shipped in the image)
-3. app-config.<profile>.yaml               (auth/identity provider config, loaded when VEECODE_PROFILE is set)
-4. app-config.distro.yaml                  (distro-level additions: marketplace, extra plugins, etc.)
-5. app-config.local.yaml                   (your operator overrides — mounted into the container)
-6. dynamic-plugins-root/app-config.dynamic-plugins.yaml  (generated at startup from your dynamic-plugins.yaml)
-7. app-config.saas.yaml                    (SaaS/platform-managed overrides — last wins; populated from VEECODE_APP_CONFIG)
-```
+Entries are listed lowest to highest priority. A file loaded later wins on any
+overlapping key.
 
-Layer 7 wins. Layer 1 provides the baseline.
-
----
-
-## When to Use Each Layer
-
-| Layer | Who controls it | What to put there |
+| Order | File | When loaded |
 | --- | --- | --- |
-| `app-config.yaml` | Distro (read-only) | Base catalog rules, auth skeleton, RBAC defaults |
-| `app-config.production.yaml` | Distro (read-only) | Production DB, TechDocs publisher, backend URLs |
-| `app-config.<profile>.yaml` | Distro + distro profiles | Auth provider config for your chosen provider |
-| `app-config.distro.yaml` | Distro (read-only) | Extensions marketplace, `pluginsWithPermission`, distro branding tweaks |
-| `app-config.local.yaml` | **You (operator)** | Your `app.branding`, `organization.name`, custom catalog locations, overrides |
-| `app-config.dynamic-plugins.yaml` | Generated at startup | Plugin-specific config injected by enabled plugins |
-| `app-config.saas.yaml` | VeeCode SaaS (if using managed offering) | Platform-level enforced settings |
+| 1 | `app-config.yaml` | Base distribution defaults (shipped in the image) |
+| 2 | `app-config.production.yaml` | Container / production overrides (shipped in the image) |
+| 3 | `app-config.distro.yaml` | VeeCode distro defaults (~10 lines, escape hatch; shipped in the image) |
+| 4 | `app-config.preset-<name>.yaml` | One per selected preset, in `VEECODE_PRESETS` order |
+| 5 | `app-config.local.yaml` | **Your** operator overrides (volume mount or `VEECODE_APP_CONFIG` base64) |
+| 6 | `dynamic-plugins-root/app-config.dynamic-plugins.yaml` | Generated at boot from each enabled plugin's `pluginConfig:` |
+| 7 | `app-config.saas.yaml` | SaaS-time overrides (database URL, etc.) |
 
-**Your primary customization target is `app-config.local.yaml`** (or the equivalent `upstream.backstage.appConfig` in Helm values).
+Files 1–3 are always present inside the image. File 4 is emitted once per
+preset that declares an `appConfig:` block, in `VEECODE_PRESETS` order. Files
+5–7 are conditional — each is skipped if absent.
 
----
+The source of truth is the `EXTRA_ARGS` construction in `entrypoint.sh`.
 
-## Helm vs. Docker Config Paths
-
-### Helm chart
-In the Helm chart, your operator config lives under `upstream.backstage.appConfig` in `values.yaml`:
-
-```yaml
-upstream:
-  backstage:
-    appConfig:
-      app:
-        branding:
-          fullLogo: https://example.com/logo.svg
-      organization:
-        name: My Org
-```
-
-This maps to the `app-config.local.yaml` layer at runtime.
-
-### Docker / distro direct
-For Docker or direct distro deployments, write your overrides in `app-config.local.yaml` at the repo root (top-level keys, no Helm wrapper):
-
-```yaml
-app:
-  branding:
-    fullLogo: https://example.com/logo.svg
-organization:
-  name: My Org
-```
-
-Mount it into the container at `/app/app-config.local.yaml` (for example, a Docker volume mount or a Kubernetes ConfigMap).
-
-:::note `VEECODE_APP_CONFIG` is different
-`VEECODE_APP_CONFIG` is **not** a path to `app-config.local.yaml`. It holds a **base64-encoded app-config document** that the entrypoint decodes into `app-config.saas.yaml` (layer 7, loaded last). It is used by the VeeCode SaaS platform; self-hosted operators normally mount `app-config.local.yaml` instead.
+:::note This is not the V1 seven-layer profile chain
+V2 has no `app-config.<profile>.yaml` layer. The profile slot (old layer 3) is
+replaced by **one file per selected preset** (layer 4 above), assembled in
+`VEECODE_PRESETS` order. See [Presets](./presets.md).
 :::
 
 ---
 
-## Practical Example
+## Where `app-config.local.yaml` sits
 
-To set a custom organization name and branding without touching the distro files:
+`app-config.local.yaml` is your primary customization target. It loads at
+**position 5** — after every preset-generated config, so it **wins over preset
+fragments**. You do not need to replicate anything from earlier files; supply
+only the keys you want to override or add, and Backstage deep-merges the rest.
 
-1. Create (or update) your `app-config.local.yaml`:
-
-```yaml
-app:
-  title: Acme Developer Portal
-  branding:
-    fullLogo: https://cdn.acme.com/portal-logo.svg
-    iconLogo: https://cdn.acme.com/portal-icon.png
-    fullLogoWidth: 160
-    theme:
-      light:
-        variant: "backstage"
-        palette:
-          navigation:
-            background: "#1a1a2e"
-      dark:
-        variant: "backstage"
-        palette:
-          navigation:
-            background: "#1a1a2e"
-organization:
-  name: Acme Corp
+```bash
+docker run \
+  -v $(pwd)/app-config.local.yaml:/app/app-config.local.yaml:ro \
+  veecode/devportal:2.0.0
 ```
 
-2. For Helm: place these keys under `upstream.backstage.appConfig` in `values.yaml`.
-3. For Docker: mount the file into the container at `/app/app-config.local.yaml`.
+### Example: override a single preset value
+
+Suppose the `github` preset enables the GitHub catalog provider at a 30-minute
+refresh frequency and you want 5 minutes. In your `app-config.local.yaml`:
+
+```yaml
+catalog:
+  providers:
+    github:
+      default:
+        schedule:
+          frequency: { minutes: 5 }
+```
+
+Because `app-config.local.yaml` loads after all preset files, your `frequency`
+wins. You do not repeat the rest of the provider block — the deep-merge keeps it.
+
+:::note `VEECODE_APP_CONFIG` is the chart-managed alternative
+In deployments where you cannot mount a file (Helm, ArgoCD), encode your
+operator config as base64 and pass it as `VEECODE_APP_CONFIG`. The entrypoint
+decodes it into `/app/app-config.saas.yaml` (position 7), which wins over
+everything — preset configs, plugin configs, and any mounted `local.yaml`. Use
+it for deployment-specific values (database URLs, ingress hosts, secret
+references) that must not be hardcoded.
+:::
 
 ---
 
-## Debugging Config
+## Variable substitution
 
-If a setting is not taking effect, check:
+Any value in any config file may contain `${VAR}` or `${VAR:-default}`.
+Backstage resolves these from the process environment at startup, **after** all
+`--config` files are merged.
+
+- `${VAR}` — replaced with the env value; if the variable is unset it resolves
+  to an empty string (Backstage does not error).
+- `${VAR:-default}` — replaced with the env value if set; falls back to
+  `default` otherwise.
+
+If a preset declares a variable as `required: true`, the entrypoint validates it
+**before** Backstage starts. A missing required var exits with code **78**, so
+substitution never runs on an incomplete environment. See
+[Presets](./presets.md) for the full validation flow.
+
+Substitution applies equally to all files in the chain. The chain position only
+controls which file's *containing key* wins, not the substitution outcome.
+
+:::warning `app.title` is baked at build time
+`app.title` is compiled into the frontend bundle at image build time and
+**cannot be overridden at runtime** through `app-config.local.yaml` or any
+later layer. Runtime config overrides apply to backend-read keys and frontend
+config delivered at boot, but the window title is fixed in the built bundle.
+:::
+
+---
+
+## Inspecting and debugging the chain
+
+To see the assembled `--config` flags and their order:
+
+```bash
+docker logs <container> 2>&1 | grep -E "EXTRA_ARGS|preset"
+```
+
+If a setting is not taking effect, check, in order:
+
 1. Which layer is setting the conflicting value.
-2. Whether a higher-priority layer is overriding it.
-3. Whether the key path is correct (e.g., `app.branding.theme.light.palette.*`, not `branding.theme.light.primaryColor`).
+2. Whether a higher-priority layer (a later file in the chain) is overriding it.
+3. Whether the key path is correct (e.g. `app.branding.theme.light.palette.*`).
+4. Whether a `${VAR}` substitution resolved to something other than you expect.
 
-For branding-specific keys, see [Simple Branding](../customization/branding.md).  
-For profile-specific env vars, see [Configuration Profiles](./configuration-profiles.md).
+Backstage does not expose a stock "merged config" endpoint. Verify a setting
+either by reading the boot logs (many keys emit a `Found N config(s)` or
+`Configured for ...` line) or by testing the behavior the key controls.
+
+---
+
+## Related
+
+- [Presets](./presets.md) — the preset model and how preset configs (layer 4)
+  are generated.
+- [Dynamic Plugins](./dynamic-plugins.md) — how
+  `app-config.dynamic-plugins.yaml` (layer 6) is built.
+- For branding-specific keys, see [Simple Branding](../customization/branding.md).

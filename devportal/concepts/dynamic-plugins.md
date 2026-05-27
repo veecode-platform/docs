@@ -6,96 +6,192 @@ title: Dynamic Plugins
 
 # Dynamic Plugins
 
-Dynamic plugins are the mechanism DevPortal uses to ship, enable, and configure Backstage plugins **without rebuilding the container image**. This is one of the core differentiators of the distro.
+Dynamic plugins are the mechanism DevPortal uses to add Backstage plugins
+**without rebuilding the container image**. A dynamic plugin is loaded at
+runtime into `/app/dynamic-plugins-root/` rather than compiled into the
+application bundle.
 
 ---
 
-## Preinstalled vs. Downloaded Plugins
+## Static core vs. dynamic plugins
 
-DevPortal ships two categories of dynamic plugins:
+The image splits its plugins into two categories, mirroring Red Hat Developer
+Hub's approach: a thin static core handles identity and data, and the feature
+surface expands through the runtime plugin directory.
 
-### Preinstalled (bundled) plugins
-These are compiled into the image at build time and live under `/app/dynamic-plugins/dist/`. They are always present but start **disabled by default** (`disabled: true`). You enable them at runtime by listing them in your `dynamic-plugins.yaml` configuration.
+- **Static plugins** are registered directly in the backend
+  (`packages/backend/src/index.ts`): auth, catalog, scaffolder, search,
+  notifications, kubernetes backend, permissions, and the RBAC backend. Many
+  integration presets only *configure* these static plugins (via `appConfig:`)
+  and ship an empty `plugins: []` list.
+- **Dynamic plugins** are everything else — every UI tab, every optional
+  catalog provider, every CI integration. They are pulled at boot and installed
+  into `/app/dynamic-plugins-root/`.
 
-The full list of preinstalled plugins and their default configuration is in `devportal-distro/dynamic-plugins.default.yaml`.
-
-### Downloaded (OCI/NPM) plugins
-These are not bundled in the image. They are pulled at startup from an OCI registry (`oci://...`) or an NPM registry. You add them to your `dynamic-plugins.yaml` and the runtime downloads and installs them before the app starts.
+A handful of **core chrome** dynamic plugins ship pre-installed and always-on
+(no `disabled:` field): `veecode-homepage`, `veecode-global-header`, the About
+page and its backend, `dynamic-plugins-info`, and the marketplace catalog entity
+provider. They are extracted into the image at build time and need no preset.
 
 ---
 
-## Enabling Plugins
+## The catalog: `dynamic-plugins.default.yaml`
 
-To enable a plugin, reference it in your `dynamic-plugins.yaml`:
+`dynamic-plugins.default.yaml` is the **catalog** (the *vitrine*) — the
+authoritative list of every optional plugin the image knows about. Every
+optional entry ships with `disabled: true`. **No optional plugin is on by
+default**; the image boots to a working shell with only the pre-installed chrome
+plugins visible.
 
-```yaml
-plugins:
-  # Enable a preinstalled plugin (already in the image)
-  - package: ./dynamic-plugins/dist/backstage-plugin-kubernetes-dynamic
-    disabled: false
-    pluginConfig:
-      # ... plugin-specific config
+Editing this file changes what *is available*, not what *is enabled*. Do not
+edit it to enable a plugin for one deployment — it is image-level configuration.
+Use one of the selection surfaces below instead.
 
-  # Download and enable an OCI plugin
-  - package: 'oci://quay.io/veecode/backstage:bs_1.49.4!backstage-plugin-mcp-actions-backend'
-    disabled: false
-    pluginConfig:
-      # ... plugin-specific config
+---
+
+## How plugins get enabled — the three selection surfaces
+
+A plugin is enabled if **any** selection surface includes it. There are three:
+
+### 1. Presets (`VEECODE_PRESETS`) — recommended
+
+Presets flip `disabled: false` for the plugins they enable. Critically, the
+plugin's `pluginConfig:` block (mount points, dynamic routes, RBAC scopes, menu
+items) stays in `dynamic-plugins.default.yaml`. A preset entry only carries the
+`package:` key and `disabled: false` — `install-dynamic-plugins.py` merges
+records shallow by `package:` key, so the default's `pluginConfig:` attaches
+automatically. Enabling an existing plugin via a new preset is a ~3-line YAML
+addition. See [Presets](./presets.md).
+
+### 2. Operator override — mounted `dynamic-plugins.yaml`
+
+Mount a `dynamic-plugins.yaml` (read-only bind mount, or a Kubernetes ConfigMap)
+with a top-level `plugins:` list. The entrypoint copies it to a writable shadow
+and rebuilds the `includes:` chain on every boot, preserving your `plugins:`
+entries. Because the operator's `plugins:` list is processed **last**, toggling
+`disabled: true/false` here always wins over preset fragments. Apply changes
+with `docker compose restart` (the entrypoint re-runs at boot).
+
+### 3. Marketplace UI
+
+The in-portal marketplace (`/extensions/marketplace`, enabled by the
+`recommended` preset) lets end users install and uninstall plugins. The
+marketplace backend writes selections to `/app/data/extensions-install.yaml`,
+which is included in the plugin chain on the next restart and **survives
+container restarts** as long as the `/app/data` volume is retained. (This is why
+`/app/data` must be a directory volume, not a single-file bind mount.)
+
+:::note The catalog and the marketplace index are independent
+The boot catalog (`dynamic-plugins.default.yaml`) and the marketplace's
+`plugin-catalog-index` are two independent artifacts that share content but are
+maintained separately. Editing one does not sync the other. The unification of
+the two is a deferred decision — see
+[ADR-013](https://github.com/veecode-platform/devportal-platform) in the
+`devportal-platform` repo.
+:::
+
+For the full precedence table when surfaces conflict, see
+[Adding Plugins](/devportal/plugins/adding).
+
+---
+
+## OCI reference shape
+
+OCI plugin references in `dynamic-plugins.default.yaml` follow this pattern:
+
+```
+oci://${PLUGIN_REGISTRY}/<workspace>:bs_${BACKSTAGE_VERSION}!<selector>
 ```
 
-In the Helm chart, this maps to `global.dynamic.plugins` in `values.yaml`. For Docker installs, mount your `dynamic-plugins.yaml` into the container at `/app/dynamic-plugins.yaml` (the entrypoint processes it at startup). Note that `VEECODE_APP_CONFIG` only carries `app-config` content — it cannot be used to deliver `dynamic-plugins.yaml`.
-
----
-
-## Plugin Configuration
-
-Each plugin entry can include a `pluginConfig` block that is merged into the app configuration for that plugin. This is how entity tabs, mount points, and feature flags are configured without touching `app-config.yaml` directly.
-
-Mount points (frontend plugins) and backend plugin wiring are both declared in the plugin's own `pluginConfig`:
+For example:
 
 ```yaml
-pluginConfig:
-  dynamicPlugins:
-    frontend:
-      my-org.my-plugin:
-        mountPoints:
-          - mountPoint: entity.page.overview/cards
-            importName: MyEntityCard
-        dynamicRoutes:
-          - path: /my-feature
-            importName: MyFeaturePage
+# RBAC UI — workspace "rbac", selector "backstage-community-plugin-rbac"
+- package: oci://${PLUGIN_REGISTRY}/rbac:bs_1.49.4!backstage-community-plugin-rbac
+
+# Marketplace frontend — version tracked via BACKSTAGE_VERSION
+- package: oci://${PLUGIN_REGISTRY}/marketplace:bs_${BACKSTAGE_VERSION}!devportal-marketplace-frontend-dynamic
 ```
 
----
+The four parts:
 
-## The Extensions Marketplace
+- **`${PLUGIN_REGISTRY}`** — defaults to `quay.io/veecode`; substituted by
+  `entrypoint.sh`. Override it (e.g. `PLUGIN_REGISTRY=registry.internal/veecode`)
+  to redirect all OCI pulls to an internal mirror without editing any YAML.
+- **`<workspace>`** — the export-overlays workspace that produced the bundle
+  (e.g. `marketplace`, `rbac`, `tech-radar`, `sonarqube`, `backstage`). One
+  workspace can bundle several packages.
+- **`bs_${BACKSTAGE_VERSION}`** — the OCI tag. `${BACKSTAGE_VERSION}` is
+  substituted from `backstage.json`, so a Backstage bump propagates to every
+  reference that uses the variable form. Some entries pin a literal version
+  (e.g. `bs_1.48.4`, `bs_1.49.4`) when the plugin has not yet been re-published
+  under the current tag.
+- **`!<selector>`** — the specific npm package name inside the bundle.
 
-The distro includes a plugin marketplace (`devportal-marketplace-frontend-dynamic`) that allows admins to browse, enable, and disable plugins via the DevPortal UI. Marketplace access is controlled by RBAC permissions (`extensions.plugin.configuration.read/write`). See [Permissions](../rbac/permissions.md) for details.
-
----
-
-## MCP Stack (AI-powered Actions)
-
-The distro ships an optional MCP (Model Context Protocol) stack as OCI dynamic plugins from `quay.io/veecode`:
-
-| Package | Role |
-| --- | --- |
-| `backstage-plugin-mcp-actions-backend` | Core MCP backend; aggregates tool sources |
-| `*-software-catalog-mcp-extras` | Catalog tools for MCP |
-| `*-techdocs-mcp-extras` | TechDocs tools for MCP |
-| `*-scaffolder-mcp-extras` | Scaffolder tools for MCP |
-| `*-mcp-chat-backend` + `*-mcp-chat` | In-portal AI chat at `/mcp-chat` |
-
-All must be enabled together (`disabled: false`). Supported AI providers for the chat plugin: OpenAI, Anthropic, Gemini, and Ollama.
+Pre-installed chrome plugins use a bare npm package name (no `oci://` prefix)
+with `preInstalled: true`; the install script skips the pull and only merges
+their `pluginConfig:`.
 
 ---
 
-## Key Files
+## Boot sequence (what installs your plugins)
 
-| File | Purpose |
-| --- | --- |
-| `dynamic-plugins.default.yaml` | All preinstalled plugins with their defaults (disabled by default) |
-| `dynamic-plugins.yaml` | Your runtime overrides — enable plugins and add OCI/NPM packages here |
-| `app-config.dynamic-plugins.yaml` | Generated at startup; merges plugin configs into the running app config |
+At container start, before Backstage accepts requests:
 
-For adding plugins through the UI, see the [Adding Plugins guide](/devportal/plugins/adding).
+1. **Preset resolver** validates required env vars (exit 78 on missing) and
+   writes a `preset-<name>-plugins.yaml` for each preset with a `plugins:` list.
+2. **Assemble the includes chain** — `dynamic-plugins.yaml` and
+   `dynamic-plugins.default.yaml` are copied to writable working files and the
+   `includes:` chain is rebuilt to reference the catalog, the marketplace file,
+   and each preset's plugin file.
+3. **`${BACKSTAGE_VERSION}` and `${PLUGIN_REGISTRY}` substitution** across the
+   working files.
+4. **`install-dynamic-plugins.py`** — for each enabled entry, `skopeo copy`
+   pulls the OCI bundle, the named selector is extracted into
+   `/app/dynamic-plugins-root/<selector>/`, and the entry's `pluginConfig:` is
+   merged into `/app/dynamic-plugins-root/app-config.dynamic-plugins.yaml`.
+   Pre-installed entries skip the pull.
+5. **Backend boot** — Backstage reads `app-config.dynamic-plugins.yaml` to
+   discover mount points, dynamic routes, and RBAC scopes.
+
+Loaded plugins are surfaced at
+`/api/dynamic-plugins-info/loaded-plugins` once the backend is up.
+
+:::warning Boot fails fast (exit 78) on plugin errors
+If a plugin bundle cannot be pulled (registry unreachable, typo'd OCI ref,
+missing mirror bundle), the install script prints an `INSTALL SUMMARY` of failed
+refs and the entrypoint exits **78** rather than booting a half-installed
+portal. The same exit-78 guard fires when the same plugin is enabled with two
+different OCI refs (the duplicate detector). For dev iteration only, set
+`DYNAMIC_PLUGINS_TOLERATE_FAILURES=true` to proceed with whatever installed.
+:::
+
+---
+
+## Distribution modes
+
+Three modes are supported by design:
+
+- **Default — runtime OCI pull.** The image ships with no optional plugin bytes.
+  At boot, `install-dynamic-plugins.py` pulls each enabled plugin from
+  `quay.io/veecode/<workspace>:<tag>`. No operator config beyond
+  `VEECODE_PRESETS`. Best for cloud/SaaS with outbound registry access.
+- **Mirror — internal registry.** Set `PLUGIN_REGISTRY=registry.internal/veecode`
+  (or any prefix mirroring `quay.io/veecode`). The entrypoint substitutes it
+  into every `oci://${PLUGIN_REGISTRY}/...` reference before the install runs —
+  no YAML edits needed. The mirror must host the same workspace/tag paths.
+- **Loaded variant — air-gapped image.** Build a derived image that extracts the
+  selected plugin bundles at build time and copies them into
+  `/app/dynamic-plugins-root/`. Mark those entries `preInstalled: true` so the
+  install script skips the pull. Pre-baked variants are the operator's
+  responsibility; the published image stays generic.
+
+---
+
+## Related
+
+- [Presets](./presets.md) — the recommended way to enable plugins.
+- [Configuration Hierarchy](./configuration-hierarchy.md) — how
+  `app-config.dynamic-plugins.yaml` fits the config merge order.
+- [Adding Plugins](/devportal/plugins/adding) — the selection surfaces in
+  practice and the full precedence rules.

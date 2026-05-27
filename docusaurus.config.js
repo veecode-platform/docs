@@ -117,6 +117,10 @@ const config = {
             from: '/devportal/installation-guide/local-setup/docker-setup',
             to: '/devportal/installation-guide/docker-local/intro'
           },
+          {
+            from: '/devportal/concepts/configuration-profiles',
+            to: '/devportal/concepts/presets'
+          },
         ],
       },
     ],
