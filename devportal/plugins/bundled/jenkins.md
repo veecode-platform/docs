@@ -6,6 +6,8 @@ title: Jenkins Plugin
 
 # Jenkins Plugin
 
+Without this plugin, build status lives in Jenkins — developers context-switch to check whether a build passed, find the right job among many, and trace failures back to code. Enable the plugin, add `jenkins.io/job-full-name` with the job path in Jenkins, and a CI tab appears on the entity showing build history and status. Configure `JENKINS_URL` and credentials in the backend plugin config.
+
 The Jenkins plugin displays Jenkins build status in catalog entity pages.
 
 **Status:** Preloaded in the DevPortal image, **disabled by default**. Enable via `dynamic-plugins.yaml` or Marketplace.

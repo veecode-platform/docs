@@ -10,7 +10,7 @@ title: Blueprints & Reference Implementations
 
 ## What is a Blueprint?
 
-While a [Golden Path](./golden-paths) focuses on the *workflow* and *automation* to get a specific service to production, a **Blueprint** focuses on the *architecture* and *design* of a solution. It answers questions like:
+While a [Golden Path](./golden-paths.md) focuses on the *workflow* and *automation* to get a specific service to production, a **Blueprint** focuses on the *architecture* and *design* of a solution. It answers questions like:
 
 - "How do we build a microservices architecture?"
 - "What is the standard pattern for event-driven systems?"

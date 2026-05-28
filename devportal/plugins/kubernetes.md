@@ -6,7 +6,11 @@ title: Kubernetes Plugin
 
 # Kubernetes Plugin
 
-The Kubernetes plugin for Backstage displays the live state of Kubernetes resources — pods, deployments, services, and more — for a catalog entity. It appears as a **Kubernetes tab on the entity page** (not a sidebar item).
+Without this plugin, a service created through DevPortal has no connection to its own Kubernetes workloads — the developer still needs to context-switch to `kubectl` or a separate dashboard to check pod status, restart counts, or logs. The portal becomes a creation tool but not an operational one.
+
+With the plugin enabled, the entity page becomes the operational view for the service: pods, deployment rollout status, and live logs visible in the same place the team already uses to understand the service.
+
+The Kubernetes plugin displays the live state of Kubernetes resources — pods, deployments, services, and more — for a catalog entity. It appears as a **Kubernetes tab on the entity page** (not a sidebar item).
 
 The plugin is **preloaded in the DevPortal image** and disabled by default. No image rebuild or support contact is needed to enable it.
 

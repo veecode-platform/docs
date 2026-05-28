@@ -35,7 +35,7 @@ const Header = () => {
             }>
               <li><a href="/" className={styles.active}>Platform</a></li>
               <li><a href="/devportal/intro">Devportal</a></li>
-              <li><a href="/admin-cli/intro">Admin-UI</a></li>
+              <li><a href="/admin-ui/intro">Admin-UI</a></li>
             </ul>
         </section>
         <section className={styles.githubLink}>

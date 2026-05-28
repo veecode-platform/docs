@@ -4,6 +4,10 @@ sidebar_label: VKDR Installation
 title: VKDR Installation
 ---
 
+:::note
+`vkdr devportal install` deploys a **VKDR-managed** DevPortal instance (installed via Helm, version pinned by the VKDR release cycle). This is **not** the DevPortal V2 install path. To install DevPortal V2 (`veecode/devportal:2.0.0`), use the [Docker local](../docker-local/intro.md) or [Kubernetes](../production-setup/setup.md) setup instead.
+:::
+
 In this step, you will install and initialize `vkdr` to prepare your local environment for running DevPortal.
 
 ## About VKDR

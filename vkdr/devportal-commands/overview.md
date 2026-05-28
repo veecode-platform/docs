@@ -6,6 +6,10 @@ title: Overview
 
 # DevPortal Commands
 
+:::note
+The `vkdr devportal` commands install and manage a **VKDR-managed** DevPortal instance for local development (Helm-based; the `--profile` flag selects a VKDR Helm values profile and is unrelated to `VEECODE_PRESETS`). This is **not** the standalone DevPortal V2 image (`veecode/devportal:2.0.0`). For installing DevPortal V2, see the [DevPortal Installation Guide](/devportal/installation-guide).
+:::
+
 ## Overview
 
 These commands are related to installing and managing VeeCode DevPortal, a ready-to-use Backstage distribution for developer portals.

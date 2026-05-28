@@ -6,6 +6,10 @@ title: CI/CD Plugins
 
 # CI/CD Plugins
 
+The problem CI/CD plugins solve is the same across every platform: the service is registered in the portal, but its pipeline lives in GitHub Actions, GitLab, Jenkins, or Azure DevOps. Developers context-switch to check builds, find failures, and trigger runs. Each CI/CD plugin closes that gap for one platform by surfacing build status and triggers on the entity page itself — the service and its pipeline become one view.
+
+This is the [Application Lifecycle](/platform/capabilities/platform-capabilities) capability layer in practice. Pick the plugin that matches the platform your team uses; the activation pattern is the same for all of them.
+
 DevPortal ships several separate CI/CD plugins, each integrating with a specific CI/CD platform. There is no single "CI/CD Plugin" — each platform has its own bundled plugin that must be enabled individually.
 
 All CI/CD plugins described here are **preloaded in the DevPortal image and disabled by default**. Enable them via `dynamic-plugins.yaml` or the Marketplace — no support contact required.
@@ -16,11 +20,11 @@ All CI/CD plugins described here are **preloaded in the DevPortal image and disa
 
 | Plugin | Platform | Package |
 |---|---|---|
-| [GitHub Actions](./bundled/github-actions) | GitHub Actions workflow runs | `backstage-community-plugin-github-actions-dynamic` |
-| [GitHub Workflows](./GitHubWorkflows) | Manual GitHub workflow trigger + cards | `veecode-platform-backstage-plugin-github-workflows-dynamic` |
-| [Jenkins](./bundled/jenkins) | Jenkins build status | `backstage-community-plugin-jenkins` + backend |
-| [Azure DevOps](./bundled/azure-devops) | Azure Pipelines + Pull Requests | `backstage-community-plugin-azure-devops-dynamic` |
-| [GitLab Pipelines](./GitLabPipelines) | GitLab CI pipeline trigger and status | OCI: `oci://quay.io/veecode/gitlab:bs_1.48.4!immobiliarelabs-backstage-plugin-gitlab` |
+| [GitHub Actions](./bundled/github-actions.md) | GitHub Actions workflow runs | `backstage-community-plugin-github-actions-dynamic` |
+| [GitHub Workflows](./GitHubWorkflows.md) | Manual GitHub workflow trigger + cards | `veecode-platform-backstage-plugin-github-workflows-dynamic` |
+| [Jenkins](./bundled/jenkins.md) | Jenkins build status | `backstage-community-plugin-jenkins` + backend |
+| [Azure DevOps](./bundled/azure-devops.md) | Azure Pipelines + Pull Requests | `backstage-community-plugin-azure-devops-dynamic` |
+| [GitLab Pipelines](./GitLabPipelines.md) | GitLab CI pipeline trigger and status | OCI: `oci://quay.io/veecode/gitlab:bs_1.48.4!immobiliarelabs-backstage-plugin-gitlab` |
 
 ---
 

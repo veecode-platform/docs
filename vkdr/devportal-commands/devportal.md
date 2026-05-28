@@ -6,6 +6,10 @@ title: devportal
 
 # vkdr devportal
 
+:::note
+The `vkdr devportal` commands install and manage a **VKDR-managed** DevPortal instance for local development (Helm-based; the `--profile` flag selects a VKDR Helm values profile and is unrelated to `VEECODE_PRESETS`). This is **not** the standalone DevPortal V2 image (`veecode/devportal:2.0.0`). For installing DevPortal V2, see the [DevPortal Installation Guide](/devportal/installation-guide).
+:::
+
 Use these commands to install and manage VeeCode DevPortal, a ready-to-use Backstage distribution.
 
 **Note:** DevPortal currently requires Kong Gateway as the ingress controller.

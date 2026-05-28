@@ -35,7 +35,7 @@ Common causes:
 
 ### I set a key in `app-config.local.yaml` but it has no effect
 
-Config files are merged in a 7-layer order. Your `app-config.local.yaml` is layer 5, but plugin-generated config (`dynamic-plugins-root/app-config.dynamic-plugins.yaml`) is layer 6 and loads after it. A plugin's `pluginConfig` block in `dynamic-plugins.yaml` can override keys from your `local.yaml`. See [Custom Configuration](./docker-local/custom-config) for the full merge order.
+Config files are merged in a 7-layer order. Your `app-config.local.yaml` is layer 5, but plugin-generated config (`dynamic-plugins-root/app-config.dynamic-plugins.yaml`) is layer 6 and loads after it. A plugin's `pluginConfig` block in `dynamic-plugins.yaml` can override keys from your `local.yaml`. See [Custom Configuration](./docker-local/custom-config.md) for the full merge order.
 
 ---
 
@@ -108,22 +108,21 @@ plugins:
     disabled: false
 ```
 
-See [Dynamic Plugins](./docker-local/custom-plugins) for mount instructions.
+See [Dynamic Plugins](./docker-local/custom-plugins.md) for mount instructions.
 
-### My `dynamic-plugins.yaml` disables all plugins unexpectedly
+### Why do I only set `plugins:` in `dynamic-plugins.yaml`, not `includes:`?
 
-If your custom `dynamic-plugins.yaml` does not include the built-in defaults, all pre-installed plugins revert to their default state (disabled). Use the resolved shadow:
+In V2 the entrypoint owns the `includes:` chain. On every boot it copies your mounted `dynamic-plugins.yaml` to a writable shadow and rebuilds `includes:` to prepend the resolved image defaults (`dynamic-plugins.default.resolved.yaml`), the marketplace state, and each selected preset's plugin fragment. Any `includes:` you write yourself is **replaced**.
+
+So you provide only a top-level `plugins:` list:
 
 ```yaml
-includes:
-  - dynamic-plugins.default.resolved.yaml
-
 plugins:
   - package: './dynamic-plugins/dist/my-plugin-dynamic'
     disabled: false
 ```
 
-(`dynamic-plugins.default.resolved.yaml` is the image-defaults shadow with `${BACKSTAGE_VERSION}` and `${PLUGIN_REGISTRY}` substituted by the entrypoint.)
+You cannot accidentally lose the pre-installed plugins by omitting the defaults, and you never reference `dynamic-plugins.default.resolved.yaml` yourself. (This differs from the V1 distro, where the defaults had to be included manually.) If your mounted `dynamic-plugins.yaml` is malformed YAML, the boot aborts with exit code **78** rather than silently dropping plugins.
 
 ---
 

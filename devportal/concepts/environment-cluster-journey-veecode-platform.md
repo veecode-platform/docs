@@ -22,6 +22,8 @@ Both **Environments** and **Clusters** are modeled as `Resource` entities in the
 
 This approach creates a clear separation of concerns: the DevOps team controls environment and cluster definitions; developers consume them self-service.
 
+Because environments and clusters are catalog entities, they inherit everything the catalog provides — ownership, RBAC, search, and annotations. The same composition model that wires a `Component` to its CI plugin can wire a `Resource` (cluster) to a Grafana dashboard for cluster-level observability. See [Composing a Portal](./portal-composition.md).
+
 **Summary:** Environments are utilized by clusters, and clusters provide the infrastructure for deploying final projects.
 
 ---

@@ -6,7 +6,9 @@ title: SonarQube
 
 # SonarQube Plugin
 
-The SonarQube plugin for DevPortal displays code quality metrics — bugs, vulnerabilities, test coverage, and duplications — directly in the component catalog. It connects to your SonarQube instance and surfaces key insights inside Backstage.
+Without this plugin, code quality is a concern that lives separately in SonarQube — a dashboard the team checks independently, disconnected from the service entity. Enable the plugin, add `sonarqube.org/project-key` with the project key from your SonarQube instance, and a Code Quality tab appears on the entity showing bugs, vulnerabilities, coverage, and technical debt for that specific service. Quality is now part of the service's record, not an external afterthought.
+
+The SonarQube plugin displays code quality metrics — bugs, vulnerabilities, test coverage, and duplications — directly in the component catalog.
 
 ---
 

@@ -8,12 +8,9 @@ Dynamic plugins can be loaded by VeeCode DevPortal at start time. They are usual
 
 ## Configuration
 
-Mount a `dynamic-plugins.yaml` file at `/app/dynamic-plugins.yaml` and include the default chain so pre-installed plugins are preserved:
+Mount a `dynamic-plugins.yaml` file at `/app/dynamic-plugins.yaml` with a top-level `plugins:` list:
 
 ```yaml
-includes:
-  - dynamic-plugins.default.resolved.yaml
-
 plugins:
   # npm plugin
   - package: '@yourorg/yourplugin@x.y.z'
@@ -24,7 +21,40 @@ plugins:
     disabled: false
 ```
 
-Mount it in your compose file or Kubernetes Deployment manifest — see [Adding Plugins](../adding) for the exact volume/ConfigMap syntax.
+You only provide `plugins:`. The entrypoint owns the `includes:` chain — on every boot it copies your file to a writable shadow and rebuilds `includes:` to prepend the resolved image defaults (`dynamic-plugins.default.resolved.yaml`), the marketplace state, and each preset fragment. An `includes:` block you add yourself is replaced, so you never need to (and shouldn't) reference the defaults manually.
+
+Mount it in your compose file or Kubernetes Deployment manifest — see [Adding Plugins](../adding.md) for the exact volume/ConfigMap syntax.
+
+## Generating the `integrity` hash
+
+The `integrity:` field is **required for remote npm packages** (unless the env var `SKIP_INTEGRITY_CHECK=true` is set). The installer downloads the package, recomputes its SHA-512, and refuses to load it on mismatch.
+
+It is **not used** for:
+
+- OCI packages (`oci://...`) — these are validated by digest comparison via `skopeo inspect`.
+- Local paths (`./dynamic-plugins/dist/...`) — pre-bundled in the image; no download involved.
+
+Expected format: `sha512-<base64>`. Two ways to generate it:
+
+**Method A — query the npm registry directly (preferred for public packages):**
+
+```bash
+npm view <package>@<version> dist.integrity
+# example
+npm view @backstage/plugin-catalog@2.0.5 dist.integrity
+```
+
+Returns the hash in exactly the format the installer compares against. **Always pin the version** — `npm view <package> dist.integrity` (no version) returns the latest, which will mismatch if you have a specific version pinned in your `package:` field.
+
+**Method B — compute it locally (fallback for private registries or when `npm view` fails):**
+
+```bash
+npm pack <package>@<version> && \
+  HASH=$(cat <package>-<version>.tgz | openssl dgst -sha512 -binary | openssl base64 -A) && \
+  echo "sha512-$HASH"
+```
+
+This replicates the exact pipeline the installer uses internally (`cat archive | openssl dgst -sha512 -binary | openssl base64 -A`), so the produced hash is guaranteed to match a successful install.
 
 ## Private npm registry
 
@@ -53,30 +83,68 @@ kubectl create secret generic devportal-npmrc \
 
 ## Wiring plugins
 
-Dynamic plugins have the ability to wire themselves to the DevPortal instance configuration. **This is a critical feature** because unlike static plugins they cannot imply in code changes to the host Backstage project.
+Dynamic plugins wire themselves to the DevPortal instance through configuration. Unlike static plugins, they cannot modify the host Backstage project's code — wiring happens at runtime, declared in YAML.
 
-Backend plugins should be detected and loaded automatically, but frontend plugins must be wired by `pluginConfig:` to the DevPortal instance.
+**The wiring rule depends on the plugin's role**, declared in its `package.json` under `backstage.role`:
 
-All dynamic plugins can bring their own settings in the `pluginConfig:` field:
+| Role | `pluginConfig` needed? | Where does its config go? |
+|---|---|---|
+| `frontend-plugin` | **Yes** — describes mount points, tabs, routes | Inside `pluginConfig.dynamicPlugins.frontend.<plugin-id>` |
+| `backend-plugin` | **No** — auto-discovered by the loader | Plain top-level keys in `app-config.yaml` (e.g., `sonarqube:`, `gitlab:`) |
+| `backend-plugin-module` | **No** — auto-attaches to its parent plugin | Plain top-level keys in `app-config.yaml` (parent plugin's config) |
+
+There is no `dynamicPlugins.backend.*` key. Backend plugins never wire themselves through `pluginConfig` — the loader detects them by their package role and registers them automatically.
+
+### Backend plugin example (no `pluginConfig`)
 
 ```yaml
 plugins:
-  - package: '@yourorg/yourplugin@x.y.z'
+  - package: oci://quay.io/veecode/sonarqube:bs_1.49.4!backstage-community-plugin-sonarqube-backend
     disabled: false
-    integrity: sha512-xxxxxxxxx
-    pluginConfig:
-      dynamicPlugins:
-        something:
-          morethings:
-            - foo
-            - bar
+    # No pluginConfig — backend role is auto-discovered
 ```
 
-:::important
-The `pluginConfig` field affects frontend plugins and backend plugins differently. Backend plugins will have their content merged with Backstage "appConfig", while frontend plugins will have their content processed by the "scalprum" component (who will then define routes, sidebars, mount points, icons, APIs, etc.).
-:::
+The plugin's runtime configuration goes in your regular `app-config.yaml` (or `app-config.local.yaml`) as a normal top-level section:
 
-Please check our [Wiring a Frontend Plugin](wiring.md) page for more info on this subject.
+```yaml
+sonarqube:
+  baseUrl: ${SONARQUBE_URL}
+  apiKey: ${SONARQUBE_TOKEN}
+```
+
+Same pattern for `backend-plugin-module` (e.g., a scaffolder action module attaches itself to the scaffolder plugin):
+
+```yaml
+plugins:
+  - package: oci://quay.io/veecode/roadie-backstage-plugins:bs_1.49.4!roadiehq-scaffolder-backend-argocd
+    disabled: false
+    # No pluginConfig — module auto-attaches to the scaffolder backend
+```
+
+### Frontend plugin example (`pluginConfig` required)
+
+Frontend plugins must declare where their UI components mount, because Backstage's frontend has no auto-discovery for routes, sidebars, tabs, or cards:
+
+```yaml
+plugins:
+  - package: oci://quay.io/veecode/sonarqube:bs_1.49.4!backstage-community-plugin-sonarqube
+    disabled: false
+    pluginConfig:
+      dynamicPlugins:
+        frontend:
+          backstage-community.plugin-sonarqube:
+            mountPoints:
+              - mountPoint: entity.page.overview/cards
+                importName: EntitySonarQubeCard
+                config:
+                  if:
+                    allOf:
+                      - isSonarQubeAvailable
+```
+
+The plugin-id under `dynamicPlugins.frontend.<plugin-id>` is the npm package name with `@` removed and `/` replaced by `.` (note: `.`, not `-`, for this key specifically — different from the OCI reference convention).
+
+See [Wiring a Frontend Plugin](wiring.md) for the full list of frontend mount points, tab paths, and the `scalprum` mechanism that processes these declarations at runtime.
 
 ## Tips
 

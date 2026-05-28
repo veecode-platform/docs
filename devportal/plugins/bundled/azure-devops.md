@@ -6,6 +6,8 @@ title: Azure DevOps Plugin
 
 # Azure DevOps Plugin
 
+Without this plugin, Azure Pipelines builds and Pull Requests are tracked only in Azure DevOps — a service registered in the portal has no operational visibility from it. Enable the plugin, add `dev.azure.com/project-repo` to the entity, and the entity gains both a CI tab (Pipelines build history) and a Pull Requests tab. The portal becomes the entry point for CI and code review workflows, not Azure DevOps.
+
 The Azure DevOps plugin displays Azure Pipelines builds and Azure Pull Requests in catalog entity pages.
 
 **Status:** Preloaded in the DevPortal image, **disabled by default**. Enable via `dynamic-plugins.yaml` or Marketplace.

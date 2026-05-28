@@ -46,7 +46,7 @@ This guide explains how to integrate your **DevPortal** with a Git provider (suc
 :::warning
 
 For the full integration and operation of the DevPortal with GitHub, you should create and configure your authentication application(GitHub Oauth) and add the host that has been provided to you in the EC2 console.
-**To configure your GitHub Oauth integration, please follow this [step-by-step guide](/devportal/installation-guide/production-setup#create-a-new-github-oauth-app )**
+**To configure your GitHub Oauth integration, please follow this [step-by-step guide](/devportal/integrations/GitHub/github-auth#step-1-create-a-github-oauth-app)**
 
 :::
 

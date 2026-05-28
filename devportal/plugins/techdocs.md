@@ -6,6 +6,8 @@ title: Tech Docs
 
 # TechDocs
 
+TechDocs is preinstalled and active — it doesn't need to be enabled. The question is whether your services are using it. Without the `backstage.io/techdocs-ref` annotation and a `mkdocs.yml` in the repository, the Docs tab is absent from the entity. With both in place, documentation for the service is browsable inside the portal, versioned with the code, and always in sync with the current state of the service — not in a separate Confluence space that drifts.
+
 TechDocs is a **docs-as-code** system built into Backstage. Documentation lives as Markdown files in your source repository and is rendered inside DevPortal. There is no in-portal editor, "New Page" button, or "Publish" button — content is written, committed, and built from the repository.
 
 ---

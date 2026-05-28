@@ -14,7 +14,7 @@ The Marketplace shows:
 - All bundled plugins (preloaded in the image, ready to enable)
 - OCI-published plugins available for download at startup
 
-See [Bundled Plugins](./bundled) for a complete list of what ships with DevPortal.
+See [Bundled Plugins](./bundled/index.md) for a complete list of what ships with DevPortal.
 
 ---
 

@@ -14,6 +14,11 @@ at boot from base distribution files, preset-generated files, and your
 overrides. Knowing the chain tells you exactly where to put a setting and why it
 takes effect — or why it doesn't.
 
+**Quick answer — where do I put my override?**
+- Operator customizations (branding, catalog locations, integration credentials): `app-config.local.yaml` (layer 5).
+- Auth provider and SCM integration (set once per environment): selected via `VEECODE_PRESETS`, which generates the preset layer (layer 4). See [Presets](./presets.md).
+- Plugin-specific backend config (Kubernetes cluster URLs, SonarQube base URL, etc.): also goes in `app-config.local.yaml`, or is injected via `pluginConfig` in `dynamic-plugins.yaml` (layer 6). See [Composing a Portal](./portal-composition.md) for the relationship between plugin loading and backend config.
+
 ---
 
 ## The precedence chain
@@ -75,13 +80,14 @@ catalog:
 Because `app-config.local.yaml` loads after all preset files, your `frequency`
 wins. You do not repeat the rest of the provider block — the deep-merge keeps it.
 
-:::note `VEECODE_APP_CONFIG` is the chart-managed alternative
-In deployments where you cannot mount a file (Helm, ArgoCD), encode your
-operator config as base64 and pass it as `VEECODE_APP_CONFIG`. The entrypoint
-decodes it into `/app/app-config.saas.yaml` (position 7), which wins over
-everything — preset configs, plugin configs, and any mounted `local.yaml`. Use
-it for deployment-specific values (database URLs, ingress hosts, secret
-references) that must not be hardcoded.
+:::note `VEECODE_APP_CONFIG` — config without a file mount
+In deployments where you cannot mount a file (ArgoCD managing plain manifests,
+a CI-injected environment, or the VeeCode SaaS), encode your operator config as
+base64 and pass it as `VEECODE_APP_CONFIG`. The entrypoint decodes it into
+`/app/app-config.saas.yaml` (position 7), which wins over everything — preset
+configs, plugin configs, and any mounted `local.yaml`. Use it for
+deployment-specific values (database URLs, ingress hosts, secret references)
+that must not be hardcoded.
 :::
 
 ---
@@ -141,4 +147,6 @@ either by reading the boot logs (many keys emit a `Found N config(s)` or
   are generated.
 - [Dynamic Plugins](./dynamic-plugins.md) — how
   `app-config.dynamic-plugins.yaml` (layer 6) is built.
+- [Composing a Portal](./portal-composition.md) — how `app-config` backend
+  sections relate to plugin loading and entity annotations.
 - For branding-specific keys, see [Simple Branding](../customization/branding.md).

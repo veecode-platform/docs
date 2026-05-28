@@ -46,11 +46,11 @@ Most “platform work” is curating and integrating the tools you already run, 
 5. **Measure impact**: Track DORA and adoption metrics from day one. Remember: platform value appears in downstream metrics, not as a plain platform output. **Learn to capture the ROI of your platform to make ROI visible**.
 
 ## How to Prove It Works
-- Use outcome metrics that matter to the business. See: [Success Metrics](../capabilities/success-metrics).
-- Anchor platform scope in team cognition and interactions. See: [Team Topologies](../references/team-topologies).
-- Ground your architecture and operating model in modern practices. See: [Cloud Native Transformation](../references/cloud-native-transformation).
+- Use outcome metrics that matter to the business. See: [Success Metrics](../capabilities/success-metrics.md).
+- Anchor platform scope in team cognition and interactions. See: [Team Topologies](../references/team-topologies.md).
+- Ground your architecture and operating model in modern practices. See: [Cloud Native Transformation](../references/cloud-native-transformation.md).
 
 ## Further Reading
-- [What is a Developer Platform](../concepts/platform-basic)
-- [Cloud Native Transformation](../references/cloud-native-transformation)
-- [Team Topologies](../references/team-topologies)
+- [What is a Developer Platform](../concepts/platform-basic.md)
+- [Cloud Native Transformation](../references/cloud-native-transformation.md)
+- [Team Topologies](../references/team-topologies.md)

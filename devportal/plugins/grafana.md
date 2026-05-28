@@ -6,10 +6,20 @@ title: Grafana Plugin
 
 # Grafana Plugin
 
-The Grafana plugin for Backstage embeds Grafana dashboards and alert panels in entity pages, giving developers direct observability access from the catalog.
+Without this plugin, Grafana dashboards are a separate tab the developer has to remember to open — and without the service entity as context, they're dashboards, not "the dashboard for this service." Enable the plugin, add `grafana/dashboard-selector` to the entity with a tag expression matching that service's dashboards, and an observability card appears in the entity overview. Metrics are now anchored to the service, not floating in a separate tool.
 
-:::note
-The Grafana plugin is **not bundled** in the DevPortal image. It must be added as an external dynamic plugin via `dynamic-plugins.yaml` or the Marketplace. No support plan is required — the plugin is a standard Backstage community plugin available publicly.
+The Grafana plugin embeds Grafana dashboards and alert panels in entity pages, giving developers direct observability access from the catalog.
+
+:::caution Grafana is not currently published as an OCI artifact by VeeCode
+The `@roadiehq/backstage-plugin-grafana` package exists upstream (Roadie community plugins) but is **not** in any active workspace in [`devportal-plugin-export-overlays`](https://github.com/veecode-platform/devportal-plugin-export-overlays) — the entry is commented out in the `roadie-backstage-plugins` workspace, which means VeeCode is not currently publishing an OCI image for it.
+
+Your options:
+
+1. **Reference the npm package directly** — if upstream Roadie publishes a dynamic build of this plugin, you can use `package: '@roadiehq/backstage-plugin-grafana'` in `dynamic-plugins.yaml`. Confirm upstream has a `-dynamic` artifact before relying on this.
+2. **Fork [`devportal-plugin-export-overlays`](https://github.com/veecode-platform/devportal-plugin-export-overlays)** and add the plugin to a workspace yourself, then publish your own OCI artifact.
+3. **Use an alternative** — for ready-to-use observability/quality plugins that VeeCode publishes today, see [Tech Insights](./bundled/index.md), [SonarQube](./Sonar.md), or the `kiali` workspace for service-mesh observability.
+
+The configuration below shows the composition contract (annotation + backend config) regardless of which installation path you choose.
 :::
 
 ---
@@ -18,13 +28,11 @@ The Grafana plugin is **not bundled** in the DevPortal image. It must be added a
 
 ### Via Marketplace
 
-Search for "Grafana" in the DevPortal Marketplace and click **Enable**. The Marketplace handles the OCI reference and mount point configuration automatically.
+If the Marketplace shows a Grafana plugin entry (the catalog is updated continuously), click **Enable** and skip the manual steps below.
 
 ### Via `dynamic-plugins.yaml`
 
-Add the Grafana plugin from the community OCI registry. Check the [Marketplace](../plugins/finding) or the [Backstage Plugin Registry](https://backstage.io/plugins) for the current OCI reference and workspace tag that matches your DevPortal's Backstage version.
-
-A typical entry looks like:
+If the OCI artifact is not available, you can still reference the upstream npm package or your own build. The illustrative OCI entry below uses placeholder workspace/tag — see the caution box above for the current publishing status.
 
 ```yaml
 plugins:
@@ -45,7 +53,7 @@ plugins:
                       - isGrafanaAvailable
 ```
 
-Replace `<workspace>` and `<tag>` with the values that match your instance. See [Adding Plugins](./adding) for details on the OCI artifact format.
+Replace `<workspace>` and `<tag>` with the values that match your instance. See [Adding Plugins](./adding.md) for details on the OCI artifact format.
 
 ---
 
@@ -80,4 +88,4 @@ metadata:
 ## References
 
 - [Roadie Grafana plugin on GitHub](https://github.com/RoadieHQ/roadie-backstage-plugins/tree/main/plugins/frontend/backstage-plugin-grafana)
-- [Adding Plugins to DevPortal](./adding)
+- [Adding Plugins to DevPortal](./adding.md)

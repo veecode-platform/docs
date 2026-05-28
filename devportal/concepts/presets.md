@@ -83,6 +83,31 @@ registration.
 
 ---
 
+## Inspecting what a preset configured
+
+A preset is not a switch or a hidden mode — it is plain config the resolver
+writes to disk **before** Backstage starts. If GitHub sign-in works, the catalog
+populated, and templates target your org, that behavior came from files you can
+read inside the running container:
+
+```bash
+# the app-config a preset contributed (layer 4)
+docker exec devportal cat /app/app-config.preset-github.yaml
+
+# the plugin fragment a preset enabled (present only when the preset enables plugins)
+docker exec devportal cat /app/preset-github-plugins.yaml
+```
+
+Replace `github` with any selected preset. These files are the complete source of
+truth for what the preset configured. If something works that you didn't
+explicitly set, it came from a preset — and you override any of it by adding the
+key to `app-config.local.yaml`, which loads after every preset layer and wins
+(see [Configuration Hierarchy](./configuration-hierarchy.md)). The boot log also
+echoes the assembled includes chain (`VEECODE: dynamic plugin includes → …`) and
+the final `--config` list (`EXTRA_ARGS=…`).
+
+---
+
 ## Tiers
 
 Every plugin in the image falls into one of three tiers:
@@ -223,4 +248,4 @@ sample (such as the starter tech-radar in `recommended`) is allowed.
 - [Dynamic Plugins](./dynamic-plugins.md) — how presets enable plugins via the
   OCI catalog.
 - For per-integration setup and the exact variable meanings, see the
-  [integrations guides](/devportal/integrations/integrations).
+  [integrations guides](/devportal/integrations).

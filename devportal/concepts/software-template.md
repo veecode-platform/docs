@@ -85,14 +85,58 @@ Upon completion:
 
 ---
 
-## Benefits of Using Templates
+## Why Templates Matter
 
-- **Efficiency:** Predefined configurations save time.
-- **Standardization:** Ensures consistency across projects.
-- **Scalability:** Easily replicable infrastructure for new components.
-- **Integration:** Simplifies linking to CI/CD and database systems.
+Templates are the primary mechanism through which [Golden Paths](/platform/concepts/golden-paths) are delivered in the DevPortal. Rather than a developer searching for the "right" way to start a new service, a well-crafted template makes the right way the easiest way.
 
-You now have a comprehensive understanding of the **template creation feature** in the Developer Portal. By using this tool, you can streamline project setup and focus on development tasks.
+- **Self-service:** Teams spin up new services without opening a ticket to the platform team.
+- **Standardization:** Every project starts from the same base — same Dockerfile structure, same CI pipeline, same observability hooks.
+- **Compliance by default:** Security and governance requirements are built into the template rather than enforced after the fact.
+- **Scalability:** Adding a new team or project type means adding a template, not duplicating runbooks.
+
+---
+
+## What template execution actually produces
+
+Running a template creates more than a project skeleton. The scaffolder executes a sequence of steps that leaves a durable trail in the catalog:
+
+1. **A new repository in the configured SCM** — the target provider (GitHub, GitLab, etc.) and organization are set by the SCM preset (`github`, `gitlab`, `azure`) selected via `VEECODE_PRESETS`. The scaffolder uses those credentials; the developer doesn't configure SCM access per template.
+
+2. **A `catalog-info.yaml` committed to that repository** — this is the entity descriptor. It declares the component kind, owner, system, and — critically — the annotations that bind the entity to plugins.
+
+3. **A Location entity registered in the catalog** — the scaffolder registers a `Location` pointing at the new `catalog-info.yaml`. From that moment the new component appears in the portal catalog without any manual registration step.
+
+4. **An entity wired for plugins, RBAC, and TechDocs** — the component is visible immediately, and the tabs and cards that appear on it are determined by what annotations the template wrote into `catalog-info.yaml`.
+
+The last point is the key design decision for template authors. A template that emits no annotations produces a catalog entry with no plugin tabs. A template that emits the right annotations produces a component that already has its CI tab, Kubernetes tab, and code-quality cards populated — before the developer pushes a single commit.
+
+### The annotation decision happens at template authoring time
+
+When a developer runs a template, they don't see annotation fields. Those are fixed by the template. The platform team decides which annotations to include when they write the template, and every component created from that template inherits the same plugin surface.
+
+Example: a template for a Node.js API service might emit:
+
+```yaml
+metadata:
+  annotations:
+    backstage.io/kubernetes-label-selector: 'app={{ values.componentId }}'
+    gitlab.com/project-slug: '{{ values.group }}/{{ values.componentId }}'
+    backstage.io/techdocs-ref: dir:.
+```
+
+Every component created from that template will have a Kubernetes tab, a GitLab CI tab, and TechDocs — provided those plugins are loaded and the backends are configured. The developer gets those surfaces automatically; the platform team controls what "automatically" means.
+
+For the full picture of how load, context, and backend interact, see [Composing a Portal](./portal-composition.md).
+
+---
+
+## References
+
+- [Composing a Portal](./portal-composition.md) — how plugins attach to entities via the three-layer model
+- [The Catalog](./catalog.md) — entity kinds, ownership, and how `catalog-info.yaml` is processed
+- [Golden Paths](/platform/concepts/golden-paths) — the platform strategy that templates implement
+
+---
 
 If additional help is needed, contact the support team or watch the video.
 <center>

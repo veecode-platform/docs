@@ -15,9 +15,9 @@ Practical, step-by-step guides for building and evolving your Internal Developer
 - You’re looking for quick wins that move DORA and adoption metrics in the right direction.
 
 ## Start here
-- [Why You Will Build a Platform (and What That Really Means)](./build-your-own-platform)
+- [Why You Will Build a Platform (and What That Really Means)](./build-your-own-platform.md)
 
 ## Related references
-- [Success Metrics](../capabilities/success-metrics)
-- [Team Topologies](../references/team-topologies)
-- [Cloud Native Transformation](../references/cloud-native-transformation)
+- [Success Metrics](../capabilities/success-metrics.md)
+- [Team Topologies](../references/team-topologies.md)
+- [Cloud Native Transformation](../references/cloud-native-transformation.md)

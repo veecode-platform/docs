@@ -14,10 +14,9 @@ Dynamic plugins are a deep subject on their own. Please refer to the [Plugins](/
 
 ## Understanding Dynamic Plugins
 
-The DevPortal image comes with pre-installed plugins that can be optionally loaded. The configuration is controlled by two files:
+The DevPortal image ships with pre-installed plugins, enabled by default. You add operator-level overrides by mounting a single file:
 
-- **`dynamic-plugins.default.yaml`**: Default plugin configuration (built into the image)
-- **`dynamic-plugins.yaml`**: Your custom overrides (mounted at runtime)
+- **`dynamic-plugins.yaml`** (mounted at runtime): a top-level `plugins:` list of your overrides. The entrypoint merges it on top of the image defaults automatically — you never reference the image's internal default file.
 
 ## Creating a Custom Plugins File
 
@@ -83,21 +82,18 @@ plugins:
     disabled: false
 ```
 
-## Plugin Configuration and the `includes` Mechanism
+## How merging works — the entrypoint owns `includes:`
 
-Your `dynamic-plugins.yaml` merges with the image defaults via an `includes:` key. The image's `dynamic-plugins.yaml` already includes `dynamic-plugins.default.yaml` to preserve the built-in plugin set. If you mount your own `dynamic-plugins.yaml`, make sure it also includes the defaults so you do not lose the pre-installed plugins:
+You provide only a top-level `plugins:` list. You do **not** write an `includes:` key. On every boot the entrypoint copies your `dynamic-plugins.yaml` to a writable shadow and **rebuilds** the `includes:` chain itself, prepending the resolved image defaults, the marketplace state, and any preset fragments. Any `includes:` you add is replaced — so you cannot accidentally drop the pre-installed plugins by omitting it:
 
 ```yaml
-includes:
-  - dynamic-plugins.default.resolved.yaml
-
 plugins:
-  # Your overrides below
+  # Your overrides — the image defaults are preserved automatically
   - package: './dynamic-plugins/dist/some-plugin-dynamic'
     disabled: false
 ```
 
-The `dynamic-plugins.default.resolved.yaml` file is the entrypoint-owned shadow of the image defaults, with `${BACKSTAGE_VERSION}` and `${PLUGIN_REGISTRY}` already substituted. Always reference this resolved shadow (not `dynamic-plugins.default.yaml`) in your operator override to ensure plugin OCI refs match.
+(The entrypoint-owned shadow it prepends is `dynamic-plugins.default.resolved.yaml`, the image defaults with `${BACKSTAGE_VERSION}` and `${PLUGIN_REGISTRY}` already substituted. It exists for the entrypoint's use — you don't reference it.)
 
 After the plugin install script runs, it generates `dynamic-plugins-root/app-config.dynamic-plugins.yaml` from the `pluginConfig` blocks of all enabled plugins. This generated file is loaded last in the config chain (after your `app-config.local.yaml`).
 

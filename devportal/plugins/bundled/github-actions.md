@@ -6,6 +6,8 @@ title: GitHub Actions Plugin
 
 # GitHub Actions Plugin
 
+Without this plugin, CI history lives only in GitHub — the developer has to leave the portal to check whether a build passed or trace a failed run back to a commit. Enable the plugin, add `github.com/project-slug` to the entity, and a CI tab appears showing recent Actions run history with status, duration, and direct links to logs. Build health becomes part of the service's entity, not a separate GitHub tab.
+
 The GitHub Actions plugin displays GitHub Actions workflow run history in the CI tab of catalog entities. It is the standard Backstage community plugin for GitHub Actions integration.
 
 **Status:** Preloaded in the DevPortal image, **disabled by default**. Enable via `dynamic-plugins.yaml` or Marketplace.

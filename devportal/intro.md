@@ -5,14 +5,11 @@ title: Intro to DevPortal
 ---
 
 import style from './style.module.css';
+import DocCard from '@site/src/components/DocCard';
 
 # Intro
 
-:::tip
-This documentation is being updated to our latest release supporting dynamic plugins. Keep in touch and, by all means, file PRs to help us improve it.
-:::
-
-Welcome to VeeCode Developer Portal documentation! This document will guide you through our Developer Portal, which is a modern and open-source Platform Engineering solution designed to help organizations better manage their API and service ecosystems.
+Welcome to VeeCode Developer Portal documentation. This guide covers installation, plugins, and concepts for running DevPortal on your infrastructure.
 
 ### What is VeeCode DevPortal?
 
@@ -27,37 +24,17 @@ VeeCode DevPortal is a Backstage distro that provides a production-grade portal 
 - It is an API showcase and governance tool for both developers and business partners
 - It simplifies DevOps adoption and scaling, removing cognitive load from average teams
 
-This documentation guide aims to help you understand the workings of the Developer Portal, how to use it, and how to customize it to meet your specific needs. Here are some of the topics covered in this guide:
+If you want to understand **why** this portal matters before diving into setup — the reasoning behind golden paths, self-service design, and developer autonomy — start with [Platform Concepts](/platform/intro). If you're here to install and configure, continue below.
 
 <div className={style.wrapper}>
 
-export const Card = ({children, title, link}) => (
-   <div className={style.card}
-      onClick={() => window.location = link }
-      onKeyDown={(e) => e.key === 'Enter' && (window.location = link)}
-      tabIndex={0}
-      role="button"
-      aria-label={`Navigate to ${title}`}>
-      <div className={style.titlebar}>
-         <h3 className={style.title}>{title}</h3>
-      </div>
-      <p className={style.desc}>
-         {children}
-      </p>
-   </div>
-);
+<DocCard title="💻 Installation Guide" link="/devportal/installation-guide" style={style}>Learn how to install the Developer Portal on your own infrastructure.</DocCard>
 
-<!-- <Card title="📄️ Self-Service Demo" link="self-service-demo/prerequisites">Explore the platform's features through a simple interactive demo.</Card> -->
+<DocCard title="💡 Concepts" link="/devportal/concepts/catalog" style={style}>Understand the core concepts and terminology related to the Developer Portal.</DocCard>
 
-<Card title="💻 Installation Guide" link="/devportal/installation-guide">Learn how to install the Developer Portal on your own infrastructure.</Card>
+<DocCard title="🧩 Plugins" link="/devportal/plugins" style={style}>Enable and configure plugins to extend DevPortal with Day-2 capabilities.</DocCard>
 
-<Card title="💡 Concepts" link="/devportal/concepts/catalog">Understand the core concepts and terminology related to the Developer Portal.</Card>
-
-<!-- <Card title="🌐 API Management" link="/devportal/api-management/apiManagement">Effectively manage your APIs and services using the Developer Portal.</Card> -->
-
-<Card title="🧩 Plugins" link="/devportal/plugins/techdocs">Customize and extend the functionality of your Developer Portal.</Card>
-
-<Card title="📍 Troubleshooting" link="/devportal/troubleshooting">Find solutions to common issues and learn how to report errors.</Card>
+<DocCard title="📍 Troubleshooting" link="/devportal/troubleshooting" style={style}>Find solutions to common issues and learn how to report errors.</DocCard>
 
 </div>
 

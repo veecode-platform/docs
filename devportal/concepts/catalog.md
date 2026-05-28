@@ -8,6 +8,18 @@ The **Software Catalog** is the central hub of DevPortal — a registry of all s
 
 ---
 
+## Why the catalog is foundational
+
+The catalog is not an optional feature — it is the substrate that the rest of the portal binds to.
+
+- **Plugins are context-aware via annotations.** A plugin loaded via a preset or `dynamic-plugins.yaml` adds nothing visible until it finds an entity carrying the right annotation. Without entities in the catalog, plugins have no subject to attach to. (See [Composing a Portal](./portal-composition.md) for the full three-layer model.)
+- **Templates produce catalog entries.** Every component a team creates via the scaffolder registers a `catalog-info.yaml`, which is how the portal learns the new service exists.
+- **RBAC operates on catalog entities.** Permissions are evaluated against entity ownership and relations — `spec.owner`, `spec.system`, group membership. Without the catalog populated, access control has nothing to enforce.
+
+This means Day-0 work is catalog work: register your services, APIs, and infrastructure before enabling plugins or configuring backends.
+
+---
+
 ## **Entity Kinds**
 
 The catalog tracks the following entity kinds (configured in `catalog.rules`):

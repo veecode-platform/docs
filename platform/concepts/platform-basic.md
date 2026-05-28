@@ -12,7 +12,7 @@ An **Internal Developer Platform (IDP)** is a curated set of tools, services, an
 
 ## Core Definition
 
-An Internal Developer Platform (IDP) is fundamentally about reducing cognitive load on stream-aligned product teams (as defined in [Team Topologies](../references/team-topologies)) by providing the thinnest viable platform. This allows teams to **focus on business logic and outcomes**, instead of wrestling with infrastructure and operational concerns.
+An Internal Developer Platform (IDP) is fundamentally about reducing cognitive load on stream-aligned product teams (as defined in [Team Topologies](../references/team-topologies.md)) by providing the thinnest viable platform. This allows teams to **focus on business logic and outcomes**, instead of wrestling with infrastructure and operational concerns.
 
 The Platform serves as a digital foundation that:
 
@@ -93,6 +93,6 @@ Reference implementations and architectural patterns for building complex system
 
 ## Conclusion
 
-An Internal Developer Platform is not just a collection of tools—it's a **strategic capability** that enables organizations to achieve the fast flow of change essential for competitive advantage in the digital economy. By applying [Team Topologies](../references/team-topologies) principles and cloud native patterns, an IDP becomes the foundation that allows development teams to focus on what matters most: delivering value to customers.
+An Internal Developer Platform is not just a collection of tools—it's a **strategic capability** that enables organizations to achieve the fast flow of change essential for competitive advantage in the digital economy. By applying [Team Topologies](../references/team-topologies.md) principles and cloud native patterns, an IDP becomes the foundation that allows development teams to focus on what matters most: delivering value to customers.
 
 The key to success lies in maintaining the balance between providing powerful capabilities while keeping cognitive load low, treating the platform as a product, and continuously evolving based on the needs of stream-aligned teams.

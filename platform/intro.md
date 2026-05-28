@@ -4,40 +4,17 @@ sidebar_label: Platform Intro
 title: Platform Intro
 ---
 
-import style from './style.module.css';
+# Platform Concepts
 
-:::tip
-We are currently revamping the whole documentation, please come back later to check our improved guides and docs. In the meantime check the other sections of the documentation ([DevPortal](../devportal/intro), [Admin-UI](../admin-ui/intro) and [VKDR-CLI](../vkdr/intro)).
-:::
+This section covers the **why** behind the VeeCode Platform: the principles, patterns, and design decisions that inform how the platform is built and how your team should use it.
 
+If you're looking for installation or configuration instructions, that's in [DevPortal](/devportal/intro).
 
-# Intro
+## What's here
 
-VeeCode Platform is a set of tools and services that help you to build your own Internal Developer Platform. It follows the principles of "batteries included but swappable", meaning that you can use the platform as is or customize it to meet your specific needs and to embrace your own DevOps culture and tools.
+- **[Composing a Portal](/platform/concepts/portal-composition)** — How plugins, catalog, and annotations compose into an operational hub; the three-layer model and Day-0/1/2 progression
+- **[Golden Paths](/platform/concepts/golden-paths)** — Why opinionated paths reduce cognitive load and how Software Templates realize them
+- **[Self-Service Design](/platform/concepts/self-service-design)** — What self-service means in practice and what it requires from the platform team
+- **[Capabilities](/platform/capabilities/platform-capabilities)** — The platform building blocks and how they compose
 
-
-## Hot Shortcuts
-
-You may want to skip documents and go straight to a few key sections, if you are feeling brave.
-
-<div className={style.wrapper}>
-
-export const Card = ({children, title, link}) => (
-   <div className={style.card}
-      onClick={() => window.location = link }
-      onKeyDown={(e) => e.key === 'Enter' && (window.location = link)}
-      tabIndex={0}
-      role="button"
-      aria-label={`Navigate to ${title}`}>
-      <div className={style.titlebar}>
-         <h3 className={style.title}>{title}</h3>
-      </div>
-      <p className={style.desc}>
-         {children}
-      </p>
-   </div>
-);
-
-<Card title="📄️ Self-Service Demo" link="">Explore the platform's features through a simple interactive demo.</Card>
-
-</div>
+VeeCode Platform is built on the principle of "batteries included but swappable": you can use it as-is or replace components to match your organization's tooling. The concepts here explain the reasoning behind default choices.

@@ -207,8 +207,33 @@ catalog:
             minutes: 3
 ```
 
+## Replacing vs adding to the demo catalog
+
+The default DevPortal image ships with demo entities registered via `/app/examples/` in `app-config.production.yaml` (see [Docker Run — What's in the demo catalog](./intro.md#whats-in-the-demo-catalog)). Backstage merges `catalog.locations[]` **additively** across config layers, so understanding the consequence matters:
+
+**Adding alongside the demo (the common case):** Anything you put in `app-config.local.yaml` under `catalog.locations[]` is appended to the demo locations. Both sets will appear in the portal. This is what every example in this page does, and it's almost always what you want for a first contact.
+
+**Removing the demo entirely:** You can't suppress an entry from a lower layer via the local config — `catalog.locations[]` does not support "remove this." The only path is to mount a replacement `app-config.production.yaml` that omits the demo locations:
+
+```bash
+# 1. Extract the existing production yaml as a starting point
+docker cp devportal:/app/app-config.production.yaml ./app-config.production.yaml
+
+# 2. Edit it — remove the /app/examples/* entries from catalog.locations
+#    Keep everything else (baseUrl, CORS, auth, RBAC paths, etc.)
+
+# 3. Mount your edited version on the next run
+docker run --rm -d -p 7007:7007 \
+  -v $(pwd)/app-config.production.yaml:/app/app-config.production.yaml:ro \
+  veecode/devportal:2.0.0
+```
+
+:::warning
+Mounting your own `app-config.production.yaml` replaces the file entirely. Make sure you start from the version in the image you're actually using — values change between releases. Re-extract after every image upgrade.
+:::
+
 ## Next Steps
 
-- [Custom App Configuration](./custom-config)
-- [Configure Dynamic Plugins](./custom-plugins)
+- [Custom App Configuration](./custom-config.md)
+- [Configure Dynamic Plugins](./custom-plugins.md)
 - [Backstage Catalog Documentation](https://backstage.io/docs/features/software-catalog/)

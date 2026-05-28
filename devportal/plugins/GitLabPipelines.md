@@ -6,6 +6,8 @@ title: GitLab Pipelines Plugin
 
 # GitLab Pipelines Plugin
 
+Without this plugin, a service registered in the portal has no visibility into its own CI pipelines. Developers context-switch to GitLab to check pipeline status or trigger runs — the portal and the CI tool are disconnected. Enable the plugin, add `gitlab.com/project-slug` to the entity, and the CI tab shows live pipeline history with the ability to trigger new runs directly from the portal.
+
 The GitLab Pipelines plugin integrates GitLab CI with your DevPortal component. It provides two views:
 
 - **Pipelines List** — lists recent pipelines with the ability to trigger or cancel runs.

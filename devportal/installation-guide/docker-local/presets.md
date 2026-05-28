@@ -310,7 +310,7 @@ For setup instructions, see the [LDAP integration guide](/devportal/integrations
 
 ### `mcp`
 
-MCP (Model Context Protocol) actions server integration. No required variables — see the [MCP integration guide](/devportal/integrations/MCP) for configuration.
+MCP (Model Context Protocol) actions server integration. No required variables — see the [MCP integration guide](/devportal/integrations/mcp) for configuration.
 
 ---
 

@@ -12,8 +12,9 @@ const config = {
   tagline: "Access the comprehensive documentation for VeeCode Platform, covering the DevPortal and Admin-UI. Learn how to effectively use these powerful tools to build and deploy your applications with ease.",
   url: "https://docs.platform.vee.codes/",
   baseUrl: "/",
-  onBrokenLinks: "ignore",
-  onBrokenMarkdownLinks: "warn",
+  onBrokenLinks: "throw",
+  onBrokenMarkdownLinks: "throw",
+  onBrokenAnchors: "throw",
   favicon: "img/favicon.ico",
   organizationName: "veecode-platform", // Usually your GitHub org/user name.
   projectName: "VeeCode Platform Services", // Usually your repo name.

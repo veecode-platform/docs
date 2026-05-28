@@ -170,7 +170,7 @@ We created VeeCode Profiles as a simple way to configure authentication and inte
 
 You will find more information about VeeCode Profiles in:
 
-- [Quick Setup with Profiles](/devportal/installation-guide/docker-local/profiles)
+- [Quick Setup with Profiles](/devportal/v1/installation-guide/docker-local/profiles)
 
 ## Troubleshooting
 

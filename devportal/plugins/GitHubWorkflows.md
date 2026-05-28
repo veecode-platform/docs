@@ -6,7 +6,9 @@ title: GitHub Workflows Plugin
 
 # GitHub Workflows Plugin
 
-The GitHub Workflows plugin provides an alternative for manually triggering GitHub workflows from within your DevPortal component. It offers two distinct approaches:
+Without this plugin, triggering a workflow means leaving the portal, navigating to GitHub, finding the repository, and running the action from there — the developer loses service context and the portal has no visibility into what happened. Enable the plugin, add `github.com/project-slug` to the entity, and a workflow card appears on the entity overview. Workflows can be triggered and monitored without leaving the service page.
+
+The GitHub Workflows plugin provides manual workflow triggering from within a DevPortal component. It offers two distinct approaches:
 
 - **Workflows List** — lists all workflows in the repository, with branch selection and manual trigger support.
 - **Workflow Cards** — an overview card showing only workflows pinned via annotation.
