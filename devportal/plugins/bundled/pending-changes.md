@@ -26,7 +26,7 @@ The Pending Changes plugin adds a badge to the Global Header indicating that plu
 
 ---
 
-## Mount point configuration (from `dynamic-plugins.default.yaml`)
+## Mount point configuration
 
 ```yaml
 pluginConfig:

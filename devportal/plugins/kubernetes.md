@@ -12,7 +12,7 @@ With the plugin enabled, the entity page becomes the operational view for the se
 
 The Kubernetes plugin displays the live state of Kubernetes resources — pods, deployments, services, and more — for a catalog entity. It appears as a **Kubernetes tab on the entity page** (not a sidebar item).
 
-The plugin ships in the **bundled catalog** (`dynamic-plugins.default.yaml`) with `disabled: true`. It is fetched from the OCI registry at boot when enabled — no image rebuild or support contact is needed. The recommended activation path is the `kubernetes` preset.
+The plugin is listed in `dynamic-plugins.default.yaml` (reference) as `disabled: true`. It is fetched from the OCI registry at boot when enabled — no image rebuild or support contact is needed. The recommended activation path is the `kubernetes` preset.
 
 ---
 

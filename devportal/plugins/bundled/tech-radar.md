@@ -29,7 +29,7 @@ The Tech Radar plugin provides a visual technology adoption radar, helping teams
 
 ---
 
-## Mount point configuration (from `dynamic-plugins.default.yaml`)
+## Mount point configuration
 
 ```yaml
 pluginConfig:

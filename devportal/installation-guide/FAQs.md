@@ -111,7 +111,7 @@ See [Dynamic Plugins](./docker-local/custom-plugins.md) for mount instructions.
 
 ### Why do I only set `plugins:` in `dynamic-plugins.yaml`, not `includes:`?
 
-In V2 the entrypoint owns the `includes:` chain. On every boot it copies your mounted `dynamic-plugins.yaml` to a writable shadow and rebuilds `includes:` to prepend the resolved image defaults (`dynamic-plugins.default.resolved.yaml`), the marketplace state, and each selected preset's plugin fragment. Any `includes:` you write yourself is **replaced**.
+In V2 the entrypoint owns the `includes:` chain. On every boot it copies your mounted `dynamic-plugins.yaml` to a writable shadow and rebuilds `includes:` to prepend the marketplace state and each selected preset's plugin fragment. Any `includes:` you write yourself is **replaced**.
 
 So you provide only a top-level `plugins:` list:
 
@@ -121,7 +121,7 @@ plugins:
     disabled: false
 ```
 
-You cannot accidentally lose the pre-installed plugins by omitting the defaults, and you never reference `dynamic-plugins.default.resolved.yaml` yourself. (This differs from the V1 distro, where the defaults had to be included manually.) If your mounted `dynamic-plugins.yaml` is malformed YAML, the boot aborts with exit code **78** rather than silently dropping plugins.
+You cannot accidentally lose the pre-installed plugins — the core plugins are declared directly in `dynamic-plugins.yaml` with `preInstalled: true` and are always merged in. (This differs from V1, where the defaults had to be included manually.) If your mounted `dynamic-plugins.yaml` is malformed YAML, the boot aborts with exit code **78** rather than silently dropping plugins.
 
 ---
 

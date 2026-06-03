@@ -47,17 +47,19 @@ provider. They are extracted into the image at build time and need no preset.
 
 ---
 
-## The catalog: `dynamic-plugins.default.yaml`
+## The reference catalog: `dynamic-plugins.default.yaml`
 
-`dynamic-plugins.default.yaml` is the **catalog** (the *vitrine*) — the
-authoritative list of every optional plugin the image knows about. Every
-optional entry ships with `disabled: true`. **No optional plugin is on by
-default**; the image boots to a working shell with only the pre-installed chrome
-plugins visible.
+`dynamic-plugins.default.yaml` is the **reference catalog** (the *vitrine*) — a
+browsable list of every optional plugin the image bundles, with package names and
+default OCI references. It is **not part of the boot chain**.
 
-Editing this file changes what *is available*, not what *is enabled*. Do not
-edit it to enable a plugin for one deployment — it is image-level configuration.
-Use one of the selection surfaces below instead.
+Every optional entry is listed with `disabled: true` as its default state. Use
+the catalog to look up a plugin's package name or OCI reference before enabling
+it via a preset or `dynamic-plugins.yaml`. A plugin not listed here works fine
+if declared directly in `dynamic-plugins.yaml`.
+
+Do not edit it to enable a plugin for one deployment — it is image-level
+documentation. Use one of the selection surfaces below instead.
 
 ---
 
@@ -67,13 +69,10 @@ A plugin is enabled if **any** selection surface includes it. There are three:
 
 ### 1. Presets (`VEECODE_PRESETS`) — recommended
 
-Presets flip `disabled: false` for the plugins they enable. Critically, the
-plugin's `pluginConfig:` block (mount points, dynamic routes, RBAC scopes, menu
-items) stays in `dynamic-plugins.default.yaml`. A preset entry only carries the
-`package:` key and `disabled: false` — `install-dynamic-plugins.py` merges
-records shallow by `package:` key, so the default's `pluginConfig:` attaches
-automatically. Enabling an existing plugin via a new preset is a ~3-line YAML
-addition. See [Presets](./presets.md).
+Presets enable the plugins they declare. Each preset entry is self-contained — it
+carries `package:`, `disabled: false`, and the full `pluginConfig:` (mount
+points, dynamic routes, RBAC scopes, menu items) inline. No merge with
+`dynamic-plugins.default.yaml` is needed at runtime. See [Presets](./presets.md).
 
 ### 2. Operator override — mounted `dynamic-plugins.yaml`
 
@@ -93,8 +92,8 @@ which is included in the plugin chain on the next restart and **survives
 container restarts** as long as the `/app/data` volume is retained. (This is why
 `/app/data` must be a directory volume, not a single-file bind mount.)
 
-:::note The catalog and the marketplace index are independent
-The boot catalog (`dynamic-plugins.default.yaml`) and the marketplace's
+:::note The reference catalog and the marketplace index are independent
+`dynamic-plugins.default.yaml` (reference catalog) and the marketplace's
 `plugin-catalog-index` are two independent artifacts that share content but are
 maintained separately. Editing one does not sync the other. The unification of
 the two is a deferred decision — see
@@ -109,7 +108,7 @@ For the full precedence table when surfaces conflict, see
 
 ## OCI reference shape
 
-OCI plugin references in `dynamic-plugins.default.yaml` follow this pattern:
+OCI plugin references used in presets and `dynamic-plugins.yaml` follow this pattern:
 
 ```
 oci://${PLUGIN_REGISTRY}/<workspace>:bs_${BACKSTAGE_VERSION}!<selector>
@@ -163,10 +162,9 @@ At container start, before Backstage accepts requests:
 
 1. **Preset resolver** validates required env vars (exit 78 on missing) and
    writes a `preset-<name>-plugins.yaml` for each preset with a `plugins:` list.
-2. **Assemble the includes chain** — `dynamic-plugins.yaml` and
-   `dynamic-plugins.default.yaml` are copied to writable working files and the
-   `includes:` chain is rebuilt to reference the catalog, the marketplace file,
-   and each preset's plugin file.
+2. **Assemble the includes chain** — `dynamic-plugins.yaml` is copied to a
+   writable working file and the `includes:` chain is rebuilt to reference the
+   marketplace file and each preset's plugin file.
 3. **`${BACKSTAGE_VERSION}` and `${PLUGIN_REGISTRY}` substitution** across the
    working files.
 4. **`install-dynamic-plugins.py`** — for each enabled entry, `skopeo copy`

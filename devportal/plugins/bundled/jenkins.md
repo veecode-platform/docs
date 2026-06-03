@@ -10,7 +10,7 @@ Without this plugin, build status lives in Jenkins — developers context-switch
 
 The Jenkins plugin displays Jenkins build status in catalog entity pages.
 
-**Status:** Ships in the bundled catalog (`dynamic-plugins.default.yaml`) with `disabled: true`. Fetched from the OCI registry at boot when enabled — no image rebuild needed. Activated automatically by the `jenkins` preset.
+**Status:** Listed in `dynamic-plugins.default.yaml` (reference) as `disabled: true`. Fetched from the OCI registry at boot when enabled — no image rebuild needed. Activated automatically by the `jenkins` preset.
 
 ---
 

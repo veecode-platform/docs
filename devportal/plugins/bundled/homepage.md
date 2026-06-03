@@ -26,7 +26,7 @@ The VeeCode Homepage plugin provides the customizable landing page for DevPortal
 
 ---
 
-## Mount point configuration (from `dynamic-plugins.default.yaml`)
+## Mount point configuration
 
 ```yaml
 pluginConfig:

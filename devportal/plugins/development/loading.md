@@ -21,7 +21,7 @@ plugins:
     disabled: false
 ```
 
-You only provide `plugins:`. The entrypoint owns the `includes:` chain — on every boot it copies your file to a writable shadow and rebuilds `includes:` to prepend the resolved image defaults (`dynamic-plugins.default.resolved.yaml`), the marketplace state, and each preset fragment. An `includes:` block you add yourself is replaced, so you never need to (and shouldn't) reference the defaults manually.
+You only provide `plugins:`. The entrypoint owns the `includes:` chain — on every boot it copies your file to a writable shadow and rebuilds `includes:` to prepend the marketplace state and each preset fragment. An `includes:` block you add yourself is replaced, so you never need to write one.
 
 Mount it in your compose file or Kubernetes Deployment manifest — see [Adding Plugins](../adding.md) for the exact volume/ConfigMap syntax.
 

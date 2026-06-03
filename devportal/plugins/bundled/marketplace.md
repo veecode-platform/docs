@@ -46,7 +46,7 @@ This means Marketplace selections **persist across restarts** once the pod is re
 
 ---
 
-## Mount point configuration (from `dynamic-plugins.default.yaml`)
+## Mount point configuration
 
 ```yaml
 pluginConfig:

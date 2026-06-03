@@ -84,7 +84,7 @@ plugins:
 
 ## How merging works — the entrypoint owns `includes:`
 
-You provide only a top-level `plugins:` list. You do **not** write an `includes:` key. On every boot the entrypoint copies your `dynamic-plugins.yaml` to a writable shadow and **rebuilds** the `includes:` chain itself, prepending the resolved image defaults, the marketplace state, and any preset fragments. Any `includes:` you add is replaced — so you cannot accidentally drop the pre-installed plugins by omitting it:
+You provide only a top-level `plugins:` list. You do **not** write an `includes:` key. On every boot the entrypoint copies your `dynamic-plugins.yaml` to a writable shadow and **rebuilds** the `includes:` chain itself, prepending the marketplace state and any preset fragments. Any `includes:` you add is replaced — so you cannot accidentally drop the pre-installed plugins:
 
 ```yaml
 plugins:
@@ -92,8 +92,6 @@ plugins:
   - package: './dynamic-plugins/dist/some-plugin-dynamic'
     disabled: false
 ```
-
-(The entrypoint-owned shadow it prepends is `dynamic-plugins.default.resolved.yaml`, the image defaults with `${BACKSTAGE_VERSION}` and `${PLUGIN_REGISTRY}` already substituted. It exists for the entrypoint's use — you don't reference it.)
 
 After the plugin install script runs, it generates `dynamic-plugins-root/app-config.dynamic-plugins.yaml` from the `pluginConfig` blocks of all enabled plugins. This generated file loads after your `app-config.local.yaml` (and before `app-config.saas.yaml` in SaaS deployments).
 

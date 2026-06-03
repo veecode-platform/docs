@@ -36,4 +36,6 @@ The Backstage plugin ecosystem does not yet have a universal standard for publis
 
 ## Checking what is already bundled
 
-Review `dynamic-plugins.default.yaml` in the DevPortal distro for the definitive list of bundled plugins and their package names. All entries with `preInstalled: true` are always active; entries with `disabled: true` are available but need enabling.
+`dynamic-plugins.default.yaml` in the DevPortal distro is a convenience reference listing bundled plugin packages and their default configuration — useful for finding a plugin's package name. It is not part of the boot chain.
+
+The always-on plugins are declared in `dynamic-plugins.yaml` with `preInstalled: true` and carry their full `pluginConfig` there. Optional plugins are enabled by declaring them in your `dynamic-plugins.yaml` or by activating a preset — no `includes` reference to `.default.yaml` is required. A plugin not listed in `.default.yaml` works fine if declared directly in `dynamic-plugins.yaml`.

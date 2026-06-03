@@ -30,7 +30,7 @@ The About plugin displays version and instance information for the DevPortal dep
 
 ---
 
-## Mount point configuration (from `dynamic-plugins.default.yaml`)
+## Mount point configuration
 
 ```yaml
 pluginConfig:

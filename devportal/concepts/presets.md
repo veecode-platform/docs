@@ -35,7 +35,7 @@ things:
 | Field | Purpose |
 | --- | --- |
 | `requires.variables` | The environment variables the operator must supply, each with a description, `required` flag, optional `docs` URL, and `example`. |
-| `plugins` | The dynamic plugins the situation needs, as OCI references (`oci://...!<selector>`). Each entry's `package:` must match an entry in `dynamic-plugins.default.yaml` so the resolver flips it from `disabled: true` to `disabled: false`. |
+| `plugins` | The dynamic plugins the situation needs. Each entry is self-contained: `package:` (OCI reference), `disabled: false`, and the full `pluginConfig:` block inline. |
 | `appConfig` | The Backstage `app-config` block those plugins expect. Written to its own `app-config.preset-<name>.yaml` and passed to Backstage as a `--config` file. |
 
 Many integration presets carry an empty `plugins: []` list — their backend
@@ -73,12 +73,12 @@ An operator-mounted `app-config.local.yaml` always wins over preset-generated
 configs. See [Configuration Hierarchy](./configuration-hierarchy.md) for the
 full precedence chain.
 
-:::warning The `package:` value must match exactly
-A preset's `package:` string must match the entry in
-`dynamic-plugins.default.yaml` verbatim — including the `${PLUGIN_REGISTRY}`
-and `${BACKSTAGE_VERSION}` variable forms. A mismatch installs the plugin a
-second time under a different name and the backend crashes on duplicate
-registration.
+:::warning The `package:` value must be unique across all sources
+If the same plugin is declared in both a preset and `dynamic-plugins.yaml`, the
+`package:` strings must be identical — including the `${PLUGIN_REGISTRY}` and
+`${BACKSTAGE_VERSION}` variable forms. A mismatch causes the install script to
+treat them as two distinct plugins, installing the bundle twice and crashing the
+backend on duplicate registration.
 :::
 
 ---
