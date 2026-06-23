@@ -20,7 +20,7 @@ For most branding use cases, the `app.branding.theme.*` configuration in `app-co
 ```yaml
 services:
   devportal:
-    image: veecode/devportal:2.1.3
+    image: veecode/devportal:2.2.0
     ports:
       - "7007:7007"
     environment:

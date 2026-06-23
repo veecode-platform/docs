@@ -6,7 +6,7 @@ title: Install with VKDR (Kubernetes)
 
 **Get DevPortal V2 running locally in under 5 minutes**
 
-This guide installs **DevPortal V2** (`docker.io/veecode/devportal:2.1.3`) into a local Kubernetes cluster using `vkdr devportal-platform install` — a single command that provisions Kong, applies the published `veecode-devportal-platform` Helm chart, and wires up credentials automatically.
+This guide installs **DevPortal V2** (`docker.io/veecode/devportal:2.2.0`) into a local Kubernetes cluster using `vkdr devportal-platform install` — a single command that provisions Kong, applies the published `veecode-devportal-platform` Helm chart, and wires up credentials automatically.
 
 It is designed for users who want to quickly evaluate the V2 platform in a cost-effective manner, directly on their own machine, without the need for a full-scale cluster.
 

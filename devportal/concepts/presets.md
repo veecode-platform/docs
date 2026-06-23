@@ -194,7 +194,7 @@ Required variables are **unioned** across the selected presets; the boot exits
 ```sh
 docker run -p 7007:7007 \
   -e VEECODE_PRESETS=recommended,veecode-theme \
-  veecode/devportal:2.1.3
+  veecode/devportal:2.2.0
 ```
 
 The evaluation starting point: VeeCode brand palette, marketplace, tech-radar,
@@ -207,7 +207,7 @@ docker run -p 7007:7007 \
   -e VEECODE_PRESETS=recommended,veecode-theme,github \
   -e GITHUB_PAT=ghp_xxxx \
   -e GITHUB_ORG=my-org \
-  veecode/devportal:2.1.3
+  veecode/devportal:2.2.0
 ```
 
 The `github` preset wires a catalog provider that scans `catalog-info.yaml`
@@ -224,7 +224,7 @@ docker run -p 7007:7007 \
   -e KEYCLOAK_CLIENT_ID=devportal \
   -e KEYCLOAK_CLIENT_SECRET=xxx \
   -e AUTH_SESSION_SECRET=xxx \
-  veecode/devportal:2.1.3
+  veecode/devportal:2.2.0
 ```
 
 ---

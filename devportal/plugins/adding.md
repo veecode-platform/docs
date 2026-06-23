@@ -82,7 +82,7 @@ docker exec <container> cat /app/backstage.json
 # {"version":"1.49.4", ...}  → use bs_1.49.4
 
 # On the image directly, without a running container
-docker run --rm veecode/devportal:2.1.3 cat /app/backstage.json
+docker run --rm veecode/devportal:2.2.0 cat /app/backstage.json
 ```
 
 The boot log prints the same value once resolved: `VEECODE: resolving ${BACKSTAGE_VERSION} → 1.49.4`. On a running container you can also grep the resolved defaults — `docker exec <container> grep -o 'bs_[0-9.]*' /app/dynamic-plugins.default.resolved.yaml | sort -u` — since the entrypoint substitutes the real version into that shadow.

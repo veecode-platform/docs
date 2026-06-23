@@ -179,7 +179,7 @@ docker run -p 7007:7007 \
   -e K8S_CLUSTER_TOKEN=xxx \
   -e SONARQUBE_BASE_URL=https://sonar.internal -e SONARQUBE_API_KEY=xxx \
   -v $(pwd)/app-config.local.yaml:/app/app-config.local.yaml:ro \
-  veecode/devportal:2.1.3
+  veecode/devportal:2.2.0
 ```
 
 **Each service's `catalog-info.yaml` — Context, what it owns:**

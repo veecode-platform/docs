@@ -9,7 +9,7 @@ title: Migrating from V1 to V2
 This guide is for operators running **V1** — the split-image topology
 (`veecode/devportal-base` + `veecode/devportal`, profiles via
 `VEECODE_PROFILE`) — who want to move to **V2**, the unified
-`veecode/devportal:2.1.3` image driven by composable presets.
+`veecode/devportal:2.2.0` image driven by composable presets.
 
 :::info Migration is optional and reversible
 V1 stays on its maintenance line (security backports). Upgrade when it
@@ -22,7 +22,7 @@ restore `VEECODE_PROFILE`). Not sure which version you run? See
 
 | V1 (split image) | V2 (unified image) |
 |---|---|
-| Two images: `veecode/devportal-base` + `veecode/devportal` | One image: `veecode/devportal:2.1.3` |
+| Two images: `veecode/devportal-base` + `veecode/devportal` | One image: `veecode/devportal:2.2.0` |
 | Plugins baked into the distro at build time | Plugins ship **disabled by default**, resolved at boot via `oci://` refs, enabled by presets |
 | One profile via `VEECODE_PROFILE=<github\|gitlab\|…>` (loads one `app-config.<profile>.yaml`) | Composable presets via `VEECODE_PRESETS=a,b,c` — SCM and identity are **separate** presets you compose |
 | VeeCode look baked into `packages/app` | Same look opt-in via the `veecode-theme` preset |
@@ -157,7 +157,7 @@ Use this table to find where each V1 setting goes. Build the new file against
 | `global.host` / `global.protocol` / `global.port` | `ingress.hostname` |
 | `upstream.ingress.*` | `ingress.*` |
 | `upstream.backstage.extraEnvVarsSecret` + `${VAR}` refs in `appConfig` | `existingSecret` (production) or `credentials: {}` — wired in via `envFrom` |
-| `upstream.backstage.image` (`veecode/devportal:1.4.5`) | `image` (`veecode/devportal:2.1.3`) |
+| `upstream.backstage.image` (`veecode/devportal:1.4.5`) | `image` (`veecode/devportal:2.2.0`) |
 | `upstream.postgresql.*` (bundled Bitnami subchart) | `database.external.*` — no bundled database; supply external coordinates |
 | `createClusterRoles: true` | `rbac.clusterRoles.create: true` |
 | _(ephemeral; no PVCs)_ | `persistence.data` + `persistence.plugins` — **new in V2, required for production** (Backstage state + plugin-bundle cache) |
@@ -179,7 +179,7 @@ Pick the path that matches V1's:
 
 - **Production Kubernetes** → the published `veecode-devportal-platform` Helm chart. See [Kubernetes (Helm chart)](./installation-guide/production-setup/plan.md).
 - **Local Kubernetes (VKDR)** → `vkdr devportal-platform install`. See [VKDR (Local Kubernetes)](./installation-guide/vkdr-local/vkdr-setup.md).
-- **Docker** → `veecode/devportal:2.1.3` with `VEECODE_PRESETS`. See [Docker Run](./installation-guide/docker-local/intro.md).
+- **Docker** → `veecode/devportal:2.2.0` with `VEECODE_PRESETS`. See [Docker Run](./installation-guide/docker-local/intro.md).
 
 ## What is NOT part of this migration
 

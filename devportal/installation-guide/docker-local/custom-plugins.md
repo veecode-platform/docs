@@ -50,7 +50,7 @@ plugins:
 docker run --rm --name devportal -d \
   -p 7007:7007 \
   -v $(pwd)/dynamic-plugins.yaml:/app/dynamic-plugins.yaml:ro \
-  veecode/devportal:2.1.3
+  veecode/devportal:2.2.0
 ```
 
 ## Mounting with Docker Compose
@@ -60,7 +60,7 @@ Update your `docker-compose.yml`:
 ```yaml
 services:
   devportal:
-    image: veecode/devportal:2.1.3
+    image: veecode/devportal:2.2.0
     ports:
       - "7007:7007"
     volumes:
