@@ -6,25 +6,25 @@ MCP server exposing the VeeCode Platform documentation (DevPortal, Platform, Adm
 
 The server serves **one DevPortal docs version per instance** — it never mixes them. Choose with `--version v1|v2` (or `VEECODE_DOCS_MCP_VERSION`):
 
-- **`v1` (default)** — the split-image / profiles release (`VEECODE_PROFILE`). This is the production-default docs and what most installs run today.
-- **`v2`** — the unified `veecode/devportal:2.0.0` / presets release (currently a preview).
+- **`v2` (default)** — the unified `veecode/devportal` / presets release. This is the current default docs line.
+- **`v1`** — the prior split-image / profiles release (`VEECODE_PROFILE`), still supported with security backports.
 
 The choice is bound for the whole session: search/get/list only return that version, and the background refresh only pulls that version's snapshot — so there is no cross-version drift. (`platform`, `admin-ui`, and `vkdr` docs are version-neutral and present in both.) Confirm the loaded version with the `get_snapshot_info` tool (`docs_version` field).
 
 ## Use with Claude Code
 
-V1 (default) — no global install:
+V2 (default) — no global install:
 
 ```bash
 claude mcp add veecode-docs --scope user \
   -- npx -y @veecode-platform/docs-mcp
 ```
 
-V2 (preview) — pass `--version v2`:
+V1 — pass `--version v1`:
 
 ```bash
-claude mcp add veecode-docs-v2 --scope user \
-  -- npx -y @veecode-platform/docs-mcp --version v2
+claude mcp add veecode-docs-v1 --scope user \
+  -- npx -y @veecode-platform/docs-mcp --version v1
 ```
 
 `npx` downloads the package on first call (~5s) and caches it. You can add both side by side. Or add to `~/.mcp.json` manually:
@@ -34,11 +34,11 @@ claude mcp add veecode-docs-v2 --scope user \
   "mcpServers": {
     "veecode-docs": {
       "command": "npx",
-      "args": ["-y", "@veecode-platform/docs-mcp", "--version", "v1"]
+      "args": ["-y", "@veecode-platform/docs-mcp"]
     },
-    "veecode-docs-v2": {
+    "veecode-docs-v1": {
       "command": "npx",
-      "args": ["-y", "@veecode-platform/docs-mcp", "--version", "v2"]
+      "args": ["-y", "@veecode-platform/docs-mcp", "--version", "v1"]
     }
   }
 }
@@ -51,7 +51,7 @@ claude mcp add veecode-docs-v2 --scope user \
 ```toml
 [mcp_servers.veecode-docs]
 command = "npx"
-args = ["-y", "@veecode-platform/docs-mcp", "--version", "v1"]
+args = ["-y", "@veecode-platform/docs-mcp"]
 ```
 
 ## Other install methods
@@ -60,8 +60,8 @@ If you'd rather not depend on `npx` resolution at launch:
 
 ```bash
 npm install -g @veecode-platform/docs-mcp
-# then point the MCP at the global binary (add --version v2 for the preview)
-claude mcp add veecode-docs --scope user -- veecode-docs-mcp --version v1
+# then point the MCP at the global binary (add --version v1 for the prior line)
+claude mcp add veecode-docs --scope user -- veecode-docs-mcp
 ```
 
 ## Tools exposed
@@ -85,7 +85,7 @@ The running session never swaps mid-conversation, so the agent's view of the doc
 
 | Variable | Effect |
 |----------|--------|
-| `VEECODE_DOCS_MCP_VERSION=v1\|v2` | Docs version to serve (default `v1`). Same as the `--version` flag. |
+| `VEECODE_DOCS_MCP_VERSION=v1\|v2` | Docs version to serve (default `v2`). Same as the `--version` flag. |
 | `VEECODE_DOCS_MCP_OFFLINE=1` | Skip the remote refresh check |
 | `VEECODE_DOCS_MCP_SNAPSHOT_URL=<url>` | Override the snapshot URL (takes precedence over the version default) |
 | `VEECODE_DOCS_MCP_CACHE_DIR=<path>` | Override the cache directory |

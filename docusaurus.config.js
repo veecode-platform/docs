@@ -48,14 +48,13 @@ const config = {
           path: "devportal",
           routeBasePath: "devportal",
           sidebarPath: require.resolve("./sidebars.js"),
-          // V1 is the current stable in production → it stays at the root
-          // (/devportal/) as the default. V2 is shipped as an opt-in preview at
-          // /devportal/v2 until the devportal-platform rollout matures, at which
-          // point lastVersion flips to "current" and the paths swap back.
-          lastVersion: "v1",
+          // V2 (the unified devportal-platform image, driven by presets) is the
+          // default, served at the root (/devportal/). V1 is the prior
+          // split-image line, kept at /devportal/v1/ for installs still on it.
+          lastVersion: "current",
           versions: {
-            current: { label: "v2 (preview)", path: "v2", banner: "unreleased" },
-            "v1": { label: "v1", path: "", banner: "none" },
+            current: { label: "v2", path: "", banner: "none" },
+            "v1": { label: "v1", path: "v1", banner: "unmaintained" },
           },
         },
         // docs: {
@@ -122,13 +121,20 @@ const config = {
             from: '/devportal/installation-guide/local-setup/docker-setup',
             to: '/devportal/installation-guide/docker-local/intro'
           },
-          // NOTE: the old V1-era → V2 redirects (configuration-profiles→presets,
-          // simple-setup/*→production-setup, understand-chart, docker-local/profiles)
-          // were removed: with V1 served at the root again, those `from` paths
-          // resolve to their real V1 pages, so a redirect would collide with an
-          // existing route (build error). Re-add them (pointing at /devportal/v2/…)
-          // when the default flips to V2.
         ],
+        // V2 is now served at the root (/devportal/). Preserve the preview-era
+        // links that circulated under /devportal/v2/… by redirecting each V2
+        // page from its old /devportal/v2/ path. V1 pages (/devportal/v1/…) and
+        // the other doc instances are left untouched.
+        createRedirects(existingPath) {
+          if (
+            existingPath.startsWith("/devportal/") &&
+            !existingPath.startsWith("/devportal/v1/")
+          ) {
+            return [existingPath.replace("/devportal/", "/devportal/v2/")];
+          }
+          return undefined;
+        },
       },
     ],
     'docusaurus-plugin-image-zoom',

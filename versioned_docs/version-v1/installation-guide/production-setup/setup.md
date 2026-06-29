@@ -256,7 +256,7 @@ kubectl rollout status deployment/veecode-devportal-backstage -n platform
 
 ## Next steps
 
-- Configure additional integrations and plugins — see the [Auth & Integrations](/devportal/integrations) section.
+- Configure additional integrations and plugins — see the [Auth & Integrations](/devportal/v1/integrations) section.
 - Review RBAC roles (`role:default/admin`, `role:default/developer`, `role:default/viewer`) and assign them to users.
 - For a deeper explanation of chart keys, see [Understand the Helm Chart](../understand-chart.md) or the [chart page on ArtifactHub](https://artifacthub.io/packages/helm/veecode-platform-next/veecode-devportal).
 

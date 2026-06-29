@@ -140,7 +140,7 @@ docker run -p 7007:7007 \
   -e GITLAB_AUTH_CLIENT_SECRET=<your-client-secret> \
   -e GITLAB_TOKEN=<your-access-token> \
   -e GITLAB_GROUP=<your-root-group> \
-  veecode/devportal:2.0.0
+  veecode/devportal:2.1.3
 ```
 
 ### Docker Compose
@@ -148,7 +148,7 @@ docker run -p 7007:7007 \
 ```yaml
 services:
   devportal:
-    image: veecode/devportal:2.0.0
+    image: veecode/devportal:2.1.3
     ports:
       - "7007:7007"
     environment:

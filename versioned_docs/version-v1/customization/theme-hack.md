@@ -70,7 +70,7 @@ Below, you'll find a table with references to the main graphical elements of the
 
 ## Internal `theme.json` file
 
-You can find below a copy of the default content of the internal theme file, but you can find it online at [theme.json](https://veecode-platform.github.io/support/references/devportal/theme.json). You can edit all the colors in this file, but remember you can use the `global.theme.customJson` value to override just the ones you want to change.
+You can find below a copy of the default content of the internal theme file, but you can find it online at [theme.json](https://veecode-platform.github.io/support/references/devportal/v1/theme.json). You can edit all the colors in this file, but remember you can use the `global.theme.customJson` value to override just the ones you want to change.
 
 ```json
 {

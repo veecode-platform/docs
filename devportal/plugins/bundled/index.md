@@ -10,7 +10,7 @@ DevPortal ships with a set of **preinstalled dynamic plugins** baked into the di
 
 A few core plugins (`preInstalled: true` in `dynamic-plugins.yaml`) are always loaded — they power the UI shell, navigation, and marketplace itself.
 
-Think of this catalog in terms of capability layers, not a flat install list. The always-on plugins establish the shell. The disabled-by-default plugins represent operational capabilities — CI/CD visibility, infrastructure observability, code quality — that your team activates based on what context-switches it wants to eliminate. Each plugin connects to a service entity via an annotation; the right question before enabling any plugin is "which entities will carry this annotation, and what does it replace for their developers?" See [Composing a Portal](/devportal/v2/concepts/portal-composition) for the full three-layer model.
+Think of this catalog in terms of capability layers, not a flat install list. The always-on plugins establish the shell. The disabled-by-default plugins represent operational capabilities — CI/CD visibility, infrastructure observability, code quality — that your team activates based on what context-switches it wants to eliminate. Each plugin connects to a service entity via an annotation; the right question before enabling any plugin is "which entities will carry this annotation, and what does it replace for their developers?" See [Composing a Portal](/devportal/concepts/portal-composition) for the full three-layer model.
 
 ---
 

@@ -1,14 +1,1 @@
-{
-  "theme.docs.versions.unreleasedVersionLabel": {
-    "message": "This is the {versionLabel} documentation — released, but not yet the default version.",
-    "description": "Banner shown on V2 (preview) pages. V2 is released (image 2.0.0, published chart) but V1 is still the default at the root, so the stock 'unreleased / in active development' wording would be wrong."
-  },
-  "theme.docs.versions.latestVersionSuggestionLabel": {
-    "message": "The current default is {latestVersionLink}.",
-    "description": "Points readers from the V2 preview to the default V1 docs."
-  },
-  "theme.docs.versions.latestVersionLinkLabel": {
-    "message": "the v1 docs",
-    "description": "Link text for the default (latest) version in the version banner."
-  }
-}
+{}

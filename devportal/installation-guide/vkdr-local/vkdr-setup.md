@@ -6,7 +6,7 @@ title: Install with VKDR (Kubernetes)
 
 **Get DevPortal V2 running locally in under 5 minutes**
 
-This guide installs **DevPortal V2** (`docker.io/veecode/devportal:2.0.0`) into a local Kubernetes cluster using `vkdr devportal-platform install` — a single command that provisions Kong, applies the published `veecode-devportal-platform` Helm chart, and wires up credentials automatically.
+This guide installs **DevPortal V2** (`docker.io/veecode/devportal:2.1.3`) into a local Kubernetes cluster using `vkdr devportal-platform install` — a single command that provisions Kong, applies the published `veecode-devportal-platform` Helm chart, and wires up credentials automatically.
 
 It is designed for users who want to quickly evaluate the V2 platform in a cost-effective manner, directly on their own machine, without the need for a full-scale cluster.
 
@@ -14,7 +14,7 @@ Within just a few minutes, you will have your own DevPortal V2 instance up and r
 The local setup is ideal for safe experimentation, feature evaluation, and prototyping, while requiring minimal setup and **no prior experience with Kubernetes or Helm**.
 
 :::note
-This guide covers **DevPortal V2**, which uses the presets model (`VEECODE_PRESETS`). V2 is configured through presets — not profiles. If you are looking for the V1 local setup, see [V1 local setup](/devportal/installation-guide/vkdr-local/vkdr-setup).
+This guide covers **DevPortal V2**, which uses the presets model (`VEECODE_PRESETS`). V2 is configured through presets — not profiles. If you are looking for the V1 local setup, see [V1 local setup](/devportal/v1/installation-guide/vkdr-local/vkdr-setup).
 :::
 
 ## Purpose of the Local Setup
@@ -38,7 +38,7 @@ The installation is divided into **six steps**, each building on the previous on
 1. **[Local Infrastructure Setup](infra.md):**
    Launch a lightweight Kubernetes cluster using `k3d` inside Docker. This cluster serves as the runtime environment for DevPortal.
 1. **[SCM Credentials Configuration](github.md):**
-   Generate and configure the required SCM credentials. These allow DevPortal to securely access your repositories and services. This uses GitHub as the example; for GitLab or Azure DevOps see [Integrations](/devportal/v2/integrations).
+   Generate and configure the required SCM credentials. These allow DevPortal to securely access your repositories and services. This uses GitHub as the example; for GitLab or Azure DevOps see [Integrations](/devportal/integrations).
 1. **[DevPortal Deployment](deployment.md):**
    Deploy DevPortal V2 locally using `vkdr devportal-platform install`. The tool takes care of the entire installation in just a few commands.
 1. **[Access and Verification](access-and-testing.md):**

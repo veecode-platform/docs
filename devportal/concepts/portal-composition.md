@@ -104,7 +104,7 @@ Common failure signatures and what they mean:
 | Log signature | What happened | Likely cause |
 |---|---|---|
 | `======= ERROR: Failed to install plugin ... npm ERR! 404` | npm package or version doesn't exist | Typo in `package:`, or version not published |
-| `======= ERROR: Failed to install plugin ... skopeo ... non-zero exit status 1` | OCI image not found or unreachable | Wrong workspace/tag, registry unreachable, or a bad `PLUGIN_REGISTRY` mirror prefix — see [Finding the OCI reference](/devportal/v2/plugins/adding) |
+| `======= ERROR: Failed to install plugin ... skopeo ... non-zero exit status 1` | OCI image not found or unreachable | Wrong workspace/tag, registry unreachable, or a bad `PLUGIN_REGISTRY` mirror prefix — see [Finding the OCI reference](/devportal/plugins/adding) |
 | `======= ERROR: ... hash of the downloaded package ... does not match the provided integrity hash` | Tampered or wrong-version artifact | Regenerate or remove the `integrity:` field, or set `SKIP_INTEGRITY_CHECK=true` for a trusted source |
 | `VEECODE: FATAL — /app/dynamic-plugins.yaml is not valid YAML; aborting boot` | Your mounted `dynamic-plugins.yaml` doesn't parse | YAML syntax error — boot aborts **before** install runs |
 | `InstallException: Config key '...' defined differently for 2 dynamic plugins` / duplicate ref rejection | The same plugin is enabled via two different refs | Reconcile the preset and your operator override to a single ref |
@@ -179,7 +179,7 @@ docker run -p 7007:7007 \
   -e K8S_CLUSTER_TOKEN=xxx \
   -e SONARQUBE_BASE_URL=https://sonar.internal -e SONARQUBE_API_KEY=xxx \
   -v $(pwd)/app-config.local.yaml:/app/app-config.local.yaml:ro \
-  veecode/devportal:2.0.0
+  veecode/devportal:2.1.3
 ```
 
 **Each service's `catalog-info.yaml` — Context, what it owns:**
@@ -210,7 +210,7 @@ kubernetes:
 Result: each service entity has a Kubernetes tab, a GitLab CI tab, and a Code Quality tab — each scoped to that service by its annotations. Developers see the operational state of their service in one place.
 
 :::note Plugins without a preset
-Not every plugin has a dedicated preset (Kubernetes, GitHub Actions, Jenkins, and others ship in the catalog disabled and are enabled via `dynamic-plugins.yaml` or the marketplace UI). The composition model is identical regardless of how a plugin is loaded — once loaded, it still follows the Context (annotation) and Backend (`app-config`) rules above. See [Adding Plugins](/devportal/v2/plugins/adding) and the [Bundled Plugin Catalog](/devportal/v2/plugins/bundled).
+Not every plugin has a dedicated preset (Kubernetes, GitHub Actions, Jenkins, and others ship in the catalog disabled and are enabled via `dynamic-plugins.yaml` or the marketplace UI). The composition model is identical regardless of how a plugin is loaded — once loaded, it still follows the Context (annotation) and Backend (`app-config`) rules above. See [Adding Plugins](/devportal/plugins/adding) and the [Bundled Plugin Catalog](/devportal/plugins/bundled).
 :::
 
 ---
@@ -230,7 +230,7 @@ The question isn't "which plugins are available" — it's "what does my team nee
 | SonarQube | SonarQube (`sonarqube` preset) | `sonarqube.org/project-key: project-key` |
 | HashiCorp Vault | Vault | `vault.io/secrets-path: secret/data/service` |
 
-For plugins not in the bundled set, see [Finding Plugins](/devportal/v2/plugins/finding).
+For plugins not in the bundled set, see [Finding Plugins](/devportal/plugins/finding).
 
 ---
 
@@ -239,5 +239,5 @@ For plugins not in the bundled set, see [Finding Plugins](/devportal/v2/plugins/
 - [Presets](./presets.md) — how `VEECODE_PRESETS` sets Day-0 auth, SCM, and the curated plugin set
 - [Dynamic Plugins](./dynamic-plugins.md) — the load layer in depth: catalog, selection surfaces, OCI references
 - [The Catalog](./catalog.md) — entity kinds, ownership, and how `catalog-info.yaml` is processed
-- [Adding Plugins](/devportal/v2/plugins/adding) — OCI and npm download configuration for plugins no preset covers
-- [Bundled Plugin Catalog](/devportal/v2/plugins/bundled) — what ships in the image and its default state
+- [Adding Plugins](/devportal/plugins/adding) — OCI and npm download configuration for plugins no preset covers
+- [Bundled Plugin Catalog](/devportal/plugins/bundled) — what ships in the image and its default state

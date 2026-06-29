@@ -17,11 +17,11 @@ GitHub offers two types of PATs:
 
 Follow this guide to create a **Classic PAT**:
 
-- [Classic PAT](/devportal/integrations/GitHub/github-tokens#classic-pat)
+- [Classic PAT](/devportal/v1/integrations/GitHub/github-tokens#classic-pat)
 
 Follow this guide to create a **Fine-grained PAT**:
 
-- [Fine-grained PAT](/devportal/integrations/GitHub/github-tokens#fine-grained-pat)
+- [Fine-grained PAT](/devportal/v1/integrations/GitHub/github-tokens#fine-grained-pat)
 
 :::tip
 While you are still struggling to understand the permissions and how they relate to core DevPortal features and plugins, you can always create a **Classic PAT**. It is the simplest option and will work for most cases. Make it work and later refine it to a **Fine-grained PAT** for better security and control or, even better, use a **GitHub App** approach.

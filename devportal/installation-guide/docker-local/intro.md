@@ -22,8 +22,8 @@ This guide explains how to run the VeeCode DevPortal using standard Docker comma
 You can simply run the following command to start a DevPortal instance locally:
 
 ```bash
-# pinned to 2.0.0 — replace with the current release tag
-docker run --rm --name devportal -d -p 7007:7007 veecode/devportal:2.0.0
+# pinned to 2.1.3 — replace with the current release tag
+docker run --rm --name devportal -d -p 7007:7007 veecode/devportal:2.1.3
 ```
 
 This will start a DevPortal instance running on [http://localhost:7007](http://localhost:7007).
@@ -47,7 +47,7 @@ Create a `docker-compose.yml` file:
 ```yaml
 services:
   devportal:
-    image: veecode/devportal:2.0.0
+    image: veecode/devportal:2.1.3
     ports:
       - "7007:7007"
 ```
@@ -85,7 +85,7 @@ We will talk more about these subjects later on, but understand there are many p
 
 ## What's in the demo catalog
 
-When you run `veecode/devportal:2.0.0` with no custom config, the catalog is **not empty by accident** — it is populated from `/app/examples/` inside the image. Knowing what's in there matters because (a) you can read these files as concrete examples of how every entity kind is declared, and (b) you need a strategy for replacing them when you go beyond the demo.
+When you run `veecode/devportal:2.1.3` with no custom config, the catalog is **not empty by accident** — it is populated from `/app/examples/` inside the image. Knowing what's in there matters because (a) you can read these files as concrete examples of how every entity kind is declared, and (b) you need a strategy for replacing them when you go beyond the demo.
 
 The demo data lives in these files (you can inspect them directly with `docker exec`):
 
@@ -129,4 +129,4 @@ Now that you have DevPortal running, you can customize it:
 - **[Custom Configuration](./custom-config.md)**: Mount custom `app-config.local.yaml` to configure integrations, authentication, and more
 - **[Dynamic Plugins](./custom-plugins.md)**: Enable, disable, and configure plugins using `dynamic-plugins.yaml`
 - **[Custom Catalog](./custom-catalog.md)**: Add your own components, APIs, and resources to the catalog
-- **[Kubernetes (Helm chart)](/devportal/v2/installation-guide/production-setup)**: Deploy to a real Kubernetes cluster using the `veecode-devportal-platform` Helm chart
+- **[Kubernetes (Helm chart)](/devportal/installation-guide/production-setup)**: Deploy to a real Kubernetes cluster using the `veecode-devportal-platform` Helm chart

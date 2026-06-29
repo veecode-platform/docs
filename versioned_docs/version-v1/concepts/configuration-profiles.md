@@ -122,4 +122,4 @@ See `app-config.ldap.yaml` / `app-config.ldap-ad.yaml` for the full set of `LDAP
 - If no profile is set, the base `app-config.yaml` guest auth is used (development only).
 - Profiles are additive — the profile config merges on top of the base; it does not replace it.
 
-For installation instructions that use these profiles, see the [installation guide](/devportal/installation-guide/simple-setup).
+For installation instructions that use these profiles, see the [installation guide](/devportal/v1/installation-guide/simple-setup).

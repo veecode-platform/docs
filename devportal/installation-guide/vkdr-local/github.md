@@ -17,11 +17,11 @@ GitHub offers two types of PATs:
 
 Follow this guide to create a **Classic PAT**:
 
-- [Classic PAT](/devportal/v2/integrations/GitHub/github-tokens#classic-pat)
+- [Classic PAT](/devportal/integrations/GitHub/github-tokens#classic-pat)
 
 Follow this guide to create a **Fine-grained PAT**:
 
-- [Fine-grained PAT](/devportal/v2/integrations/GitHub/github-tokens#fine-grained-pat)
+- [Fine-grained PAT](/devportal/integrations/GitHub/github-tokens#fine-grained-pat)
 
 :::tip
 Start with a **Classic PAT** while you are learning which permissions each feature requires. Once you have a working setup, you can switch to a **Fine-grained PAT** for better security and control.

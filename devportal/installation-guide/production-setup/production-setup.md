@@ -20,11 +20,11 @@ Use this guide when you need a persistent, team-accessible DevPortal instance â€
 - Kubernetes cluster with an ingress controller (nginx or Kong)
 - `helm` v3 and `kubectl` installed and configured against the target cluster
 - DNS hostname pointing to your cluster's ingress load balancer
-- Git provider credentials (see [Integrations](/devportal/v2/integrations))
+- Git provider credentials (see [Integrations](/devportal/integrations))
 
 ## Deployment approach
 
-DevPortal V2 is distributed as the `veecode-devportal-platform` Helm chart (chart version `0.1.0`, app version `2.0.0`) published in the `next-charts` Helm repository. The chart deploys the `docker.io/veecode/devportal:2.0.0` image and manages the following resources on your behalf:
+DevPortal V2 is distributed as the `veecode-devportal-platform` Helm chart (chart version `0.1.0`, app version `2.1.3`) published in the `next-charts` Helm repository. The chart deploys the `docker.io/veecode/devportal:2.1.3` image and manages the following resources on your behalf:
 
 | Resource | Purpose |
 |----------|---------|
@@ -36,5 +36,5 @@ DevPortal V2 is distributed as the `veecode-devportal-platform` Helm chart (char
 | `ClusterRole` / `ClusterRoleBinding` | Required only when the `kubernetes` preset is enabled (`rbac.clusterRoles.create=true`) |
 
 :::note V2 vs V1
-The `veecode-devportal-platform` chart and `docker.io/veecode/devportal:2.0.0` image are V2 only. The V1 chart (`veecode-devportal`) and image remain unchanged and deploy the 1.x distribution. Do not mix V1 and V2 resources.
+The `veecode-devportal-platform` chart and `docker.io/veecode/devportal:2.1.3` image are V2 only. The V1 chart (`veecode-devportal`) and image remain unchanged and deploy the 1.x distribution. Do not mix V1 and V2 resources.
 :::

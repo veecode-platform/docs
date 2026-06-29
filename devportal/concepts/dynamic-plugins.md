@@ -102,7 +102,7 @@ the two is a deferred decision — see
 :::
 
 For the full precedence table when surfaces conflict, see
-[Adding Plugins](/devportal/v2/plugins/adding).
+[Adding Plugins](/devportal/plugins/adding).
 
 ---
 
@@ -218,5 +218,5 @@ Three modes are supported by design:
 - [Presets](./presets.md) — the recommended way to enable plugins.
 - [Configuration Hierarchy](./configuration-hierarchy.md) — how
   `app-config.dynamic-plugins.yaml` fits the config merge order.
-- [Adding Plugins](/devportal/v2/plugins/adding) — the selection surfaces in
+- [Adding Plugins](/devportal/plugins/adding) — the selection surfaces in
   practice and the full precedence rules.

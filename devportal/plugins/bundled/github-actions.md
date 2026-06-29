@@ -31,7 +31,7 @@ The GitHub Actions plugin displays GitHub Actions workflow run history in the CI
 
 ## Enabling the plugin
 
-The simplest path is to add the `github` preset to `VEECODE_PRESETS` — it enables the GitHub Actions plugin along with the rest of the GitHub integration. See [Presets](/devportal/v2/concepts/presets) for details.
+The simplest path is to add the `github` preset to `VEECODE_PRESETS` — it enables the GitHub Actions plugin along with the rest of the GitHub integration. See [Presets](/devportal/concepts/presets) for details.
 
 To enable manually, add the following to your `dynamic-plugins.yaml`:
 

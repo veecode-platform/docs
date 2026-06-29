@@ -117,7 +117,7 @@ To create the necessary cluster roles automatically, set:
 createClusterRoles: true
 ```
 
-Assign users to roles using the Backstage RBAC policy. See the [RBAC documentation](/devportal/rbac/permissions) for details.
+Assign users to roles using the Backstage RBAC policy. See the [RBAC documentation](/devportal/v1/rbac/permissions) for details.
 
 ## Checklist before deploying
 

@@ -40,10 +40,10 @@ describe("createServer bundledPath resolution", () => {
     }
   });
 
-  it("honors VEECODE_DOCS_MCP_VERSION env var (unknown value falls back, no throw)", async () => {
+  it("rejects an unknown VEECODE_DOCS_MCP_VERSION value (fail closed)", async () => {
     process.env.VEECODE_DOCS_MCP_VERSION = "bogus";
-    const { server, dispose } = await createServer({ bundledPath: fixturePath, offline: true });
-    expect(server).toBeTruthy();
-    await dispose();
+    await expect(
+      createServer({ bundledPath: fixturePath, offline: true }),
+    ).rejects.toThrow(/Invalid docs version/);
   });
 });

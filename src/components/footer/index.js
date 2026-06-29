@@ -48,13 +48,13 @@ const Footer = () => {
                 <strong>Devportal</strong>
               </li>
               <li>
-                <a href="/devportal/installation-guide/simple-setup">Instalation Guide</a>
+                <a href="/devportal/installation-guide">Instalation Guide</a>
               </li>
               <li>
                 <a href="/devportal/concepts/catalog">Concepts</a>
               </li>
               <li>
-                <a href="/devportal/plugins/techdocs">Plugins</a>
+                <a href="/devportal/plugins">Plugins</a>
               </li>
               <li>
                 <a href="/devportal/troubleshooting">Troubleshooting</a>

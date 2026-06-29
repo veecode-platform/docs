@@ -31,13 +31,13 @@ describe("get_snapshot_info", () => {
     });
   });
 
-  it("defaults docs_version to v1 when not provided", () => {
+  it("defaults docs_version to v2 when not provided", () => {
     const result = getSnapshotInfo({
       snapshot,
       source: "bundled",
       bundledVersion: snapshot.version,
       refreshStatus: "up-to-date",
     });
-    expect(result.docs_version).toBe("v1");
+    expect(result.docs_version).toBe("v2");
   });
 });

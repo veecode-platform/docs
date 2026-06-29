@@ -19,7 +19,7 @@ For environments where Helm is not available, a [no-Helm fallback](#no-helm-fall
 helm repo add next-charts https://veecode-platform.github.io/next-charts
 helm repo update next-charts
 helm search repo veecode-devportal-platform
-# should show: 0.1.0 / 2.0.0
+# should show: 0.1.0 / 2.1.3
 ```
 
 ---
@@ -146,9 +146,10 @@ helm upgrade devportal next-charts/veecode-devportal-platform \
 
 ---
 
+<!-- dp-source: storage,pvc,postgres,helm -->
 ## No-Helm fallback
 
-If Helm is not available, use the reference manifest from the [devportal-platform repository](https://github.com/veecode-platform/devportal-platform/blob/main/examples/deploy/k8s.yaml). This manifest applies the same two PVCs, a `Deployment`, and a `Service` using plain `kubectl`:
+If Helm is not available, use the reference manifest from the [devportal-platform repository](https://github.com/veecode-platform/devportal-platform/blob/main/examples/deploy/k8s.yaml). The manifest contains two `PersistentVolumeClaim` resources, a `ConfigMap`, a `Deployment`, and a `Service`. By default it runs on SQLite — the two PVCs back `/app/data` (state) and `/app/dynamic-plugins-root` (plugin cache):
 
 ```bash
 kubectl apply -f https://raw.githubusercontent.com/veecode-platform/devportal-platform/main/examples/deploy/k8s.yaml
@@ -159,12 +160,14 @@ You will need to edit the manifest to:
 - Add an `envFrom` referencing a Secret with the required variables for your preset combination.
 - Add an `Ingress` resource (see [Plan your setup](plan.md)).
 
-The Helm chart is the recommended path for production because it handles PVC provisioning, RBAC, ingress, and upgrades consistently. The raw manifest is suitable for minimal or air-gapped environments.
+**PostgreSQL (recommended for production):** Delete both `PersistentVolumeClaim` resources and their corresponding `volumeMounts`/`volumes` entries from the `Deployment`. Point `backend.database` at an external Postgres instance via `app-config.local.yaml`. The pod becomes stateless and can schedule in any availability zone. See [`docs/how-to/deploy-stateless-postgres.md`](https://github.com/veecode-platform/devportal-platform/blob/main/docs/how-to/deploy-stateless-postgres.md) in the source repo for the full walkthrough.
+
+The Helm chart is the recommended path for production because it handles RBAC, ingress, and upgrades consistently. The raw manifest is suitable for minimal or air-gapped environments.
 
 ---
 
 ## Next steps
 
-- Configure additional integrations — see [Auth & Integrations](/devportal/v2/integrations)
-- Review RBAC roles and assign them to users — see [RBAC](/devportal/v2/rbac/permissions)
+- Configure additional integrations — see [Auth & Integrations](/devportal/integrations)
+- Review RBAC roles and assign them to users — see [RBAC](/devportal/rbac/permissions)
 - Enable additional plugins via the marketplace in the DevPortal UI

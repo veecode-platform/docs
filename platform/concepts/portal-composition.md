@@ -8,7 +8,7 @@ title: Composing a Portal
 
 A developer portal out of the box is a service catalog and a template runner: teams can register services, create new ones from templates, and browse the software landscape. That is **Day-0** — the portal knows what exists and can create things, but it doesn't connect to anything live yet.
 
-The value engineers actually care about — seeing pod status, triggering a deployment, checking code quality, browsing dashboards without leaving the service page — comes from **plugin composition**. This page explains the model conceptually. For the exact configuration mechanics, see the DevPortal guide: [Composing a Portal (DevPortal)](/devportal/v2/concepts/portal-composition).
+The value engineers actually care about — seeing pod status, triggering a deployment, checking code quality, browsing dashboards without leaving the service page — comes from **plugin composition**. This page explains the model conceptually. For the exact configuration mechanics, see the DevPortal guide: [Composing a Portal (DevPortal)](/devportal/concepts/portal-composition).
 
 ---
 
@@ -48,6 +48,6 @@ Composition is a deliberate sequence, not a one-time setup:
 
 The three-layer model is the same across DevPortal versions; what differs is the configuration surface (V2 composes plugins with `VEECODE_PRESETS`; the V1 distro used a single `VEECODE_PROFILE`). For the concrete steps — enabling plugins, the annotation reference table, the fail-fast install diagnostics, and a full worked example — follow the version-specific guide:
 
-- **[Composing a Portal (DevPortal)](/devportal/v2/concepts/portal-composition)** — the load/context/backend mechanics, plugin→annotation reference, and diagnostics for your DevPortal version.
+- **[Composing a Portal (DevPortal)](/devportal/concepts/portal-composition)** — the load/context/backend mechanics, plugin→annotation reference, and diagnostics for your DevPortal version.
 - **[Platform Capabilities](/platform/capabilities/platform-capabilities)** — the capability layers plugins realize.
 - **[Golden Paths](/platform/concepts/golden-paths)** — the strategy templates implement.

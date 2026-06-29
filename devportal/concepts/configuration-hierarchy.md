@@ -60,7 +60,7 @@ only the keys you want to override or add, and Backstage deep-merges the rest.
 ```bash
 docker run \
   -v $(pwd)/app-config.local.yaml:/app/app-config.local.yaml:ro \
-  veecode/devportal:2.0.0
+  veecode/devportal:2.1.3
 ```
 
 ### Example: override a single preset value

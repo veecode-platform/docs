@@ -28,7 +28,7 @@ The backend for Kubernetes is a **static plugin** compiled into the DevPortal ba
 
 ## Enabling the plugin
 
-The simplest path is to add the `kubernetes` preset to `VEECODE_PRESETS` — it enables both the frontend dynamic plugin and the backend configuration in one step. See [Presets](/devportal/v2/concepts/presets) for details.
+The simplest path is to add the `kubernetes` preset to `VEECODE_PRESETS` — it enables both the frontend dynamic plugin and the backend configuration in one step. See [Presets](/devportal/concepts/presets) for details.
 
 To enable manually, add the following to your `dynamic-plugins.yaml`:
 

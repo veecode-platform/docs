@@ -8,7 +8,7 @@ title: Platform Intro
 
 This section covers the **why** behind the VeeCode Platform: the principles, patterns, and design decisions that inform how the platform is built and how your team should use it.
 
-If you're looking for installation or configuration instructions, that's in [DevPortal](/devportal/v2/intro).
+If you're looking for installation or configuration instructions, that's in [DevPortal](/devportal/intro).
 
 ## What's here
 

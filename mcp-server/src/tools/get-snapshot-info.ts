@@ -10,7 +10,7 @@ export interface SnapshotInfoInput {
 }
 
 export interface SnapshotInfo {
-  /** Which DevPortal docs line this server is serving: "v1" (default) or "v2" (preview). */
+  /** Which DevPortal docs line this server is serving: "v2" (default) or "v1" (prior split-image line). */
   docs_version: "v1" | "v2";
   version: string;
   generated_at: string;
@@ -24,7 +24,7 @@ export interface SnapshotInfo {
 export function getSnapshotInfo(input: SnapshotInfoInput): SnapshotInfo {
   const section_count = input.snapshot.docs.reduce((n, d) => n + d.sections.length, 0);
   return {
-    docs_version: input.docsVersion ?? "v1",
+    docs_version: input.docsVersion ?? "v2",
     version: input.snapshot.version,
     generated_at: input.snapshot.generatedAt,
     source: input.source,

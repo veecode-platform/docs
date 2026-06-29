@@ -124,7 +124,7 @@ The format is `<kind>:<namespace>/<name>` (lowercase), matching Backstage's enti
 
 ---
 
-For the three-layer model that governs how the resulting entities connect to plugins, see [Composing a Portal](/platform/concepts/portal-composition). For the software template side of this pattern, see [Software Templates](/devportal/concepts/software-template).
+For the three-layer model that governs how the resulting entities connect to plugins, see [Composing a Portal](/platform/concepts/portal-composition). For the software template side of this pattern, see [Software Templates](/devportal/v1/concepts/software-template).
 
 ---
 

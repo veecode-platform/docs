@@ -77,6 +77,7 @@ The chart also accepts a `credentials: { KEY: value, ... }` map that renders a S
 
 ---
 
+<!-- dp-source: storage,pvc,helm -->
 ## Persistent volumes
 
 The chart provisions two PVCs by default:
@@ -94,6 +95,7 @@ Ensure your cluster has a `StorageClass` that supports `ReadWriteOnce`. Cloud-ma
 
 ---
 
+<!-- dp-source: postgres -->
 ## Database
 
 By default DevPortal uses **persistent SQLite** on the `/app/data` PVC. This is correct for single-replica deployments.

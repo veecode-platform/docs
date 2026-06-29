@@ -126,7 +126,7 @@ docker compose up --no-log-prefix
 If `GITHUB_AUTH_CLIENT_ID` is not set, the entrypoint automatically copies the value of `GITHUB_CLIENT_ID` to it. Both variables must ultimately resolve to the same OAuth App credentials for sign-in to work.
 :::
 
-For details on creating a GitHub OAuth App and GitHub App, see the [GitHub integration guide](/devportal/integrations/GitHub/github-auth).
+For details on creating a GitHub OAuth App and GitHub App, see the [GitHub integration guide](/devportal/v1/integrations/GitHub/github-auth).
 
 ---
 
@@ -174,7 +174,7 @@ docker compose up --no-log-prefix
 
 - `GITLAB_GROUP_PATTERN`: Pattern to match groups during catalog sync (defaults to `[\s\S]*` — all groups)
 
-For details on creating a GitLab OAuth Application, see the [GitLab integration guide](/devportal/integrations/GitLab/gitlab-auth).
+For details on creating a GitLab OAuth Application, see the [GitLab integration guide](/devportal/v1/integrations/GitLab/gitlab-auth).
 
 :::caution
 The correct variable names are `GITLAB_AUTH_CLIENT_ID` and `GITLAB_AUTH_CLIENT_SECRET`. Do not use `GITLAB_CLIENT_ID` or `GITLAB_CLIENT_SECRET` — these are not read by the profile config and GitLab OAuth will silently fail.
@@ -225,7 +225,7 @@ docker compose up --no-log-prefix
 
 - `KEYCLOAK_METADATA_URL`: Computed and logged by the entrypoint as `$KEYCLOAK_BASE_URL/realms/$KEYCLOAK_REALM`. The bundled config builds the discovery URL from `KEYCLOAK_BASE_URL` + `KEYCLOAK_REALM` directly, so setting this variable alone does not change it — override `auth.providers` in `app-config.local.yaml` for a non-standard endpoint.
 
-For setup instructions, see the [Keycloak integration guide](/devportal/integrations/Keycloak/keycloak-auth).
+For setup instructions, see the [Keycloak integration guide](/devportal/v1/integrations/Keycloak/keycloak-auth).
 
 ---
 
@@ -277,7 +277,7 @@ docker compose up --no-log-prefix
 `AZURE_CLIENT_ID` and `AZURE_TENANT_ID` are used for both Microsoft Entra ID sign-in and Microsoft Graph org sync. Ensure the app registration has the necessary Microsoft Graph API permissions (`User.Read.All`, `Group.Read.All`).
 :::
 
-For setup instructions, see the [Azure integration guide](/devportal/integrations/Azure).
+For setup instructions, see the [Azure integration guide](/devportal/v1/integrations/Azure).
 
 ---
 
@@ -318,7 +318,7 @@ services:
 - `LDAP_USERS_FILTER`: LDAP filter for users (defaults to `(uid=*)`)
 - `LDAP_GROUPS_FILTER`: LDAP filter for groups (defaults to `(objectClass=groupOfNames)`)
 
-For setup instructions, see the [LDAP integration guide](/devportal/integrations/LDAP).
+For setup instructions, see the [LDAP integration guide](/devportal/v1/integrations/LDAP).
 
 ---
 
@@ -367,7 +367,7 @@ services:
 Unlike the `ldap` profile, `LDAP_USERS_FILTER` and `LDAP_GROUPS_FILTER` have no built-in defaults in `ldap-ad` and must be provided to match your AD schema.
 :::
 
-For setup instructions, see the [LDAP integration guide](/devportal/integrations/LDAP).
+For setup instructions, see the [LDAP integration guide](/devportal/v1/integrations/LDAP).
 
 ---
 
@@ -426,7 +426,7 @@ services:
 
 ### GitHub App / OAuth App / PAT
 
-See the [GitHub integration guide](/devportal/integrations/GitHub/github-auth).
+See the [GitHub integration guide](/devportal/v1/integrations/GitHub/github-auth).
 
 ### GitLab OAuth App
 

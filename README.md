@@ -16,11 +16,11 @@ The documentation is also available to CLI coding agents (Claude Code, Codex, Cu
 It serves **one DevPortal docs version per instance** (it never mixes V1 and V2):
 
 ```bash
-# V1 (default — the split-image / profiles release most installs run today)
+# V2 (default — the unified veecode/devportal / presets release)
 claude mcp add veecode-docs --scope user -- npx -y @veecode-platform/docs-mcp
 
-# V2 (preview — the unified veecode/devportal:2.0.0 / presets release)
-claude mcp add veecode-docs-v2 --scope user -- npx -y @veecode-platform/docs-mcp --version v2
+# V1 (the prior split-image / profiles release)
+claude mcp add veecode-docs-v1 --scope user -- npx -y @veecode-platform/docs-mcp --version v1
 ```
 
 `platform`, `admin-ui`, and `vkdr` docs are version-neutral and present in both. Full setup (Codex CLI, manual `~/.mcp.json`, global install, env vars, the exposed tools, and how the snapshot stays fresh) is in the **[MCP server README](mcp-server/README.md)**.

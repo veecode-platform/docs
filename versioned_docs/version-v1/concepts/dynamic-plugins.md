@@ -110,4 +110,4 @@ All must be enabled together (`disabled: false`). Supported AI providers for the
 | `dynamic-plugins.yaml` | Your runtime overrides — enable plugins and add OCI/NPM packages here |
 | `app-config.dynamic-plugins.yaml` | Generated at startup; merges plugin configs into the running app config |
 
-For adding plugins through the UI, see the [Adding Plugins guide](/devportal/plugins/adding).
+For adding plugins through the UI, see the [Adding Plugins guide](/devportal/v1/plugins/adding).

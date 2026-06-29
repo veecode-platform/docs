@@ -1,0 +1,118 @@
+name: Update DevPortal image tag
+
+# Keeps the `veecode/devportal` image tag referenced in the V2 docs in sync with
+# the latest STABLE release published on Docker Hub. Zero-maintenance: runs daily,
+# opens (or updates) a PR against `main` only when a newer tag exists.
+#
+# Scope is deliberately limited to `devportal/**` — the current (V2) docs tree.
+# The versioned V1 docs under `versioned_docs/version-v1/` stay on their own 1.x
+# line and are never touched.
+
+on:
+  schedule:
+    - cron: "0 6 * * *" # daily, 06:00 UTC
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-tag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Resolve latest stable tag from Docker Hub
+        id: latest
+        run: |
+          set -euo pipefail
+          # Page through tags ordered by recency; keep only bare semver X.Y.Z
+          # (drops `latest`, `nightly`, per-arch `-amd64/-arm64`, and `-rc/-beta`
+          # pre-releases), then pick the highest by version sort. V1 tags (1.x)
+          # never outrank V2, so this is robust across future major bumps.
+          latest=$(
+            curl -fsSL "https://hub.docker.com/v2/repositories/veecode/devportal/tags?page_size=100&ordering=last_updated" \
+              | jq -r '.results[].name' \
+              | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' \
+              | sort -V \
+              | tail -1 || true
+          )
+          # `|| true` above: a zero-match grep exits 1, which under
+          # `set -o pipefail` would kill the step before this guard runs.
+          if [ -z "$latest" ]; then
+            echo "::error::Could not resolve a stable tag from Docker Hub"
+            exit 1
+          fi
+          echo "Latest stable tag: $latest"
+          echo "latest=$latest" >> "$GITHUB_OUTPUT"
+
+      - name: Read current tag referenced in the docs
+        id: current
+        run: |
+          set -euo pipefail
+          # Highest V2 tag currently referenced under devportal/ — using the
+          # max (sort -V) rather than the first match keeps this stable against
+          # filesystem ordering and any stray 1.x reference in an example.
+          current=$(
+            grep -rhoE 'veecode/devportal:[0-9]+\.[0-9]+\.[0-9]+' devportal \
+              | sed 's|.*:||' | sort -V | tail -1 || true
+          )
+          if [ -z "$current" ]; then
+            echo "::error::Could not find a current veecode/devportal:X.Y.Z reference under devportal/"
+            exit 1
+          fi
+          echo "Current tag in docs: $current"
+          echo "current=$current" >> "$GITHUB_OUTPUT"
+
+      - name: Rewrite docs if the tag changed
+        id: rewrite
+        env:
+          OLD: ${{ steps.current.outputs.current }}
+          NEW: ${{ steps.latest.outputs.latest }}
+        run: |
+          set -euo pipefail
+          if [ "$OLD" = "$NEW" ]; then
+            echo "Docs already on $NEW — nothing to do."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # Literal replacement of the old version string, scoped to the V2 tree.
+          old_escaped=${OLD//./\\.}
+          grep -rlF "$OLD" devportal --include='*.md' --include='*.mdx' \
+            | xargs --no-run-if-empty sed -i "s|${old_escaped}|${NEW}|g"
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Open or update the PR
+        if: steps.rewrite.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          OLD: ${{ steps.current.outputs.current }}
+          NEW: ${{ steps.latest.outputs.latest }}
+        run: |
+          set -euo pipefail
+          branch="chore/devportal-image-tag"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$branch"
+          git add devportal/
+          git commit -m "docs: bump devportal image tag to ${NEW}"
+          git push --force-with-lease origin "$branch"
+          title="docs: bump devportal image tag to ${NEW}"
+          body=$(cat <<EOF
+          Automated update of the \`veecode/devportal\` image tag in the V2 docs.
+
+          - Previous: \`${OLD}\`
+          - Latest stable on Docker Hub: \`${NEW}\`
+
+          Source: https://hub.docker.com/r/veecode/devportal/tags
+          Scope: \`devportal/**\` only — V1 docs (\`versioned_docs/version-v1/\`) are left on their 1.x line.
+          EOF
+          )
+          if gh pr view "$branch" --json number >/dev/null 2>&1; then
+            gh pr edit "$branch" --title "$title" --body "$body"
+          else
+            gh pr create --base main --head "$branch" --title "$title" --body "$body"
+          fi

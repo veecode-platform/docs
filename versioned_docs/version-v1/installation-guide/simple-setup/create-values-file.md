@@ -44,7 +44,7 @@ upstream:
 This will deploy a functional DevPortal with sensible defaults. You can access it at `http://localhost:8000` (or whatever host/port you configure).
 
 :::info
-To enable authentication and full Git provider integration (GitHub, GitLab, etc.), see the [Auth & Integrations](/devportal/integrations) section. The values for those integrations should be added under `upstream.backstage.appConfig` in your `values.yaml` file.
+To enable authentication and full Git provider integration (GitHub, GitLab, etc.), see the [Auth & Integrations](/devportal/v1/integrations) section. The values for those integrations should be added under `upstream.backstage.appConfig` in your `values.yaml` file.
 :::
 
 ### About the Helm chart

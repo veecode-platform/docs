@@ -4,9 +4,9 @@ sidebar_label: DevPortal Deployment
 title: DevPortal Deployment
 ---
 
-In this step, you will deploy **DevPortal V2** (`docker.io/veecode/devportal:2.0.0`) into your local cluster using `vkdr devportal-platform install`.
+In this step, you will deploy **DevPortal V2** (`docker.io/veecode/devportal:2.1.3`) into your local cluster using `vkdr devportal-platform install`.
 
-VKDR installs the published `veecode-devportal-platform` Helm chart (version 0.1.0, appVersion 2.0.0) into the `platform` namespace and automatically wires up Kong as the ingress controller.
+VKDR installs the published `veecode-devportal-platform` Helm chart (version 0.1.0, appVersion 2.1.3) into the `platform` namespace and automatically wires up Kong as the ingress controller.
 
 ## Steps Overview
 
@@ -108,7 +108,7 @@ vkdr devportal-platform remove
 | `--load-env` | Read GitHub credentials from environment variables instead of flags |
 
 :::info Presets and required credentials
-Each preset requires specific credentials in the Secret. A missing required variable causes the DevPortal pod to exit with code 78 at boot — check pod logs if it does not become Ready. See the [Helm install guide](/devportal/v2/installation-guide/production-setup/setup) for the full per-preset variable matrix.
+Each preset requires specific credentials in the Secret. A missing required variable causes the DevPortal pod to exit with code 78 at boot — check pod logs if it does not become Ready. See the [Helm install guide](/devportal/installation-guide/production-setup/setup) for the full per-preset variable matrix.
 :::
 
 ## Check Deployment

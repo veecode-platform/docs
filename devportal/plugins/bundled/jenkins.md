@@ -35,7 +35,7 @@ Both must be enabled together.
 
 ## Enabling the plugin
 
-The simplest path is to add the `jenkins` preset to `VEECODE_PRESETS` — it enables both the frontend and backend plugins together. See [Presets](/devportal/v2/concepts/presets) for details.
+The simplest path is to add the `jenkins` preset to `VEECODE_PRESETS` — it enables both the frontend and backend plugins together. See [Presets](/devportal/concepts/presets) for details.
 
 To enable manually, add the following to your `dynamic-plugins.yaml`:
 

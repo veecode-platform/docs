@@ -14,9 +14,9 @@ Our documentation is still in progress and we currently provide information on i
 
 ## Choose your provider
 
-Follow the detailed setup instructions for your Git provider in the [Auth & Integrations](/devportal/integrations) section:
+Follow the detailed setup instructions for your Git provider in the [Auth & Integrations](/devportal/v1/integrations) section:
 
-- [GitHub](/devportal/integrations/GitHub/) — authentication, backend integrations, and personal access tokens
+- [GitHub](/devportal/v1/integrations/GitHub/) — authentication, backend integrations, and personal access tokens
 - [GitLab](#gitlab) — backend integration via personal access token
 
 Once you have your credentials configured, add the corresponding values to your `values.yaml` file under `upstream.backstage.appConfig` and redeploy.
@@ -25,7 +25,7 @@ Once you have your credentials configured, add the corresponding values to your 
 
 ## GitHub
 
-See [GitHub integrations](/devportal/integrations/GitHub/) for full details on OAuth apps, GitHub Apps, and PATs. The minimal `values.yaml` snippet for a GitHub backend integration using a PAT is:
+See [GitHub integrations](/devportal/v1/integrations/GitHub/) for full details on OAuth apps, GitHub Apps, and PATs. The minimal `values.yaml` snippet for a GitHub backend integration using a PAT is:
 
 ```yaml
 upstream:

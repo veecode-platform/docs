@@ -9,9 +9,10 @@ title: Custom Dynamic Plugins
 DevPortal supports **dynamic plugins** that can be enabled, disabled, and configured at runtime without rebuilding the container image. This guide shows you how to enable and customize plugin behavior using a custom `dynamic-plugins.yaml` file mount by docker compose.
 
 :::important
-Dynamic plugins are a deep subject on their own. Please refer to the [Plugins](/devportal/v2/plugins/) section for more information.
+Dynamic plugins are a deep subject on their own. Please refer to the [Plugins](/devportal/plugins/) section for more information.
 :::
 
+<!-- dp-source: plugin,entrypoint -->
 ## Understanding Dynamic Plugins
 
 The image includes a catalog of optional plugins, all disabled by default. The core chrome plugins (global header, homepage, About) are pre-installed and enabled by default — they are listed in the shipped `dynamic-plugins.yaml`. You activate plugins via presets or a mounted `dynamic-plugins.yaml`. You add operator-level overrides by mounting a single file:
@@ -50,7 +51,7 @@ plugins:
 docker run --rm --name devportal -d \
   -p 7007:7007 \
   -v $(pwd)/dynamic-plugins.yaml:/app/dynamic-plugins.yaml:ro \
-  veecode/devportal:2.0.0
+  veecode/devportal:2.1.3
 ```
 
 ## Mounting with Docker Compose
@@ -60,7 +61,7 @@ Update your `docker-compose.yml`:
 ```yaml
 services:
   devportal:
-    image: veecode/devportal:2.0.0
+    image: veecode/devportal:2.1.3
     ports:
       - "7007:7007"
     volumes:
@@ -103,7 +104,7 @@ You may notice an `extensions-install.yaml` file in the working directory. This 
 
 ## Important Notes
 
-Dynamic plugins are a deep subject on their own. Please refer to the [Plugins](/devportal/v2/plugins/) section for more information. The dynamic plugins feature is based on the same plugin system used by Red Hat Developer Hub, so Red Hat documentation is also a good resource on this topic.
+Dynamic plugins are a deep subject on their own. Please refer to the [Plugins](/devportal/plugins/) section for more information. The dynamic plugins feature is based on the same plugin system used by Red Hat Developer Hub, so Red Hat documentation is also a good resource on this topic.
 
 :::warning
 Dynamic plugins require a special kind of packaging. All DevPortal pre-installed dynamic plugins are published on the public NPM registry and pulled at build time into the `veecode/devportal` distro image. **Not all plugins are available as dynamic plugins**, so please check each plugin's documentation to see if it is available as such. There is usually a `-dynamic` suffix in a dynamic plugin package name, and they tend to exist in both forms in the NPM registry.
@@ -111,7 +112,7 @@ Dynamic plugins require a special kind of packaging. All DevPortal pre-installed
 
 ## Examples
 
-OCI plugins are fetched via `skopeo` at boot. See the [Dynamic Plugins](/devportal/v2/plugins/) section for OCI registry usage examples.
+OCI plugins are fetched via `skopeo` at boot. See the [Dynamic Plugins](/devportal/plugins/) section for OCI registry usage examples.
 
 ## Viewing Available Plugins
 

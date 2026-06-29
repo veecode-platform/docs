@@ -43,7 +43,7 @@ Our [local DevPortal setup](../../installation-guide/vkdr-local/vkdr-setup.md) u
 What you need:
 
 - A local npm registry (run [Verdaccio](https://verdaccio.org/) at local port 4873)
-- Publish the frontend plugin to Verdaccio (as described [here](/devportal/v2/plugins/development/packaging#publish-a-dynamic-plugin))
+- Publish the frontend plugin to Verdaccio (as described [here](/devportal/plugins/development/packaging#publish-a-dynamic-plugin))
 - Obtain the SHA integrity signature of the published plugin
 - A local `vkdr` cluster with DevPortal properly installed - check the [local DevPortal setup](../../installation-guide/vkdr-local/vkdr-setup.md) guide for more info.
 
@@ -55,7 +55,7 @@ To start a local Verdaccio registry you may run:
 verdaccio -l 0.0.0.0:4873
 ```
 
-Do not forget to [package and publish the frontend plugin to Verdaccio](/devportal/v2/plugins/development/packaging#publish-a-dynamic-plugin).
+Do not forget to [package and publish the frontend plugin to Verdaccio](/devportal/plugins/development/packaging#publish-a-dynamic-plugin).
 
 ### Signature
 

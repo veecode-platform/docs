@@ -9,8 +9,8 @@ import DocCard from '@site/src/components/DocCard';
 
 # Intro
 
-:::note You're reading the V1 docs (current stable)
-V1 is the split-image release (`veecode/devportal-base` + `veecode/devportal`, profiles via `VEECODE_PROFILE`) — the version most production and SaaS installs run today. A unified **V2** (`veecode/devportal:2.0.0`, composable presets) is available as a [preview](/devportal/v2/intro). Not sure which you run? See [Which version am I running?](/devportal/v2/which-version).
+:::note You're reading the V1 docs
+V1 is the split-image release (`veecode/devportal-base` + `veecode/devportal`, profiles via `VEECODE_PROFILE`). It is still supported with security backports, but **V2** (`veecode/devportal`, composable presets) is now the current default — see the [V2 documentation](/devportal/intro). Not sure which you run? See [Which version am I running?](/devportal/which-version).
 :::
 
 Welcome to VeeCode Developer Portal documentation. This guide covers installation, plugins, and concepts for running DevPortal on your infrastructure.
@@ -32,13 +32,13 @@ If you want to understand **why** this portal matters before diving into setup �
 
 <div className={style.wrapper}>
 
-<DocCard title="💻 Installation Guide" link="/devportal/installation-guide/simple-setup" style={style}>Learn how to install the Developer Portal on your own infrastructure.</DocCard>
+<DocCard title="💻 Installation Guide" link="/devportal/v1/installation-guide/simple-setup" style={style}>Learn how to install the Developer Portal on your own infrastructure.</DocCard>
 
-<DocCard title="💡 Concepts" link="/devportal/concepts/catalog" style={style}>Understand the core concepts and terminology related to the Developer Portal.</DocCard>
+<DocCard title="💡 Concepts" link="/devportal/v1/concepts/catalog" style={style}>Understand the core concepts and terminology related to the Developer Portal.</DocCard>
 
-<DocCard title="🧩 Plugins" link="/devportal/plugins" style={style}>Enable and configure plugins to extend DevPortal with Day-2 capabilities.</DocCard>
+<DocCard title="🧩 Plugins" link="/devportal/v1/plugins" style={style}>Enable and configure plugins to extend DevPortal with Day-2 capabilities.</DocCard>
 
-<DocCard title="📍 Troubleshooting" link="/devportal/troubleshooting" style={style}>Find solutions to common issues and learn how to report errors.</DocCard>
+<DocCard title="📍 Troubleshooting" link="/devportal/v1/troubleshooting" style={style}>Find solutions to common issues and learn how to report errors.</DocCard>
 
 </div>
 

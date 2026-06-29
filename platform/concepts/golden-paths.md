@@ -21,7 +21,7 @@ In a complex cloud-native environment, developers often face a paradox of choice
 
 ## Examples
 
-A Golden Path is typically realized through a **[Software Template](/devportal/v2/concepts/software-template)** in the DevPortal.
+A Golden Path is typically realized through a **[Software Template](/devportal/concepts/software-template)** in the DevPortal.
 
 ### 1. Spring Boot on Kubernetes
 For backend services, a Golden Path might include:

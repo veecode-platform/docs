@@ -7,7 +7,7 @@ title: Adding Plugins
 You can add dynamic plugins to your DevPortal instance at any time without rebuilding the base image.
 
 :::note
-Adding a plugin is the **load** step — step 1 of 3 in the plugin activation model. A loaded plugin does nothing visible until the relevant catalog entities carry the correct annotation (context) and `app-config` configures the backend it queries. See [Composing a Portal](/devportal/v2/concepts/portal-composition) for the full model.
+Adding a plugin is the **load** step — step 1 of 3 in the plugin activation model. A loaded plugin does nothing visible until the relevant catalog entities carry the correct annotation (context) and `app-config` configures the backend it queries. See [Composing a Portal](/devportal/concepts/portal-composition) for the full model.
 :::
 
 ## Prerequisites
@@ -16,6 +16,7 @@ Adding a plugin is the **load** step — step 1 of 3 in the plugin activation mo
 - The plugin package reference (npm specifier, local path, or OCI artifact)
 - Any credentials the plugin requires (API tokens, etc.)
 
+<!-- dp-source: plugin,entrypoint -->
 ## Via Marketplace
 
 The in-portal Marketplace is the simplest path — no YAML editing required.
@@ -70,7 +71,7 @@ oci://quay.io/veecode/<workspace>:bs_<backstage-version>!<plugin-name>
 - **backstage-version**: Backstage version of your DevPortal instance, as a `bs_<version>` tag (e.g., `bs_1.49.4`). Must match — a plugin built for `1.48.4` will not load on a `1.49.4` instance. See [Discovering your Backstage version](#discovering-your-backstage-version) below.
 - **plugin-name**: npm package name with `@` removed and `/` replaced by `-`. Examples: `@immobiliarelabs/backstage-plugin-gitlab` → `immobiliarelabs-backstage-plugin-gitlab`; `@roadiehq/backstage-plugin-argo-cd` → `roadiehq-backstage-plugin-argo-cd`.
 
-You rarely type this by hand — the variable form `oci://${PLUGIN_REGISTRY}/<workspace>:bs_${BACKSTAGE_VERSION}!<plugin-name>` lets the entrypoint substitute the registry and version for you at boot (see [Dynamic Plugins](/devportal/v2/concepts/dynamic-plugins)).
+You rarely type this by hand — the variable form `oci://${PLUGIN_REGISTRY}/<workspace>:bs_${BACKSTAGE_VERSION}!<plugin-name>` lets the entrypoint substitute the registry and version for you at boot (see [Dynamic Plugins](/devportal/concepts/dynamic-plugins)).
 
 #### Discovering your Backstage version
 
@@ -82,7 +83,7 @@ docker exec <container> cat /app/backstage.json
 # {"version":"1.49.4", ...}  → use bs_1.49.4
 
 # On the image directly, without a running container
-docker run --rm veecode/devportal:2.0.0 cat /app/backstage.json
+docker run --rm veecode/devportal:2.1.3 cat /app/backstage.json
 ```
 
 The boot log prints the same value once resolved: `VEECODE: resolving ${BACKSTAGE_VERSION} → 1.49.4`. On a running container you can also grep the resolved defaults — `docker exec <container> grep -o 'bs_[0-9.]*' /app/dynamic-plugins.default.resolved.yaml | sort -u` — since the entrypoint substitutes the real version into that shadow.

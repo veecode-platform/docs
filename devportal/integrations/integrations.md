@@ -16,7 +16,7 @@ VEECODE_PRESETS=recommended,github,github-auth
 
 The entrypoint validates all required variables across all selected presets at startup. If any are missing, the process exits with code 78 and lists every missing variable before the backend boots.
 
-See [Presets](/devportal/v2/concepts/presets) for how composition and layering work.
+See [Presets](/devportal/concepts/presets) for how composition and layering work.
 
 ## SCM vs identity presets
 

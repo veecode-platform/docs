@@ -23,7 +23,7 @@ import DocCard from '@site/src/components/DocCard';
 
 <DocCard title="Production Setup" link="./production-setup" style={style}>Learn how to install a self-hosted and production-ready Developer Portal on your own infrastructure.</DocCard>
 
-<DocCard title="Customization" link="/devportal/customization" style={style}>Learn how to customize your Developer Portal.</DocCard>
+<DocCard title="Customization" link="/devportal/v1/customization" style={style}>Learn how to customize your Developer Portal.</DocCard>
 
 <DocCard title="FAQs" link="./FAQs" style={style}>Frequently Asked Questions.</DocCard>
 

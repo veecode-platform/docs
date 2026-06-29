@@ -30,11 +30,11 @@ The catalog is the foundation everything else builds on. Without a populated cat
 **The problem it solves:** Developers context-switch between the portal (which knows about the service) and CI/CD tools (which know about its builds). The service and its pipeline are the same thing, but they live in different places.
 
 **How DevPortal realizes it** (via plugins):
-- **[GitHub Actions](/devportal/v2/plugins/bundled/github-actions)** — CI run history on the entity page
-- **[GitHub Workflows](/devportal/v2/plugins/GitHubWorkflows)** — manual workflow triggers from the entity overview
-- **[GitLab Pipelines](/devportal/v2/plugins/GitLabPipelines)** — pipeline list and job triggers for GitLab CI
-- **[Jenkins](/devportal/v2/plugins/bundled/jenkins)** — build status for Jenkins pipelines
-- **[Azure DevOps](/devportal/v2/plugins/bundled/azure-devops)** — Azure Pipelines and Pull Requests on entity pages
+- **[GitHub Actions](/devportal/plugins/bundled/github-actions)** — CI run history on the entity page
+- **[GitHub Workflows](/devportal/plugins/GitHubWorkflows)** — manual workflow triggers from the entity overview
+- **[GitLab Pipelines](/devportal/plugins/GitLabPipelines)** — pipeline list and job triggers for GitLab CI
+- **[Jenkins](/devportal/plugins/bundled/jenkins)** — build status for Jenkins pipelines
+- **[Azure DevOps](/devportal/plugins/bundled/azure-devops)** — Azure Pipelines and Pull Requests on entity pages
 
 Each plugin connects to the entity via an annotation in `catalog-info.yaml`. The entity declares which project it maps to in the CI tool; the plugin reads that and surfaces the relevant data.
 
@@ -45,8 +45,8 @@ Each plugin connects to the entity via an annotation in `catalog-info.yaml`. The
 **The problem it solves:** Infrastructure is opaque to application developers. They don't know what Kubernetes cluster their service runs on, what secrets it uses, or what version is deployed. That knowledge lives with the platform team or in separate tools.
 
 **How DevPortal realizes it** (via plugins):
-- **[Kubernetes](/devportal/v2/plugins/kubernetes)** — live pod status, deployment rollout, and logs for the service's workloads
-- **[Vault](/devportal/v2/plugins/vault)** — secrets metadata visible on the entity page (paths and keys, not values)
+- **[Kubernetes](/devportal/plugins/kubernetes)** — live pod status, deployment rollout, and logs for the service's workloads
+- **[Vault](/devportal/plugins/vault)** — secrets metadata visible on the entity page (paths and keys, not values)
 - **IaC templates** — infrastructure provisioned through the portal's scaffolder, so infrastructure creation follows the same Golden Path as application creation
 
 The Kubernetes plugin is the most direct bridge: a service entity with the right label selector annotation shows exactly which pods belong to it and their current health.
@@ -58,8 +58,8 @@ The Kubernetes plugin is the most direct bridge: a service entity with the right
 **The problem it solves:** Metrics, logs, and alerts live in separate tools. A developer responding to an incident has to pivot between the portal (to understand the service), Grafana (to see metrics), and potentially a code quality tool to understand technical debt.
 
 **How DevPortal realizes it** (via plugins):
-- **[Grafana](/devportal/v2/plugins/grafana)** — dashboards scoped to the entity, embedded in the overview
-- **[SonarQube](/devportal/v2/plugins/Sonar)** — code quality metrics (bugs, coverage, vulnerabilities) on the entity's Code Quality tab
+- **[Grafana](/devportal/plugins/grafana)** — dashboards scoped to the entity, embedded in the overview
+- **[SonarQube](/devportal/plugins/Sonar)** — code quality metrics (bugs, coverage, vulnerabilities) on the entity's Code Quality tab
 
 The `grafana/dashboard-selector` annotation connects the entity to its dashboards by tag. The `sonarqube.org/project-key` annotation connects it to its SonarQube project. Each connection is explicit and per-entity — one service's dashboards don't bleed into another's.
 

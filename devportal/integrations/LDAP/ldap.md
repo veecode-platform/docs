@@ -110,7 +110,7 @@ docker run -p 7007:7007 \
   -e LDAP_SECRET=<admin-password> \
   -e LDAP_USERS_BASE_DN="ou=users,dc=example,dc=com" \
   -e LDAP_GROUPS_BASE_DN="ou=groups,dc=example,dc=com" \
-  veecode/devportal:2.0.0
+  veecode/devportal:2.1.3
 ```
 
 ## `ldap-ad` preset — Active Directory
@@ -175,7 +175,7 @@ docker run -p 7007:7007 \
   -e LDAP_SECRET=<service-account-password> \
   -e LDAP_USERS_BASE_DN="OU=Users,DC=example,DC=com" \
   -e LDAP_GROUPS_BASE_DN="OU=Groups,DC=example,DC=com" \
-  veecode/devportal:2.0.0
+  veecode/devportal:2.1.3
 ```
 
 ## Choosing between `ldap` and `ldap-ad`

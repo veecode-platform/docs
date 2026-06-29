@@ -12,7 +12,7 @@ DevPortal does **not** embed Prometheus, Jaeger, or Loki directly. Instead, it i
 
 ## **Setting Up the Grafana Plugin**
 
-The Grafana plugin is not bundled in the default image. Add it to your `dynamic-plugins.yaml` as an external plugin. Refer to the [Grafana plugin guide](/devportal/plugins/grafana) for the full plugin package reference and configuration.
+The Grafana plugin is not bundled in the default image. Add it to your `dynamic-plugins.yaml` as an external plugin. Refer to the [Grafana plugin guide](/devportal/v1/plugins/grafana) for the full plugin package reference and configuration.
 
 At minimum, configure the Grafana proxy in your app-config:
 
@@ -89,4 +89,4 @@ metadata:
 The Grafana, Prometheus, Loki, and Jaeger instances must be separately deployed and accessible to both DevPortal's backend (for API calls) and end users' browsers (for direct links). DevPortal does not provision or manage these services.
 :::
 
-For more on the plugin, see the [Grafana Plugin guide](/devportal/plugins/grafana).
+For more on the plugin, see the [Grafana Plugin guide](/devportal/v1/plugins/grafana).

@@ -72,7 +72,7 @@ docker run --rm --name devportal -d \
   -p 7007:7007 \
   -v $(pwd)/catalog-info.yaml:/app/catalog-info.yaml:ro \
   -v $(pwd)/app-config.local.yaml:/app/app-config.local.yaml:ro \
-  veecode/devportal:2.0.0
+  veecode/devportal:2.1.3
 ```
 
 In your `app-config.local.yaml`:
@@ -91,7 +91,7 @@ Create a `docker-compose.yml`:
 ```yaml
 services:
   devportal:
-    image: veecode/devportal:2.0.0
+    image: veecode/devportal:2.1.3
     ports:
       - "7007:7007"
     volumes:
@@ -113,7 +113,7 @@ Then mount the directory:
 ```yaml
 services:
   devportal:
-    image: veecode/devportal:2.0.0
+    image: veecode/devportal:2.1.3
     ports:
       - "7007:7007"
     volumes:
@@ -225,7 +225,7 @@ docker cp devportal:/app/app-config.production.yaml ./app-config.production.yaml
 # 3. Mount your edited version on the next run
 docker run --rm -d -p 7007:7007 \
   -v $(pwd)/app-config.production.yaml:/app/app-config.production.yaml:ro \
-  veecode/devportal:2.0.0
+  veecode/devportal:2.1.3
 ```
 
 :::warning
