@@ -24,6 +24,7 @@ helm search repo veecode-devportal-platform
 
 ---
 
+<!-- dp-source: storage,pvc,postgres,helm -->
 ## Step 2: Create the credentials Secret
 
 Credentials for the presets you select must be in a Kubernetes Secret **before** `helm install`. The chart references it via `existingSecret`.
@@ -81,9 +82,53 @@ kubectl create secret generic my-devportal-creds \
 
 For GitOps workflows, use an external secrets operator (External Secrets Operator, Vault Agent, Sealed Secrets) to populate the Secret from your secrets store.
 
+### PostgreSQL credentials (production)
+
+For production deployments using external PostgreSQL (see Step 3), include the database credentials in the same Secret. The chart injects them into `backend.database` automatically when `database.external.enabled=true`:
+
+| Key | Description |
+|---|---|
+| `PG_HOST` | PostgreSQL hostname or endpoint |
+| `PG_PORT` | Port — typically `5432` |
+| `PG_USER` | Database user |
+| `PG_PASSWORD` | Database password |
+| `PG_DATABASE` | Database name — `backstage` is the conventional default |
+
+Add them to your `kubectl create secret` command above, or patch an existing Secret:
+
+```bash
+kubectl patch secret my-devportal-creds \
+  --namespace platform \
+  --type merge \
+  --patch '{"stringData":{"PG_HOST":"<host>","PG_PORT":"5432","PG_USER":"<user>","PG_PASSWORD":"<password>","PG_DATABASE":"backstage"}}'
+```
+
+For AWS RDS, prefer a Multi-AZ instance — with PVCs removed the database becomes the single durable dependency.
+
 ---
 
 ## Step 3: Install the chart
+
+### Production (PostgreSQL — recommended)
+
+With `database.external.enabled=true` the chart disables the internal SQLite path and injects a `backend.database` block using the `PG_*` credentials from your Secret. Remove both PVCs — the pod becomes fully stateless and schedules in any availability zone:
+
+```bash
+helm install devportal next-charts/veecode-devportal-platform \
+  --namespace platform \
+  --create-namespace \
+  --set 'presets={recommended,github,github-auth}' \
+  --set existingSecret=my-devportal-creds \
+  --set database.external.enabled=true \
+  --set persistence.data.enabled=false \
+  --set persistence.plugins.enabled=false
+```
+
+With stateless pods, `replicaCount > 1` is safe. Add `--set replicaCount=2` for basic HA.
+
+### Development / minimal (SQLite)
+
+The default path provisions two PVCs (`/app/data` and `/app/dynamic-plugins-root`). Suitable for a single-node dev cluster; an EBS- or RWO-backed PVC pins the pod to one availability zone and is not recommended for production:
 
 ```bash
 helm install devportal next-charts/veecode-devportal-platform \
@@ -93,14 +138,11 @@ helm install devportal next-charts/veecode-devportal-platform \
   --set existingSecret=my-devportal-creds
 ```
 
-To enable ingress at install time:
+### Common options
+
+To enable ingress, add to either install command:
 
 ```bash
-helm install devportal next-charts/veecode-devportal-platform \
-  --namespace platform \
-  --create-namespace \
-  --set 'presets={recommended,github,github-auth}' \
-  --set existingSecret=my-devportal-creds \
   --set ingress.enabled=true \
   --set ingress.hostname=devportal.example.com \
   --set ingress.ingressClassName=nginx
@@ -130,6 +172,15 @@ VEECODE: applying preset "recommended"
 ...
 Running in PRODUCTION mode
 ```
+
+For a PostgreSQL deployment, also confirm:
+
+```
+Database is PostgreSQL, using database store
+Listening on 0.0.0.0:7007
+```
+
+If the pre-step could not reach the database you will see `VEECODE: WARNING — stateless pre-step exited non-zero` — the pod still starts but plugin selections may not be recovered. Check the `PG_*` credentials and TLS settings.
 
 If a required variable is missing, the container exits with **code 78** and logs exactly which variable to set — the pod will not enter a crash loop silently.
 
