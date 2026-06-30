@@ -124,7 +124,7 @@ helm install devportal next-charts/veecode-devportal-platform \
   --set persistence.plugins.enabled=false
 ```
 
-With stateless pods, `replicaCount > 1` is safe. Add `--set replicaCount=2` for basic HA.
+With stateless pods, `replicaCount > 1` is safe for steady-state traffic. Add `--set replicaCount=2` for basic HA. Note: the chart uses `strategy: Recreate`, so upgrades (`helm upgrade`) still cause a brief downtime window regardless of replica count — all pods are terminated before the new ones start.
 
 ### Development / minimal (SQLite)
 
@@ -173,14 +173,20 @@ VEECODE: applying preset "recommended"
 Running in PRODUCTION mode
 ```
 
-For a PostgreSQL deployment, also confirm:
+For a PostgreSQL deployment, the pre-step logs to stdout on success:
 
 ```
-Database is PostgreSQL, using database store
-Listening on 0.0.0.0:7007
+VEECODE prestep: pluginDivisionMode=database — read "backstage_plugin_extensions".marketplace_installations in backstage_plugin_extensions (<N> row(s))
+VEECODE prestep: regenerated /app/data/extensions-install.yaml with <N> plugin selection(s) from the database
 ```
 
-If the pre-step could not reach the database you will see `VEECODE: WARNING — stateless pre-step exited non-zero` — the pod still starts but plugin selections may not be recovered. Check the `PG_*` credentials and TLS settings.
+If the pre-step cannot reach the database it degrades gracefully (the pod still starts, but plugin selections may not be recovered from the database). You will see a line like:
+
+```
+VEECODE prestep: WARNING — could not read marketplace_installations (<error>); leaving /app/data/extensions-install.yaml as-is
+```
+
+Check the `PG_*` credentials and TLS settings if you see this.
 
 If a required variable is missing, the container exits with **code 78** and logs exactly which variable to set — the pod will not enter a crash loop silently.
 
