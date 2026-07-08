@@ -44,6 +44,9 @@ After connecting, the card shows:
 **Disabling AI Chat only** (without disconnecting MCP):
 Use the switch on the connected card. This removes `mcp-chat-backend`, `mcp-chat`, the `mcpChat:` block, and the LLM API key — without affecting the MCP server or external clients.
 
+**Disconnecting entirely:**
+The trash icon on the connected card removes both the MCP server and AI Chat. Both this full disconnect and the AI-Chat-only switch above require an instance restart to take effect.
+
 ### Self-hosted (preset activation)
 
 Activate the `mcp` preset (and optionally `mcp-chat`) via `VEECODE_PRESETS`:
@@ -83,7 +86,7 @@ For self-hosted (preset) deployments, `MCP_CHAT_PROVIDER` accepts only `openai` 
 :::
 
 :::warning
-Do not also activate `mcp-actions-backend` via a raw `dynamic-plugins.yaml` mount when using the `mcp` preset. Duplicate registration causes a boot failure: `Plugin 'mcp-actions' is already registered`.
+Do not also activate `mcp-actions-backend` via a raw `dynamic-plugins.yaml` mount when using the `mcp` preset (or via a static import in a custom backend build). Duplicate registration causes a boot failure: `Plugin 'mcp-actions' is already registered`.
 :::
 
 **Available toolsets:**
@@ -97,9 +100,27 @@ Do not also activate `mcp-actions-backend` via a raw `dynamic-plugins.yaml` moun
 | `techdocs-mcp-extras` | RHDH | `analyze-techdocs-coverage`, `fetch-techdocs`, `retrieve-techdocs-content` |
 | `scaffolder-mcp-extras` | RHDH | `execute-template`, `fetch-template-metadata`, `list-scaffolder-tasks`, `get-scaffolder-task-logs`, `list-scaffolder-actions`, `dry-run-template` |
 
+:::note Restricting the exposed toolset (self-hosted only)
+`pluginSources` is itself an overridable list, not a fixed set. To expose fewer tools — for example, dropping `explain` — mount a `dynamic-plugins.yaml` with the same plugin and a trimmed list:
+
+```yaml
+plugins:
+  - disabled: false
+    package: oci://quay.io/veecode/backstage:bs_<backstage-version>!backstage-plugin-mcp-actions-backend
+    pluginConfig:
+      backend:
+        actions:
+          pluginSources:
+            - catalog
+            - scaffolder
+```
+
+See [Adding Plugins](../plugins/adding.md#via-yaml-override) for how operator-mounted overrides interact with preset fragments. Not available on SaaS, where the `mcp` preset's default toolset is fixed.
+:::
+
 ### OAuth / DCR configuration (self-hosted)
 
-External clients authenticate via OAuth 2.1 with Dynamic Client Registration (DCR). This configuration is already baked into the base image when using the V2 unified image. For reference, the relevant app-config blocks are:
+External clients authenticate via OAuth 2.1 with Dynamic Client Registration (DCR) — each user authenticates as their own Backstage identity (`user:default/<name>`), established on first authorization in the client, so permissions and RBAC apply per that identity rather than a shared service account. This configuration is already baked into the base image when using the V2 unified image. For reference, the relevant app-config blocks are:
 
 ```yaml
 auth:

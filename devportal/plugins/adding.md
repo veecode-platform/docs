@@ -106,6 +106,7 @@ Common workspaces you will see in the wild:
 | `argocd` | Argo CD plugin |
 | `sonarqube` | SonarQube quality scorecards |
 | `keycloak` | Keycloak SSO + group sync |
+| `aws-ecs` | AWS ECS integration |
 | `mcp-integrations` / `mcp-chat` | MCP plugins |
 
 This list is not exhaustive — there are 60+ workspaces. For any plugin not in the table, use one of the two discovery paths below.
