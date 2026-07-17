@@ -174,7 +174,19 @@ Two deltas have no V1 equivalent and are easy to miss:
 
 Pick the path that matches V1's:
 
-- **Production Kubernetes** → the published `veecode-devportal-platform` Helm chart. See [Kubernetes (Helm chart)](./installation-guide/production-setup/plan.md).
+- **Production Kubernetes** → the published `veecode-devportal-platform` Helm chart from the `next-charts` repo. This is **not** the same as installing from a local chart checkout (`helm install dp ./veecode-devportal-platform-chart`) — that path is for chart maintainers only:
+
+  ```bash
+  helm repo add next-charts https://veecode-platform.github.io/next-charts
+  helm repo update next-charts
+
+  helm install devportal next-charts/veecode-devportal-platform \
+    --namespace platform --create-namespace \
+    --set 'presets={recommended,veecode-theme,<your-integration-presets>}' \
+    --set existingSecret=my-devportal-creds
+  ```
+
+  Full walkthrough (Secret creation, PostgreSQL, ingress, upgrading): [Deploy to Kubernetes](./installation-guide/production-setup/setup.md).
 - **Local Kubernetes (VKDR)** → `vkdr devportal-platform install`. See [VKDR (Local Kubernetes)](./installation-guide/vkdr-local/vkdr-setup.md).
 - **Docker** → `veecode/devportal:2.1.3` with `VEECODE_PRESETS`. See [Docker Run](./installation-guide/docker-local/intro.md).
 

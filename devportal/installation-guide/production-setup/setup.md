@@ -19,7 +19,8 @@ For environments where Helm is not available, a [no-Helm fallback](#no-helm-fall
 helm repo add next-charts https://veecode-platform.github.io/next-charts
 helm repo update next-charts
 helm search repo veecode-devportal-platform
-# should show: 0.1.0 / 2.1.3
+# should show a CHART VERSION / APP VERSION pair, e.g. 0.4.0 / 2.2.0 — check
+# https://veecode-platform.github.io/next-charts/index.yaml for the current latest
 ```
 
 ---
