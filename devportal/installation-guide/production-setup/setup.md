@@ -13,7 +13,9 @@ For environments where Helm is not available, a [no-Helm fallback](#no-helm-fall
 
 ---
 
-## Step 1: Add the Helm repository
+## Step 1: Add the Helm repository (optional)
+
+The install and upgrade commands in this guide point straight at the chart repo URL with `--repo`, so this step isn't required. Add it only if you want a persistent local alias — useful for `helm search`/`helm show values` outside of an install:
 
 ```bash
 helm repo add next-charts https://veecode-platform.github.io/next-charts
@@ -22,6 +24,8 @@ helm search repo veecode-devportal-platform
 # should show a CHART VERSION / APP VERSION pair, e.g. 0.4.0 / 2.2.0 — check
 # https://veecode-platform.github.io/next-charts/index.yaml for the current latest
 ```
+
+With the alias in place, swap `veecode-devportal-platform --repo https://veecode-platform.github.io/next-charts` for `next-charts/veecode-devportal-platform` in any command below.
 
 ---
 
@@ -115,7 +119,8 @@ For AWS RDS, prefer a Multi-AZ instance — with PVCs removed the database becom
 With `database.external.enabled=true` the chart disables the internal SQLite path and injects a `backend.database` block using the `PG_*` credentials from your Secret. Remove both PVCs — the pod becomes fully stateless and schedules in any availability zone:
 
 ```bash
-helm install devportal next-charts/veecode-devportal-platform \
+helm install devportal veecode-devportal-platform \
+  --repo https://veecode-platform.github.io/next-charts \
   --namespace platform \
   --create-namespace \
   --set 'presets={recommended,github,github-auth}' \
@@ -132,7 +137,8 @@ With stateless pods, `replicaCount > 1` is safe for steady-state traffic. Add `-
 The default path provisions two PVCs (`/app/data` and `/app/dynamic-plugins-root`). Suitable for a single-node dev cluster; an EBS- or RWO-backed PVC pins the pod to one availability zone and is not recommended for production:
 
 ```bash
-helm install devportal next-charts/veecode-devportal-platform \
+helm install devportal veecode-devportal-platform \
+  --repo https://veecode-platform.github.io/next-charts \
   --namespace platform \
   --create-namespace \
   --set 'presets={recommended,github,github-auth}' \
@@ -196,7 +202,8 @@ If a required variable is missing, the container exits with **code 78** and logs
 ## Upgrading
 
 ```bash
-helm upgrade devportal next-charts/veecode-devportal-platform \
+helm upgrade devportal veecode-devportal-platform \
+  --repo https://veecode-platform.github.io/next-charts \
   --namespace platform \
   --reuse-values \
   --set existingSecret=my-devportal-creds

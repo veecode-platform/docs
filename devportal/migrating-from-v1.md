@@ -177,19 +177,25 @@ Pick the path that matches V1's:
 - **Production Kubernetes** → the published `veecode-devportal-platform` Helm chart from the `next-charts` repo. This is **not** the same as installing from a local chart checkout (`helm install dp ./veecode-devportal-platform-chart`) — that path is for chart maintainers only:
 
   ```bash
-  helm repo add next-charts https://veecode-platform.github.io/next-charts
-  helm repo update next-charts
-
-  helm install devportal next-charts/veecode-devportal-platform \
+  helm install devportal veecode-devportal-platform \
+    --repo https://veecode-platform.github.io/next-charts \
     --namespace platform --create-namespace \
     --set 'presets={recommended,veecode-theme,<your-integration-presets>}' \
     --set existingSecret=my-devportal-creds
   ```
 
+  `--repo` resolves the chart straight from the URL — no `helm repo add` needed. If you'd rather have a persistent local alias (handy for repeated `helm search`/`helm show values`), add it once and use `next-charts/veecode-devportal-platform` instead of `veecode-devportal-platform --repo <url>` in any command here:
+
+  ```bash
+  helm repo add next-charts https://veecode-platform.github.io/next-charts
+  helm repo update next-charts
+  ```
+
   Once V2 is installed, later chart-version bumps are a normal `helm upgrade` — this one *is* an in-place update, unlike the V1→V2 move itself:
 
   ```bash
-  helm upgrade devportal next-charts/veecode-devportal-platform \
+  helm upgrade devportal veecode-devportal-platform \
+    --repo https://veecode-platform.github.io/next-charts \
     --namespace platform \
     --reuse-values \
     --set existingSecret=my-devportal-creds
