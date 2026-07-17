@@ -4,9 +4,9 @@ sidebar_label: DevPortal Deployment
 title: DevPortal Deployment
 ---
 
-In this step, you will deploy **DevPortal V2** (`docker.io/veecode/devportal:2.1.3`) into your local cluster using `vkdr devportal-platform install`.
+In this step, you will deploy **DevPortal V2** (`docker.io/veecode/devportal:2.2.0`) into your local cluster using `vkdr devportal-platform install`.
 
-VKDR installs the published `veecode-devportal-platform` Helm chart (version 0.1.0, appVersion 2.1.3) into the `platform` namespace and automatically wires up Kong as the ingress controller.
+VKDR installs the published `veecode-devportal-platform` Helm chart (version 0.1.0, appVersion 2.2.0) into the `platform` namespace and automatically wires up Kong as the ingress controller.
 
 ## Steps Overview
 

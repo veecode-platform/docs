@@ -90,7 +90,7 @@ GitHub SCM integration: catalog autodiscovery and GitHub Actions/Issues/PRs.
 ```yaml
 services:
   devportal:
-    image: veecode/devportal:2.1.3
+    image: veecode/devportal:2.2.0
     ports:
       - "7007:7007"
     environment:
@@ -128,7 +128,7 @@ GitHub OAuth sign-in (identity provider).
 ```yaml
 services:
   devportal:
-    image: veecode/devportal:2.1.3
+    image: veecode/devportal:2.2.0
     ports:
       - "7007:7007"
     environment:
@@ -175,7 +175,7 @@ GitLab SCM integration + GitLab OAuth sign-in. This single preset covers both ca
 ```yaml
 services:
   devportal:
-    image: veecode/devportal:2.1.3
+    image: veecode/devportal:2.2.0
     ports:
       - "7007:7007"
     environment:
@@ -232,7 +232,7 @@ Azure Entra ID (Microsoft) sign-in (identity provider).
 ```yaml
 services:
   devportal:
-    image: veecode/devportal:2.1.3
+    image: veecode/devportal:2.2.0
     ports:
       - "7007:7007"
     environment:

@@ -70,7 +70,7 @@ Use the `-v` flag to mount your config file:
 docker run --rm --name devportal -d \
   -p 7007:7007 \
   -v $(pwd)/app-config.local.yaml:/app/app-config.local.yaml:ro \
-  veecode/devportal:2.1.3
+  veecode/devportal:2.2.0
 ```
 
 ## Mounting with Docker Compose
@@ -80,7 +80,7 @@ Update your `docker-compose.yml`:
 ```yaml
 services:
   devportal:
-    image: veecode/devportal:2.1.3
+    image: veecode/devportal:2.2.0
     ports:
       - "7007:7007"
     environment:
@@ -102,7 +102,7 @@ Set `DEVELOPMENT=true` to enable nodemon hot-reload. DevPortal will watch `app-c
 ```yaml
 services:
   devportal:
-    image: veecode/devportal:2.1.3
+    image: veecode/devportal:2.2.0
     ports:
       - "7007:7007"
     environment:
@@ -158,7 +158,7 @@ docker run --rm --name devportal -d \
   -p 7007:7007 \
   -e GITHUB_PAT=your_token_here \
   -v $(pwd)/app-config.local.yaml:/app/app-config.local.yaml:ro \
-  veecode/devportal:2.1.3
+  veecode/devportal:2.2.0
 ```
 
 ## Next Steps

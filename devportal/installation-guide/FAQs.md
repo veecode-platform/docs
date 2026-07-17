@@ -14,7 +14,7 @@ The marketplace catalog is downloaded from an OCI image at startup. If the downl
 Force a fresh download on the next startup:
 
 ```bash
-docker run ... -e CATALOG_INDEX_REFRESH=true veecode/devportal:2.1.3
+docker run ... -e CATALOG_INDEX_REFRESH=true veecode/devportal:2.2.0
 ```
 
 The default catalog image is `quay.io/veecode/plugin-catalog-index:latest`. Override it with `CATALOG_INDEX_IMAGE` if you host it internally.
@@ -134,7 +134,7 @@ The canonical path is the `veecode-devportal-platform` Helm chart published in t
 ```sh
 helm repo add next-charts https://veecode-platform.github.io/next-charts
 helm repo update next-charts
-helm search repo veecode-devportal-platform   # → chart 0.1.0, app 2.1.3
+helm search repo veecode-devportal-platform   # → chart 0.1.0, app 2.2.0
 ```
 
 Create a Secret with the variables required by your chosen presets (see the [per-preset matrix](/devportal/installation-guide/production-setup/plan)), then install:

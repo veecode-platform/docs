@@ -164,7 +164,7 @@ docker run -p 7007:7007 \
   -e AZURE_AUTH_TENANT_ID=<tenant-id> \
   -e AZURE_AUTH_CLIENT_ID=<client-id> \
   -e AZURE_AUTH_CLIENT_SECRET=<client-secret> \
-  veecode/devportal:2.1.3
+  veecode/devportal:2.2.0
 ```
 
 ### Azure DevOps repos + GitHub identity
