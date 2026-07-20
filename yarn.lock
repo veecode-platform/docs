@@ -9540,6 +9540,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"docusaurus-plugin-copy-page-button@npm:0.8.4":
+  version: 0.8.4
+  resolution: "docusaurus-plugin-copy-page-button@npm:0.8.4"
+  peerDependencies:
+    "@docusaurus/core": ^3.0.0
+    react: ^18.0.0 || ^19.0.0
+  checksum: 10/b2191f645925eb09f5571696b162f64fda8aced94b9816e73f90da78f4579eb7f73b8d74de55236a870396f66e7e39906b2ac91f1ff9db9803f1ac22bcf03d72
+  languageName: node
+  linkType: hard
+
 "docusaurus-plugin-image-zoom@npm:^3.0.1":
   version: 3.0.1
   resolution: "docusaurus-plugin-image-zoom@npm:3.0.1"
@@ -9549,6 +9559,19 @@ __metadata:
   peerDependencies:
     "@docusaurus/theme-classic": ">=3.0.0"
   checksum: 10/860ceb43f45ebc520114d55fe26ff3c77e22d1c3886c38a30aee8e5dae96f55ca7fe918bdd80b8cfde6980f6dcb3ff04db1c1979efe9ea8e7782409bd1a2f301
+  languageName: node
+  linkType: hard
+
+"docusaurus-plugin-llms@npm:0.5.0":
+  version: 0.5.0
+  resolution: "docusaurus-plugin-llms@npm:0.5.0"
+  dependencies:
+    gray-matter: "npm:4.0.3"
+    minimatch: "npm:9.0.3"
+    yaml: "npm:2.8.1"
+  peerDependencies:
+    "@docusaurus/core": ^3.0.0
+  checksum: 10/f08376eba2acd2fd217c0fb1557c09099d431f7c44e33b1fdfe87e0d95c9e13918542eb66ef8c63a0c6bc29d2977d09d703f252e3e3d5474bc7b6d02ca096a17
   languageName: node
   linkType: hard
 
@@ -11204,7 +11227,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"gray-matter@npm:^4.0.3":
+"gray-matter@npm:4.0.3, gray-matter@npm:^4.0.3":
   version: 4.0.3
   resolution: "gray-matter@npm:4.0.3"
   dependencies:
@@ -13846,6 +13869,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"minimatch@npm:9.0.3":
+  version: 9.0.3
+  resolution: "minimatch@npm:9.0.3"
+  dependencies:
+    brace-expansion: "npm:^2.0.1"
+  checksum: 10/c81b47d28153e77521877649f4bab48348d10938df9e8147a58111fe00ef89559a2938de9f6632910c4f7bf7bb5cd81191a546167e58d357f0cfb1e18cecc1c5
+  languageName: node
+  linkType: hard
+
 "minimatch@npm:^10.2.2":
   version: 10.2.5
   resolution: "minimatch@npm:10.2.5"
@@ -14778,7 +14810,10 @@ __metadata:
     "@mdx-js/react": "npm:^3.0.1"
     classnames: "npm:^2.5.1"
     clsx: "npm:^2.1.1"
+    docusaurus-plugin-copy-page-button: "npm:0.8.4"
     docusaurus-plugin-image-zoom: "npm:^3.0.1"
+    docusaurus-plugin-llms: "npm:0.5.0"
+    minisearch: "npm:^7.1.0"
     prism-react-renderer: "npm:^2.3.1"
     react: "npm:^18.3.1"
     react-dom: "npm:^18.3.1"
@@ -18944,6 +18979,15 @@ __metadata:
   version: 4.0.0
   resolution: "yallist@npm:4.0.0"
   checksum: 10/4cb02b42b8a93b5cf50caf5d8e9beb409400a8a4d85e83bb0685c1457e9ac0b7a00819e9f5991ac25ffabb56a78e2f017c1acc010b3a1babfe6de690ba531abd
+  languageName: node
+  linkType: hard
+
+"yaml@npm:2.8.1":
+  version: 2.8.1
+  resolution: "yaml@npm:2.8.1"
+  bin:
+    yaml: bin.mjs
+  checksum: 10/eae07b3947d405012672ec17ce27348aea7d1fa0534143355d24a43a58f5e05652157ea2182c4fe0604f0540be71f99f1173f9d61018379404507790dff17665
   languageName: node
   linkType: hard
 

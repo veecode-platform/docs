@@ -5,6 +5,24 @@
 //const darkCodeTheme = require("prism-react-renderer/themes/dracula");
 import { themes as prismThemes } from 'prism-react-renderer';
 
+// Base of the GitHub tree used for "Edit this page" links. Docs edits land on
+// the develop branch (the editable base per CLAUDE.md).
+const GITHUB_DOCS_TREE = "https://github.com/veecode-platform/docs/tree/develop";
+
+// editUrl for non-versioned instances. The function form gives us the docs dir
+// (relative to repo root, i.e. the plugin `path`) plus the file path, so the
+// generated link resolves to the exact source file regardless of instance.
+const editUrl = ({ versionDocsDirPath, docPath }) =>
+  `${GITHUB_DOCS_TREE}/${versionDocsDirPath}/${docPath}`;
+
+// editUrl for the versioned devportal instance. V1 (versioned_docs/version-v1)
+// is frozen (correctness-only), so we omit its edit link; V2 (current) points
+// at the develop source tree.
+const devportalEditUrl = ({ version, versionDocsDirPath, docPath }) =>
+  version === "v1"
+    ? undefined
+    : `${GITHUB_DOCS_TREE}/${versionDocsDirPath}/${docPath}`;
+
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: "VeeCode Platform Documentation",
@@ -48,6 +66,8 @@ const config = {
           path: "devportal",
           routeBasePath: "devportal",
           sidebarPath: require.resolve("./sidebars.js"),
+          editUrl: devportalEditUrl,
+          showLastUpdateTime: true,
           // V2 (the unified devportal-platform image, driven by presets) is the
           // default, served at the root (/devportal/). V1 is the prior
           // split-image line, kept at /devportal/v1/ for installs still on it.
@@ -82,6 +102,8 @@ const config = {
         path: "platform",
         routeBasePath: "platform",
         sidebarPath: require.resolve("./sidebars.js"),
+        editUrl,
+        showLastUpdateTime: true,
         // ... other options
       },
     ],
@@ -92,6 +114,8 @@ const config = {
         path: "admin-ui",
         routeBasePath: "admin-ui",
         sidebarPath: require.resolve("./sidebars.js"),
+        editUrl,
+        showLastUpdateTime: true,
         // ... other options
       },
     ],
@@ -102,6 +126,8 @@ const config = {
         path: "vkdr",
         routeBasePath: "vkdr",
         sidebarPath: require.resolve("./sidebars.js"),
+        editUrl,
+        showLastUpdateTime: true,
         // ... other options
       },
     ],
@@ -139,6 +165,35 @@ const config = {
     ],
     'docusaurus-plugin-image-zoom',
     require.resolve('./plugins/mcp-snapshot'),
+    // llms.txt / llms-full.txt for AI crawlers. Covers the four current doc
+    // instances; the frozen V1 tree (versioned_docs/version-v1) is excluded to
+    // avoid duplicating the devportal content.
+    [
+      'docusaurus-plugin-llms',
+      {
+        generateLLMsTxt: true,
+        generateLLMsFullTxt: true,
+        docsDir: [
+          { path: 'devportal', routeBasePath: 'devportal', label: 'DevPortal' },
+          { path: 'platform', routeBasePath: 'platform', label: 'Platform' },
+          { path: 'admin-ui', routeBasePath: 'admin-ui', label: 'Admin-UI' },
+          { path: 'vkdr', routeBasePath: 'vkdr', label: 'VKDR-CLI' },
+        ],
+        title: 'VeeCode Platform Documentation',
+        description: 'Documentation for VeeCode DevPortal, Admin-UI, Platform and VKDR-CLI.',
+      },
+    ],
+    // "Copy page as Markdown" / "Open in ChatGPT/Claude" button. Emits a .md
+    // route per page (generateMarkdownRoutes) so the AI links have real
+    // markdown to point at.
+    [
+      'docusaurus-plugin-copy-page-button',
+      {
+        generateMarkdownRoutes: true,
+        markdownUrl: true,
+        enabledActions: ['copy', 'view', 'chatgpt', 'claude'],
+      },
+    ],
   ],
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
