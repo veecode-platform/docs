@@ -5,24 +5,6 @@
 //const darkCodeTheme = require("prism-react-renderer/themes/dracula");
 import { themes as prismThemes } from 'prism-react-renderer';
 
-// Base of the GitHub tree used for "Edit this page" links. Docs edits land on
-// the develop branch (the editable base per CLAUDE.md).
-const GITHUB_DOCS_TREE = "https://github.com/veecode-platform/docs/tree/develop";
-
-// editUrl for non-versioned instances. The function form gives us the docs dir
-// (relative to repo root, i.e. the plugin `path`) plus the file path, so the
-// generated link resolves to the exact source file regardless of instance.
-const editUrl = ({ versionDocsDirPath, docPath }) =>
-  `${GITHUB_DOCS_TREE}/${versionDocsDirPath}/${docPath}`;
-
-// editUrl for the versioned devportal instance. V1 (versioned_docs/version-v1)
-// is frozen (correctness-only), so we omit its edit link; V2 (current) points
-// at the develop source tree.
-const devportalEditUrl = ({ version, versionDocsDirPath, docPath }) =>
-  version === "v1"
-    ? undefined
-    : `${GITHUB_DOCS_TREE}/${versionDocsDirPath}/${docPath}`;
-
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: "VeeCode Platform Documentation",
@@ -66,7 +48,6 @@ const config = {
           path: "devportal",
           routeBasePath: "devportal",
           sidebarPath: require.resolve("./sidebars.js"),
-          editUrl: devportalEditUrl,
           showLastUpdateTime: true,
           // V2 (the unified devportal-platform image, driven by presets) is the
           // default, served at the root (/devportal/). V1 is the prior
@@ -102,7 +83,6 @@ const config = {
         path: "platform",
         routeBasePath: "platform",
         sidebarPath: require.resolve("./sidebars.js"),
-        editUrl,
         showLastUpdateTime: true,
         // ... other options
       },
@@ -114,7 +94,6 @@ const config = {
         path: "admin-ui",
         routeBasePath: "admin-ui",
         sidebarPath: require.resolve("./sidebars.js"),
-        editUrl,
         showLastUpdateTime: true,
         // ... other options
       },
@@ -126,7 +105,6 @@ const config = {
         path: "vkdr",
         routeBasePath: "vkdr",
         sidebarPath: require.resolve("./sidebars.js"),
-        editUrl,
         showLastUpdateTime: true,
         // ... other options
       },
