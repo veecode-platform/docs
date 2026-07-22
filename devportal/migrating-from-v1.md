@@ -109,7 +109,7 @@ beyond setting `VEECODE_PRESETS`:
 
 3. **State volumes (SQLite path) or external PostgreSQL.** V1 ran with ephemeral storage; V2 needs a persistence decision:
 
-   - **SQLite (default):** mount two volumes so restarts don't wipe state:
+   - **SQLite (simplest — no database to run):** mount two volumes so restarts don't wipe state:
      - `/app/data` — Backstage SQLite databases plus the marketplace's `extensions-install.yaml`. Must be a **directory** volume, not a single-file bind (the marketplace rewrites the file via atomic temp-file + rename).
      - `/app/dynamic-plugins-root` — resolved plugin-bundle cache (fast restart).
    - **PostgreSQL (recommended for production):** set `backend.database.client: pg` in `app-config.local.yaml` — neither volume is required. The pod is fully stateless; a boot pre-step regenerates `extensions-install.yaml` from the database on each start.
@@ -160,7 +160,7 @@ Use this table to find where each V1 setting goes. Build the new file against
 | `upstream.backstage.image` (`veecode/devportal:1.4.5`) | `image` (`veecode/devportal:2.1.3`) |
 | `upstream.postgresql.*` (bundled Bitnami subchart) | `database.external.*` — no bundled database; supply external coordinates |
 | `createClusterRoles: true` | `rbac.clusterRoles.create: true` |
-| _(ephemeral; no PVCs)_ | `persistence.data` + `persistence.plugins` — new in V2; required for **SQLite** deployments (default), **not needed** when `database.external.enabled=true` |
+| _(ephemeral; no PVCs)_ | `persistence.data` + `persistence.plugins` — new in V2; **off by default** (stateless on external PostgreSQL, the default). Enable them only for the opt-in **SQLite** dev path (`database.external.enabled=false`) |
 
 Two deltas have no V1 equivalent and are easy to miss:
 
@@ -168,7 +168,7 @@ Two deltas have no V1 equivalent and are easy to miss:
    `appConfig` and fed them via `extraEnvVarsSecret`. In V2 the presets read
    their variables from the environment, so put them in a Secret referenced by
    `existingSecret` — see [Step 2 of the install guide](./installation-guide/production-setup/setup.md#step-2-create-the-credentials-secret).
-2. **PVCs depend on your database choice.** The V1 wrapper ran with ephemeral storage. V2 defaults to SQLite, which requires `persistence.data` (Backstage state + marketplace selections) and `persistence.plugins` (plugin-bundle cache). With external PostgreSQL (`database.external.enabled=true`) both volumes can be disabled — the pod becomes fully stateless and schedules in any availability zone. See [Deploy to Kubernetes](./installation-guide/production-setup/setup.md#step-3-install-the-chart) for the production install command.
+2. **PVCs depend on your database choice.** The V1 wrapper ran with ephemeral storage. V2 defaults to **stateless on external PostgreSQL** — no PVC, the pod schedules in any availability zone. A render-time guard blocks a bare install that picks neither path. Only the opt-in SQLite dev path (`database.external.enabled=false`) needs `persistence.data` (Backstage state + marketplace selections) and `persistence.plugins` (plugin-bundle cache). See [Deploy to Kubernetes](./installation-guide/production-setup/setup.md#step-3-install-the-chart) for the production install command.
 
 ## Installing V2
 
