@@ -116,7 +116,7 @@ For AWS RDS, prefer a Multi-AZ instance — with PVCs removed the database becom
 
 ### Production (PostgreSQL — recommended)
 
-With `database.external.enabled=true` the chart disables the internal SQLite path and injects a `backend.database` block using the `PG_*` credentials from your Secret. Remove both PVCs — the pod becomes fully stateless and schedules in any availability zone:
+This is the chart's **default** posture. `database.external.enabled=true` injects a `backend.database` block using the `PG_*` credentials from your Secret, and with both PVCs off the pod is fully stateless and schedules in any availability zone (the flags below are the defaults, shown explicitly for clarity):
 
 ```bash
 helm install devportal veecode-devportal-platform \
@@ -134,7 +134,7 @@ With stateless pods, `replicaCount > 1` is safe for steady-state traffic. Add `-
 
 ### Development / minimal (SQLite)
 
-The default path provisions two PVCs (`/app/data` and `/app/dynamic-plugins-root`). Suitable for a single-node dev cluster; an EBS- or RWO-backed PVC pins the pod to one availability zone and is not recommended for production:
+This is an **opt-in** path — the chart defaults to stateless PostgreSQL and a render-time guard **blocks a bare install** unless you pick a persistence path. Enable the two PVCs (`/app/data` and `/app/dynamic-plugins-root`) explicitly. Suitable for a single-node dev cluster only; an EBS- or RWO-backed PVC pins the pod to one availability zone and is not recommended for production:
 
 ```bash
 helm install devportal veecode-devportal-platform \
@@ -142,7 +142,9 @@ helm install devportal veecode-devportal-platform \
   --namespace platform \
   --create-namespace \
   --set 'presets={recommended,github,github-auth}' \
-  --set existingSecret=my-devportal-creds
+  --set existingSecret=my-devportal-creds \
+  --set persistence.data.enabled=true \
+  --set persistence.plugins.enabled=true
 ```
 
 ### Common options

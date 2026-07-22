@@ -80,17 +80,17 @@ The chart also accepts a `credentials: { KEY: value, ... }` map that renders a S
 <!-- dp-source: storage,pvc,helm -->
 ## Persistent volumes
 
-The chart provisions two PVCs by default:
+Both PVCs are **off by default** — the recommended posture is stateless on external PostgreSQL, which needs no PVC at all. Enable them only for the SQLite / single-node dev path:
 
-| Value key | Mount path | Default size | What it holds |
-|-----------|-----------|-------------|---------------|
-| `persistence.data` | `/app/data` | 1 Gi | SQLite databases (catalog cache) and marketplace state. Without this PVC the catalog is wiped on every restart. |
-| `persistence.plugins` | `/app/dynamic-plugins-root` | 2 Gi | Downloaded OCI plugin bundles. Without this, all plugins are re-fetched on every restart (~60–90 s). |
+| Value key | Default | Mount path | Size when enabled | What it holds |
+|-----------|---------|-----------|-------------------|---------------|
+| `persistence.data` | `false` | `/app/data` | 1 Gi | SQLite databases (catalog cache) and marketplace state. **Required if you run SQLite** (`database.external.enabled=false`) — without it the catalog is wiped on every restart. |
+| `persistence.plugins` | `false` | `/app/dynamic-plugins-root` | 2 Gi | Downloaded OCI plugin bundles. Purely a speed-up — with it off, plugins are re-fetched on every restart (~60–90 s). |
 
-Ensure your cluster has a `StorageClass` that supports `ReadWriteOnce`. Cloud-managed clusters (GKE, EKS, AKS) include one by default.
+If you enable `persistence.data`, ensure your cluster has a `StorageClass` that supports `ReadWriteOnce`. Cloud-managed clusters (GKE, EKS, AKS) include one by default.
 
 :::warning
-`helm uninstall` deletes the data PVC along with the release. Back up the SQLite database before uninstalling if you need to preserve the catalog state.
+When `persistence.data.enabled=true`, `helm uninstall` deletes the data PVC along with the release. Back up the SQLite database before uninstalling if you need to preserve the catalog state. (On stateless PostgreSQL there is no data PVC — the database is the durable store.)
 :::
 
 ---
@@ -98,9 +98,7 @@ Ensure your cluster has a `StorageClass` that supports `ReadWriteOnce`. Cloud-ma
 <!-- dp-source: postgres -->
 ## Database
 
-By default DevPortal uses **persistent SQLite** on the `/app/data` PVC. This is correct for single-replica deployments.
-
-For multi-replica deployments (`replicaCount > 1`), SQLite is not safe — you must switch to **external PostgreSQL**:
+By default DevPortal runs **stateless on external PostgreSQL** — the recommended posture, and required for multi-replica deployments (`replicaCount > 1`), where SQLite is not safe:
 
 ```bash
 helm install devportal next-charts/veecode-devportal-platform \
@@ -109,7 +107,9 @@ helm install devportal next-charts/veecode-devportal-platform \
   --set existingSecret=my-devportal-creds  # must contain PG_* vars
 ```
 
-The Secret must contain: `PG_HOST`, `PG_PORT`, `PG_USER`, `PG_PASSWORD`, `PG_DATABASE`. When `database.external.enabled=true` the chart does not create the data PVC (Postgres is the state store).
+The Secret must contain: `PG_HOST`, `PG_PORT`, `PG_USER`, `PG_PASSWORD`, `PG_DATABASE` (the PG user needs `CREATEDB` — Backstage creates several `backstage_plugin_*` databases). When `database.external.enabled=true` the chart creates no data PVC — Postgres is the state store.
+
+For a single-node dev cluster with no database, opt into **persistent SQLite** instead (`--set persistence.data.enabled=true`, see [Persistent volumes](#persistent-volumes) above). A render-time guard blocks a bare install that picks neither path, since SQLite on an ephemeral volume loses all state on restart.
 
 ---
 
@@ -167,7 +167,7 @@ If you enable the `kubernetes` preset, also set `rbac.clusterRoles.create=true` 
 ## Checklist before deploying
 
 - [ ] Namespace created (or `--create-namespace` passed to `helm install`)
-- [ ] StorageClass available for `ReadWriteOnce` PVCs
+- [ ] External PostgreSQL reachable with a `CREATEDB`-capable user (default posture) — **or**, for the SQLite dev path, a `StorageClass` supporting `ReadWriteOnce`
 - [ ] Kubernetes Secret created with all required variables for your preset combination
 - [ ] Preset list finalized (at most one identity preset)
 - [ ] Ingress controller installed in the cluster
