@@ -24,12 +24,12 @@ Use this guide when you need a persistent, team-accessible DevPortal instance �
 
 ## Deployment approach
 
-DevPortal V2 is distributed as the `veecode-devportal-platform` Helm chart (chart version `0.1.0`, app version `2.1.3`) published in the `next-charts` Helm repository. The chart deploys the `docker.io/veecode/devportal:2.1.3` image and manages the following resources on your behalf:
+DevPortal V2 is distributed as the `veecode-devportal-platform` Helm chart published in the `next-charts` Helm repository. The chart deploys the `docker.io/veecode/devportal` image and manages the following resources on your behalf:
 
 | Resource | Purpose |
 |----------|---------|
 | `Deployment` | Runs the DevPortal container |
-| `PersistentVolumeClaim` (×2) | Persists catalog state (`/app/data`) and plugin bundles (`/app/dynamic-plugins-root`) |
+| `PersistentVolumeClaim` (×2, opt-in) | Only when `persistence.*` is enabled for the SQLite dev path — catalog state (`/app/data`) and plugin bundles (`/app/dynamic-plugins-root`). None created in the default stateless/PostgreSQL posture |
 | `Secret` (optional) | Chart-managed credentials (dev convenience; `existingSecret` is recommended for production) |
 | `Service` | Exposes port 7007 within the cluster |
 | `Ingress` | Routes external traffic (opt-in via `ingress.enabled`) |
