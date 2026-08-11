@@ -4,7 +4,7 @@ title: Install DevPortal 3.x (Preview)
 ---
 
 :::warning Preview status
-DevPortal 3.x is a preview. It is a minimal fork of [Red Hat Developer Hub](https://github.com/redhat-developer/rhdh-chart); DevPortal 2.x remains the supported production line.
+DevPortal 3.x is a preview. It is a minimal fork of [Red Hat Developer Hub](https://github.com/redhat-developer/rhdh); DevPortal 2.x remains the supported production line.
 :::
 
 The chart ships guest sign-in **enabled by default** and maps the guest identity to the `ADMIN` user (`user:default/admin`). That is useful for evaluation and dangerous for anything exposed to users. The single off-switch is `global.veecode.guestAuth.enabled: false`; after turning it off, configure a real authentication provider before exposing the portal.
@@ -13,10 +13,10 @@ The chart ships guest sign-in **enabled by default** and maps the guest identity
 
 Getting `global.host` wrong is the highest-cost setup mistake: the portal can serve HTTP 200 for `/` while every route returns 404 because the frontend is trying to load its plugins from the wrong origin.
 
-The chart's `rhdh.hostname` helper returns `global.host` literally, and the default app configuration renders both `app.baseUrl` and `backend.baseUrl` as `https://` followed by that hostname. Set `global.host` to a host or host and port, without `http://` or `https://`:
+The chart's `rhdh.hostname` helper returns `global.host` literally, and the default app configuration renders both `app.baseUrl` and `backend.baseUrl` as `https://` followed by that hostname. Choose the values pattern that matches the endpoint:
 
-- **Port-forward evaluation:** use `localhost:7007`. The port belongs in the value for this local endpoint; the port-forward is opened at `http://localhost:7007`.
-- **Public TLS endpoint:** use a hostname such as `devportal.example.com` (or include a non-default port if that is part of the endpoint). Do not include the scheme; the chart derives `https://devportal.example.com`.
+- **Port-forward evaluation (supported preview path):** do not set `global.host`; use the appConfig overlay in Step 3, which sets `app.baseUrl`, `backend.baseUrl`, and `backend.cors.origin` to `http://localhost:7007`. The chart derives `https://<host>` from `global.host`, while a port-forward is plain HTTP, so all three URLs must say `http` explicitly.
+- **Public TLS endpoint:** use the six-line values example in the TLS subsection below with a scheme-less `global.host`, such as `devportal.example.com`; the chart derives `https://devportal.example.com`.
 
 The supported preview path below uses a local port-forward. Public Ingress exposure is described separately, but is not yet a supported preview scenario.
 
@@ -56,15 +56,20 @@ The preview channel should list chart `0.1.0` with app version `3.0.0-beta.1`.
 
 ## Step 3: Install the preview
 
-Save this exact minimal consumer configuration as `values.yaml`:
+For the supported port-forward evaluation, save this exact consumer configuration as `values.yaml`:
 
 ```yaml
-global:
-  host: localhost:7007
 upstream:
   backstage:
     extraEnvVarsSecrets:
       - veecode-runtime-secrets
+    appConfig:
+      app:
+        baseUrl: http://localhost:7007
+      backend:
+        baseUrl: http://localhost:7007
+        cors:
+          origin: http://localhost:7007
 ```
 
 Install the pinned preview chart:
@@ -83,11 +88,22 @@ Forward the chart's service and open the local endpoint:
 kubectl -n devportal port-forward svc/devportal-developer-hub 7007:7007
 ```
 
-Open <http://localhost:7007>. Keep the `global.host` value as `localhost:7007`; it is the host value used by the chart, not a URL with a scheme.
+Open <http://localhost:7007>. The values file above intentionally omits `global.host` and sets the app and backend URLs to the plain-HTTP port-forward endpoint.
 
 ### Exposing publicly (not supported for this preview yet)
 
-When a public Ingress path is intentionally supported, use the real TLS hostname as the bare `global.host` value and configure the cluster's Ingress controller and TLS Secret. For example:
+When a public Ingress path is intentionally supported, use the following six-line values example with the real TLS hostname as the bare `global.host` value, then configure the cluster's Ingress controller and TLS Secret:
+
+```yaml
+global:
+  host: devportal.example.com
+upstream:
+  backstage:
+    extraEnvVarsSecrets:
+      - veecode-runtime-secrets
+```
+
+For example:
 
 ```yaml
 global:
