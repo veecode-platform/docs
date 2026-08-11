@@ -88,7 +88,7 @@ Forward the chart's service and open the local endpoint:
 kubectl -n devportal port-forward svc/devportal-developer-hub 7007:7007
 ```
 
-Open <http://localhost:7007>. The values file above intentionally omits `global.host` and sets the app and backend URLs to the plain-HTTP port-forward endpoint.
+Open [http://localhost:7007](http://localhost:7007). The values file above intentionally omits `global.host` and sets the app and backend URLs to the plain-HTTP port-forward endpoint.
 
 ### Exposing publicly (not supported for this preview yet)
 
