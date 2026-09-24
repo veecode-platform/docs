@@ -319,7 +319,7 @@ MCP chat provider integration.
 |----------|-------------|
 | `MCP_CHAT_PROVIDER` | Chat provider name — `claude` or `openai` |
 | `MCP_CHAT_API_KEY` | API key for the chat provider |
-| `MCP_CHAT_MODEL` | Model identifier — e.g., `claude-sonnet-4-6-latest` (check your provider's current model catalogue) |
+| `MCP_CHAT_MODEL` | Model identifier — e.g., `claude-sonnet-5` (check your provider's current model catalogue) |
 
 ---
 
