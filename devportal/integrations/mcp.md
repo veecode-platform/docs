@@ -75,7 +75,7 @@ The `mcp-chat` preset (`presets/mcp-chat.yaml`) requires:
 |---|---|
 | `MCP_CHAT_PROVIDER` | LLM provider ID: `openai` or `claude` |
 | `MCP_CHAT_API_KEY` | API key for the selected provider |
-| `MCP_CHAT_MODEL` | Model name (e.g., `gpt-4o` for openai, `claude-sonnet-4-6-latest` for claude — check the provider's current model catalogue) |
+| `MCP_CHAT_MODEL` | Model name (e.g., `gpt-4o` for openai, `claude-sonnet-5` for claude — check the provider's current model catalogue) |
 
 :::note
 For self-hosted (preset) deployments, `MCP_CHAT_PROVIDER` accepts only `openai` or `claude`. Gemini and Ollama are SaaS-only.
