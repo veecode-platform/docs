@@ -52,7 +52,7 @@ helm repo update
 helm search repo veecode/devportal --versions
 ```
 
-The preview channel should list chart `0.1.0` with app version `3.0.0-beta.1`.
+Install the newest `veecode/devportal` version the list shows. At the time of writing that is chart `0.1.24` with app version `3.0.0-beta.9`.
 
 ## Step 3: Install the preview
 
@@ -72,10 +72,10 @@ upstream:
           origin: http://localhost:7007
 ```
 
-Install the pinned preview chart:
+Install that chart version:
 
 ```bash
-helm install devportal veecode/devportal --version 0.1.0 -n devportal --create-namespace -f values.yaml
+helm install devportal veecode/devportal --version 0.1.24 -n devportal --create-namespace -f values.yaml
 ```
 
 ## Step 4: Reach the portal
@@ -125,7 +125,7 @@ On the sign-in screen, choose **Guest** and continue. The default guest flow sig
 
 ## Enable or disable plugins
 
-The chart's default plugin set is declared in `global.dynamic.plugins` in `values.yaml`. To disable a default or configured plugin, use the same entry with `disabled: true`:
+The default plugins are baked into the DevPortal image, not declared in the chart's `values.yaml`. `global.dynamic.plugins` only adds to them. To disable a default plugin, add an entry with its exact package reference and `disabled: true`; the chart's [product face guide](https://github.com/veecode-platform/devportal-chart/blob/main/docs/product-face-overrides.md) lists every reference:
 
 ```yaml
 global:
@@ -140,11 +140,12 @@ global:
 - VeeCode analytics home
 - Global header, VeeCode theme, and About
 - Marketplace
+- TechDocs, Notifications, Signals, and Tech Radar
 - RBAC UI; enforcement is **off** in the preview
 - A read-only ClusterRole for the Kubernetes plugin, gated by `kubernetesPlugin.rbac`
 
 ## Version and lineage
 
-Chart `0.1.0` and image `3.0.0-beta.1` are pinned by digest inside the chart. Never point production at `:edge`.
+Each chart version pins its image by digest; chart `0.1.24` installs image `3.0.0-beta.9`. Never point production at `:edge`.
 
 The chart source is [veecode-platform/devportal-chart](https://github.com/veecode-platform/devportal-chart). It is a renamed fork of [redhat-developer/rhdh-chart](https://github.com/redhat-developer/rhdh-chart) pinned at `backstage-7.0.1`.
