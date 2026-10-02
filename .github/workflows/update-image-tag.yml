@@ -1,12 +1,20 @@
 name: Update DevPortal image tag
 
-# Keeps the `veecode/devportal` image tag referenced in the V2 docs in sync with
-# the latest STABLE release published on Docker Hub. Zero-maintenance: runs daily,
-# opens (or updates) a PR against `main` only when a newer tag exists.
+# Keeps the `veecode/devportal` image tags referenced in the docs in sync with
+# the newest STABLE releases published on Docker Hub. Zero-maintenance: runs daily,
+# opens (or updates) one PR against `main` only when a newer tag exists.
 #
-# Scope is deliberately limited to `devportal/**` — the current (V2) docs tree.
-# The versioned V1 docs under `versioned_docs/version-v1/` stay on their own 1.x
-# line and are never touched.
+# Each major line moves only within itself: the 2.x commands follow the newest
+# stable 2.x tag and the 3.x commands the newest stable 3.x tag. A line with no
+# stable tag on Docker Hub yet (3.x before 3.0.0 is published) is left as it is,
+# and a tag in the docs that is ahead of Docker Hub is never lowered.
+#
+# Scope is deliberately limited to `devportal/**`. The versioned V1 docs under
+# `versioned_docs/version-v1/` and any 1.x reference stay on their own line.
+# Only the tag of a `veecode/devportal:X.Y.Z` reference is rewritten, and only a
+# bare stable X.Y.Z: a pre-release (`3.0.0-beta.10`) and a reference pinned by
+# digest (`3.0.0@sha256:...`) are left alone, which is how a page keeps a reference
+# the bot must not move. The same digits elsewhere (`openapi: 3.0.0`) are not tags.
 
 on:
   schedule:
@@ -25,72 +33,119 @@ jobs:
         with:
           ref: main
 
-      - name: Resolve latest stable tag from Docker Hub
+      - name: Resolve the stable tags from Docker Hub
         id: latest
         run: |
           set -euo pipefail
-          # Page through tags ordered by recency; keep only bare semver X.Y.Z
-          # (drops `latest`, `nightly`, per-arch `-amd64/-arm64`, and `-rc/-beta`
-          # pre-releases), then pick the highest by version sort. V1 tags (1.x)
-          # never outrank V2, so this is robust across future major bumps.
-          latest=$(
-            curl -fsSL "https://hub.docker.com/v2/repositories/veecode/devportal/tags?page_size=100&ordering=last_updated" \
-              | jq -r '.results[].name' \
-              | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' \
-              | sort -V \
-              | tail -1 || true
-          )
+          # Follow every page of tags: the newest 2.x tag can fall out of the
+          # first page once 3.x tags are pushed more recently.
+          url="https://hub.docker.com/v2/repositories/veecode/devportal/tags?page_size=100&ordering=last_updated"
+          tags=""
+          pages=0
+          while [ -n "$url" ]; do
+            pages=$((pages + 1))
+            if [ "$pages" -gt 50 ]; then
+              echo "::error::More than 50 pages of tags on Docker Hub"
+              exit 1
+            fi
+            page=$(curl -fsSL "$url")
+            tags+=$(jq -r '.results[].name' <<< "$page")$'\n'
+            url=$(jq -r '.next // empty' <<< "$page")
+          done
+          # Keep only bare semver X.Y.Z: this drops `latest`, `edge`, per-arch
+          # `-amd64/-arm64` tags and `-rc/-beta` pre-releases.
+          stable=$(grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' <<< "$tags" | sort -Vu || true)
           # `|| true` above: a zero-match grep exits 1, which under
           # `set -o pipefail` would kill the step before this guard runs.
-          if [ -z "$latest" ]; then
+          if [ -z "$stable" ]; then
             echo "::error::Could not resolve a stable tag from Docker Hub"
             exit 1
           fi
-          echo "Latest stable tag: $latest"
-          echo "latest=$latest" >> "$GITHUB_OUTPUT"
+          echo "Stable tags on Docker Hub: $(tr '\n' ' ' <<< "$stable")"
+          {
+            echo "stable<<EOF_STABLE"
+            echo "$stable"
+            echo "EOF_STABLE"
+          } >> "$GITHUB_OUTPUT"
 
-      - name: Read current tag referenced in the docs
+      - name: Read the tags referenced in the docs
         id: current
         run: |
           set -euo pipefail
-          # Highest V2 tag currently referenced under devportal/ — using the
-          # max (sort -V) rather than the first match keeps this stable against
-          # filesystem ordering and any stray 1.x reference in an example.
-          current=$(
-            grep -rhoE 'veecode/devportal:[0-9]+\.[0-9]+\.[0-9]+' devportal \
-              | sed 's|.*:||' | sort -V | tail -1 || true
+          # The highest stable tag of each major line 2 and up that is referenced
+          # under devportal/ (sort -V, not the first match, so the result does not
+          # depend on filesystem order). The lookahead rejects a longer version,
+          # a pre-release suffix and a digest pin.
+          pins=$(
+            grep -rhoP 'veecode/devportal:\K[0-9]+\.[0-9]+\.[0-9]+(?![0-9A-Za-z@-]|\.[0-9])' devportal \
+              --include='*.md' --include='*.mdx' \
+              | sort -Vu \
+              | awk -F. '$1 >= 2 { highest[$1] = $0 } END { for (major in highest) print major, highest[major] }' \
+              | sort -n || true
           )
-          if [ -z "$current" ]; then
-            echo "::error::Could not find a current veecode/devportal:X.Y.Z reference under devportal/"
+          if [ -z "$pins" ]; then
+            echo "::error::Could not find a current veecode/devportal:X.Y.Z reference (2.x or later) under devportal/"
             exit 1
           fi
-          echo "Current tag in docs: $current"
-          echo "current=$current" >> "$GITHUB_OUTPUT"
+          echo "Current tags in the docs:"
+          echo "$pins"
+          {
+            echo "pins<<EOF_PINS"
+            echo "$pins"
+            echo "EOF_PINS"
+          } >> "$GITHUB_OUTPUT"
 
-      - name: Rewrite docs if the tag changed
+      - name: Rewrite docs if a tag changed
         id: rewrite
         env:
-          OLD: ${{ steps.current.outputs.current }}
-          NEW: ${{ steps.latest.outputs.latest }}
+          STABLE: ${{ steps.latest.outputs.stable }}
+          PINS: ${{ steps.current.outputs.pins }}
         run: |
           set -euo pipefail
-          if [ "$OLD" = "$NEW" ]; then
-            echo "Docs already on $NEW — nothing to do."
+          summary=""
+          titles=""
+          while read -r major old; do
+            [ -n "${major:-}" ] || continue
+            new=$(grep -E "^${major}\." <<< "$STABLE" | sort -V | tail -1 || true)
+            if [ -z "$new" ]; then
+              echo "::notice::No stable ${major}.x tag on Docker Hub yet; leaving ${old} as it is."
+              continue
+            fi
+            if [ "$old" = "$new" ]; then
+              echo "${major}.x docs already on $new — nothing to do."
+              continue
+            fi
+            if [ "$(printf '%s\n%s\n' "$old" "$new" | sort -V | tail -1)" = "$old" ]; then
+              echo "::notice::${old} in the docs is ahead of the newest ${major}.x tag on Docker Hub (${new}); leaving it."
+              continue
+            fi
+            # OLD never matches inside a longer version, a pre-release or a digest pin.
+            export OLD="$old" NEW="$new"
+            # shellcheck disable=SC2016 # $ENV is Perl's, not the shell's
+            { grep -rlZF "veecode/devportal:$old" devportal --include='*.md' --include='*.mdx' || true; } \
+              | xargs -0 --no-run-if-empty perl -pi -e 's#(veecode/devportal:)\Q$ENV{OLD}\E(?![0-9A-Za-z@-]|\.[0-9])#$1$ENV{NEW}#g'
+            echo "${major}.x: ${old} to ${new}"
+            summary+="- ${major}.x: \`${old}\` to \`${new}\`"$'\n'
+            titles+="${titles:+, }${new}"
+          done <<< "$PINS"
+          if git diff --quiet -- devportal; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          # Literal replacement of the old version string, scoped to the V2 tree.
-          old_escaped=${OLD//./\\.}
-          grep -rlF "$OLD" devportal --include='*.md' --include='*.mdx' \
-            | xargs --no-run-if-empty sed -i "s|${old_escaped}|${NEW}|g"
-          echo "changed=true" >> "$GITHUB_OUTPUT"
+          {
+            echo "changed=true"
+            echo "titles=$titles"
+            echo "summary<<EOF_SUMMARY"
+            echo "$summary"
+            echo "EOF_SUMMARY"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Open or update the PR
         if: steps.rewrite.outputs.changed == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
-          OLD: ${{ steps.current.outputs.current }}
-          NEW: ${{ steps.latest.outputs.latest }}
+          TITLES: ${{ steps.rewrite.outputs.titles }}
+          SUMMARY: ${{ steps.rewrite.outputs.summary }}
         run: |
           set -euo pipefail
           branch="chore/devportal-image-tag"
@@ -98,17 +153,21 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git checkout -b "$branch"
           git add devportal/
-          git commit -m "docs: bump devportal image tag to ${NEW}"
+          title="docs: bump devportal image tags to ${TITLES}"
+          git commit -m "$title"
+          # A fresh checkout has no remote-tracking ref for the bot's branch, and
+          # without one --force-with-lease rejects the push ("stale info") once an
+          # earlier run has pushed the branch. Fetch it first; the first run has none.
+          git fetch origin "+refs/heads/${branch}:refs/remotes/origin/${branch}" || true
           git push --force-with-lease origin "$branch"
-          title="docs: bump devportal image tag to ${NEW}"
           body=$(cat <<EOF
-          Automated update of the \`veecode/devportal\` image tag in the V2 docs.
+          Automated update of the \`veecode/devportal\` image tags in the docs.
 
-          - Previous: \`${OLD}\`
-          - Latest stable on Docker Hub: \`${NEW}\`
+          ${SUMMARY}
+          Each major line moves only within itself, to the newest stable tag of that line on Docker Hub.
 
           Source: https://hub.docker.com/r/veecode/devportal/tags
-          Scope: \`devportal/**\` only — V1 docs (\`versioned_docs/version-v1/\`) are left on their 1.x line.
+          Scope: \`devportal/**\` only — V1 docs (\`versioned_docs/version-v1/\`) and any 1.x reference are left alone.
           EOF
           )
           if gh pr view "$branch" --json number >/dev/null 2>&1; then

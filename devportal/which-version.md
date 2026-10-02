@@ -16,7 +16,7 @@ Look at any **one** of these on your running deployment:
 
 | Signal | You're on **V1** | You're on **V2** |
 |---|---|---|
-| Container image | two images: `veecode/devportal-base` + `veecode/devportal` (or `veecode/devportal:1.x` / `:latest`) | one image: `veecode/devportal:2.1.3` |
+| Container image | two images: `veecode/devportal-base` + `veecode/devportal` (or `veecode/devportal:1.x`) | one image: `veecode/devportal:2.1.3` |
 | Enablement env var | `VEECODE_PROFILE=<github\|gitlab\|…>` | `VEECODE_PRESETS=<a,b,c>` |
 | Helm chart name | `veecode-devportal` (appVersion `1.x`) | `veecode-devportal-platform` (appVersion `2.1.3`) |
 | Plugin model | plugins baked into the distro image | plugins disabled by default, enabled by presets / OCI refs |
@@ -44,3 +44,7 @@ When you're ready to move to the unified image, see
 You're in the right place — keep reading. V2 is the current default: the
 `veecode/devportal:2.1.3` image, presets, and the `veecode-devportal-platform`
 Helm chart are documented here.
+
+:::note
+`veecode/devportal:latest` is the 2.x line. It keeps moving within 2.x and stays on 2.x until 2.x leaves support, and it never points at a 3.x image. Pin a version tag in every install you keep.
+:::

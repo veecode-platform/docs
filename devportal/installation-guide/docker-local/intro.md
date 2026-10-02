@@ -22,11 +22,15 @@ This guide explains how to run the VeeCode DevPortal using standard Docker comma
 You can simply run the following command to start a DevPortal instance locally:
 
 ```bash
-# pinned to 2.1.3 — replace with the current release tag
+# the tag pins one release — replace it with the current release tag
 docker run --rm --name devportal -d -p 7007:7007 veecode/devportal:2.1.3
 ```
 
 This will start a DevPortal instance running on [http://localhost:7007](http://localhost:7007).
+
+:::note
+Use a version tag, as above. `veecode/devportal:latest` is the 2.x line and never points at a 3.x image.
+:::
 
 :::note
 The default behavior enables "guest" authentication as an admin user. The default catalog will be populated with a built-in catalog for demo purposes.
