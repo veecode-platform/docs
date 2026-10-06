@@ -49,6 +49,8 @@ The `devportal` instance is versioned (the others are not). Current posture:
 
 **Freeze rule:** `versioned_docs/version-v1/` is **correctness-only** — no new content, only factual fixes. All new work lands in the `devportal/` (V2) current tree. The only deliberately shared transition surface is `devportal/migrating-from-v1.md` and `devportal/which-version.md`. This avoids double-maintenance drift between the two versions.
 
+**DevPortal 3.x** lives inside the current tree as its own section, `devportal/v3/` (served at `/devportal/v3/`): install, upgrade, support, and `release-sheets/` (one `release-sheet-X-Y-Z.md` per release, `sidebar_position` ascending). The 2.x → 3.x migration guide is top-level, `devportal/migrating-from-2x.md`, next to `migrating-from-v1.md`. The navbar version dropdown reaches it through a `dropdownItemsBefore` link labeled `v3`, listed above v2 and v1. The earlier `/devportal/installation-guide/v3-preview/*` URLs redirect to these pages.
+
 **Links:** inside the V2 tree, use **relative** `.md` links or a bare `/devportal/...` (now resolves to V2 at root). V1 self-links use `/devportal/v1/...`. Cross-instance links (`platform/`, `admin-ui/`) into DevPortal use `/devportal/...`.
 
 **Image tag:** prose references to the V2 image stay version-agnostic (`veecode/devportal`, no tag). Concrete `veecode/devportal:X.Y.Z` tags belong only in copy-paste install commands under `devportal/`, where `.github/workflows/update-image-tag.yml` keeps them on the latest stable Docker Hub release.

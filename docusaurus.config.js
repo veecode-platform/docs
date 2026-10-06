@@ -125,6 +125,44 @@ const config = {
             from: '/devportal/installation-guide/local-setup/docker-setup',
             to: '/devportal/installation-guide/docker-local/intro'
           },
+          // The 3.x guides moved out of the installation guides into their own
+          // section, and the migration guide moved up next to the V1 one.
+          {
+            from: '/devportal/installation-guide/v3-preview/intro',
+            to: '/devportal/v3/intro'
+          },
+          {
+            from: '/devportal/installation-guide/v3-preview/upgrade',
+            to: '/devportal/v3/upgrade'
+          },
+          {
+            from: '/devportal/installation-guide/v3-preview/support',
+            to: '/devportal/v3/support'
+          },
+          {
+            from: '/devportal/installation-guide/v3-preview/migrate-from-2x',
+            to: '/devportal/migrating-from-2x'
+          },
+          {
+            from: '/devportal/installation-guide/v3-preview/release-sheets',
+            to: '/devportal/v3/release-sheets/'
+          },
+          {
+            from: '/devportal/installation-guide/v3-preview/release-sheet-3-0-0',
+            to: '/devportal/v3/release-sheets/release-sheet-3-0-0'
+          },
+          {
+            from: '/devportal/installation-guide/v3-preview/release-sheet-3-0-1',
+            to: '/devportal/v3/release-sheets/release-sheet-3-0-1'
+          },
+          {
+            from: '/devportal/installation-guide/v3-preview/release-sheet-3-0-2',
+            to: '/devportal/v3/release-sheets/release-sheet-3-0-2'
+          },
+          {
+            from: '/devportal/installation-guide/v3-preview/release-sheet-3-0-3',
+            to: '/devportal/v3/release-sheets/release-sheet-3-0-3'
+          },
         ],
         // V2 is now served at the root (/devportal/). Preserve the preview-era
         // links that circulated under /devportal/v2/… by redirecting each V2
@@ -208,6 +246,8 @@ const config = {
             type: "docsVersionDropdown",
             docsPluginId: "default",
             position: "right",
+            // The 3.x docs live inside the current (v2) tree, under /devportal/v3/.
+            dropdownItemsBefore: [{ to: "/devportal/v3/intro", label: "v3" }],
           },
           {
             href: "https://github.com/veecode-platform/support",

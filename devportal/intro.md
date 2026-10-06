@@ -13,6 +13,10 @@ import DocCard from '@site/src/components/DocCard';
 These docs cover **V2**, the unified `veecode/devportal:2.1.3` image driven by composable presets — the current default. If you still run **V1** (the split image `veecode/devportal-base` + `veecode/devportal`, profiles via `VEECODE_PROFILE`), see the [V1 documentation](/devportal/v1/intro). Not sure which you run? See [Which version am I running?](./which-version.md).
 :::
 
+:::tip DevPortal 3.x
+DevPortal 3.x has its own guides: [install](./v3/intro.md), [upgrade](./v3/upgrade.md), [support](./v3/support.md) and [release sheets](./v3/release-sheets/release-sheets.md). To move an existing 2.x install to 3.x, see [Migrating from 2.x to 3.x](./migrating-from-2x.md).
+:::
+
 Welcome to VeeCode Developer Portal documentation. This guide covers installation, plugins, and concepts for running DevPortal on your infrastructure.
 
 ### What is VeeCode DevPortal?
