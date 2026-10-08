@@ -6,11 +6,11 @@ title: Jenkins Plugin
 
 # Jenkins Plugin
 
-Without this plugin, build status lives in Jenkins — developers context-switch to check whether a build passed, find the right job among many, and trace failures back to code. Enable the plugin, add `jenkins.io/job-full-name` with the job path in Jenkins, and a CI tab appears on the entity showing build history and status. Configure `JENKINS_URL` and credentials in the backend plugin config.
+Without this plugin, build status lives in Jenkins: you context-switch to check whether a build passed and trace failures back to code. Enable the plugin, add `jenkins.io/job-full-name` with the job path in Jenkins, and a CI card appears on the entity showing build history and status.
 
 The Jenkins plugin displays Jenkins build status in catalog entity pages.
 
-**Status:** Listed in `dynamic-plugins.default.yaml` (reference) as `disabled: true`. Fetched from the OCI registry at boot when enabled — no image rebuild needed. Activated automatically by the `jenkins` preset.
+**Status:** Not a default plugin. Install it from Marketplace (plugin `backstage-community-plugin-jenkins`) or with a plugin entry.
 
 ---
 
@@ -18,72 +18,51 @@ The Jenkins plugin displays Jenkins build status in catalog entity pages.
 
 | Package | Role |
 |---|---|
-| `backstage-community-plugin-jenkins` | Frontend — entity CI tab card |
-| `backstage-community-plugin-jenkins-backend` | Backend — Jenkins API proxy |
+| `backstage-community-plugin-jenkins` | Frontend: entity CI card |
+| `backstage-community-plugin-jenkins-backend` | Backend: Jenkins API proxy |
 
-Both must be enabled together.
+Both must be enabled together. The frontend card only renders when the entity carries the required annotation.
 
 ---
 
 ## What it does
 
-- Adds a **CI** tab entry showing Jenkins builds via `EntityJenkinsContent`
+- Adds a **CI** card entry showing Jenkins builds via `EntityJenkinsContent`
 - Displays build status, duration, and link to Jenkins
 - Only renders for entities with `isJenkinsAvailable` true
 
 ---
 
-## Enabling the plugin
+## Install it
 
-The simplest path is to add the `jenkins` preset to `VEECODE_PRESETS` — it enables both the frontend and backend plugins together. See [Presets](/devportal/concepts/presets) for details.
+In Marketplace, search for `backstage-community-plugin-jenkins`, select **Install**, and restart the stack as described in [Adding Plugins](../adding.md).
 
-To enable manually, add the following to your `dynamic-plugins.yaml`:
+Alternatively, add both digest-pinned references from the default plugin index under `global.dynamic.plugins` on Kubernetes, or in the operator plugin file on the local stack:
 
 ```yaml
 plugins:
-  - package: oci://${PLUGIN_REGISTRY}/jenkins:bs_1.48.4!backstage-community-plugin-jenkins-backend
+  - package: oci://quay.io/veecode/backstage-community-plugin-jenkins@sha256:bbed7a06c0b758213e58b9bb0427e22c83895b199530bb56984ea7e5caa1d193
     disabled: false
-    pluginConfig:
-      jenkins:
-        instances:
-          - name: default
-            baseUrl: ${JENKINS_URL}
-            username: ${JENKINS_USERNAME}
-            apiKey: ${JENKINS_TOKEN}
-
-  - package: oci://${PLUGIN_REGISTRY}/jenkins:bs_1.48.4!backstage-community-plugin-jenkins
+  - package: oci://quay.io/veecode/backstage-community-plugin-jenkins-backend@sha256:dc043d5b0302f8e4f42d1f0599a050463082f08a214fc5991709f32471d536cb
     disabled: false
-    pluginConfig:
-      dynamicPlugins:
-        frontend:
-          backstage-community.plugin-jenkins:
-            mountPoints:
-              - mountPoint: entity.page.ci/cards
-                importName: EntityJenkinsContent
-                config:
-                  layout:
-                    gridColumn: "1 / -1"
-                  if:
-                    allOf:
-                      - isJenkinsAvailable
 ```
+
+The index supplies the frontend mount point (`EntityJenkinsContent` on `entity.page.ci/cards`, shown when `isJenkinsAvailable` is true) and the backend connection settings.
 
 ---
 
-## App configuration
+## Configuration
 
-Jenkins connection details are supplied via the backend plugin's `pluginConfig`:
+The backend plugin needs the Jenkins base URL and credentials. The index default reads them from the environment:
 
 ```yaml
 jenkins:
-  instances:
-    - name: default
-      baseUrl: ${JENKINS_URL}        # e.g. https://jenkins.company.com
-      username: ${JENKINS_USERNAME}
-      apiKey: ${JENKINS_TOKEN}       # Jenkins API token (not password)
+  baseUrl: ${JENKINS_URL}
+  username: ${JENKINS_USERNAME}
+  apiKey: ${JENKINS_TOKEN}
 ```
 
-Multiple Jenkins instances are supported — add additional entries to the `instances` array and reference them with `jenkins.com/host` annotation.
+Use a Jenkins API token, not a password. Set the three variables in the runtime Secret on Kubernetes or in the local stack environment, and keep the block above in app configuration. The [upstream plugin README](https://github.com/backstage/community-plugins/tree/main/workspaces/jenkins/plugins/jenkins) documents the card components and their options.
 
 ---
 
@@ -94,3 +73,5 @@ metadata:
   annotations:
     jenkins.io/job-full-name: my-folder/my-job
 ```
+
+The value is the full job path in Jenkins. The plugin works with folder projects backed by Git source control.

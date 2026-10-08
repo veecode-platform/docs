@@ -1,0 +1,24 @@
+name: Docs checks
+
+on:
+  pull_request:
+    paths:
+      - devportal/**
+      - versioned_docs/**
+      - scripts/check-v3-docs.mjs
+      - scripts/v3-docs-check.json
+      - .github/workflows/docs-checks.yml
+
+permissions:
+  contents: read
+
+jobs:
+  v3-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check the 3.x docs against the frozen 2.x docs
+        run: node scripts/check-v3-docs.mjs

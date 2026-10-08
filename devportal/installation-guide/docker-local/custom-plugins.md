@@ -1,123 +1,112 @@
 ---
-sidebar_position: 3
+sidebar_position: 5
 sidebar_label: Dynamic Plugins
-title: Custom Dynamic Plugins
+title: Configure dynamic plugins for the local stack
 ---
 
-## Custom Dynamic Plugins
+The image contains a default plugin index and the default plugin file (`dynamic-plugins.veecode.yaml`). The local stack mounts an operator plugin file into the `install-dynamic-plugins` service, which merges its entries with Marketplace selections before installing plugins.
 
-DevPortal supports **dynamic plugins** that can be enabled, disabled, and configured at runtime without rebuilding the container image. This guide shows you how to enable and customize plugin behavior using a custom `dynamic-plugins.yaml` file mount by docker compose.
+The root `dynamic-plugins.yaml` is derived from the pinned chart. Do not edit it. Create a separate operator file for local additions.
 
-:::important
-Dynamic plugins are a deep subject on their own. Please refer to the [Plugins](/devportal/plugins/) section for more information.
-:::
+## Add an operator plugin file
 
-<!-- dp-source: plugin,entrypoint -->
-## Understanding Dynamic Plugins
+Create `dynamic-plugins.local.yaml` in the `devportal-local` directory. Include the default plugin index and the default plugin file:
 
-The image includes a catalog of optional plugins, all disabled by default. The core chrome plugins (global header, homepage, About) are pre-installed and enabled by default — they are listed in the shipped `dynamic-plugins.yaml`. You activate plugins via presets or a mounted `dynamic-plugins.yaml`. You add operator-level overrides by mounting a single file:
+```yaml
+includes:
+  - dynamic-plugins.default.yaml
+  - /opt/app-root/src/dynamic-plugins.veecode.yaml
+plugins: []
+```
 
-- **`dynamic-plugins.yaml`** (mounted at runtime): a top-level `plugins:` list. Mounting this file **replaces** the image's `/app/dynamic-plugins.yaml` — it does not merge with it. The entrypoint keeps your `plugins:` entries and assembles the internal `includes:` chain (marketplace state + preset fragments) itself, so you never reference the image's default file. Because it replaces: the shipped file already lists the core chrome plugins (global header, homepage, About) — keep those entries when you add your own, or those frontend plugins stop surfacing.
+Replace `plugins: []` with the entries you need. Use a full digest-pinned OCI package reference to enable a plugin that is not a default plugin. To override a default plugin, use `oci://<registry>/<repository>:{{inherit}}!<plugin path>` with the full `!<plugin path>` suffix.
 
-## Creating a Custom Plugins File
+The installer matches an override by registry, repository, and plugin path, not by tag or digest. A tag or digest in an override sets the plugin version, so a stale digest can pin an older artifact. An override's `pluginConfig` replaces the default plugin's entire `pluginConfig`. Include every setting you want to keep.
 
-Create a `dynamic-plugins.yaml` file in your project directory. In this file you can simply enable pre-installed plugins (and use them with their default settings), disable them, or download and configure plugins from NPM or OCI registries.
+### Enable or disable plugins from the index
 
-All *pre-installed plugins* are available in the container image at `/app/dynamic-plugins-root/` - you can use relative paths to them. Downloaded plugins will be referenced by their NPM or OCI registry URL and fetched at runtime.
+This example enables the regex scaffolder module and disables the Tech Radar frontend:
 
 ```yaml
 plugins:
-  # Enable a pre-installed plugin with its default settings
-  - package: './dynamic-plugins/dist/some-plugin-dynamic'
+  - package: oci://quay.io/veecode/backstage-community-plugin-scaffolder-backend-module-regex@sha256:e0f3e1f69cb6c1bccd538f8ed80e6b16b85f2540b8866c636225903bb76a0e35
     disabled: false
-
-  # Disable a plugin
-  - package: './dynamic-plugins/dist/another-plugin-dynamic'
+  - package: oci://quay.io/veecode/backstage-community-plugin-tech-radar:{{inherit}}!backstage-community-plugin-tech-radar
     disabled: true
-    
-  # Download and configure plugin with custom settings
-  - package: '@someorg/custom-plugin-dynamic'
-    disabled: false
-    pluginConfig:
-      here:
-        goes: xxx
-        some: yyy
-        config: yyy
 ```
 
-## Mounting with Docker Run
+The regex module adds the `regex:replace` action.
+
+## Find plugin references
+
+Print the default plugin file from the running container:
 
 ```bash
-docker run --rm --name devportal -d \
-  -p 7007:7007 \
-  -v $(pwd)/dynamic-plugins.yaml:/app/dynamic-plugins.yaml:ro \
-  veecode/devportal:2.1.3
+docker compose exec devportal cat /opt/app-root/src/dynamic-plugins.veecode.yaml
 ```
 
-## Mounting with Docker Compose
+The file lists the default plugins with their package references. Each Marketplace package is a `Package` catalog entity in the `rhdh` namespace. Copy its `spec.dynamicArtifact` value into a plugin entry.
 
-Update your `docker-compose.yml`:
+## How the plugin list is assembled
+
+The `includes` list starts with `dynamic-plugins.default.yaml` and `/opt/app-root/src/dynamic-plugins.veecode.yaml`. The install service then places operator plugin entries before Marketplace selections. If both name the same plugin, the operator entry wins.
+
+## Mount the operator plugin file with Compose
+
+Create `docker-compose.plugins.yaml` in the same directory to mount your file at the operator config path:
 
 ```yaml
 services:
-  devportal:
-    image: veecode/devportal:2.1.3
-    ports:
-      - "7007:7007"
+  install-dynamic-plugins:
     volumes:
-      - ./dynamic-plugins.yaml:/app/dynamic-plugins.yaml:ro
+      - ./dynamic-plugins.local.yaml:/opt/app-root/src/dynamic-plugins.operator.yaml:ro
 ```
 
-## Loading External Plugins
-
-You can also load plugins from external registries (NPM or OCI):
-
-```yaml
-plugins:
-  # Load from NPM registry
-  - package: '@someorg/my-custom-plugin@1.0.0'
-    disabled: false
-    
-  # Load from OCI registry
-  - package: 'oci://ghcr.io/my-org/my-plugin:latest'
-    disabled: false
-```
-
-## How `dynamic-plugins.yaml` is assembled
-
-You provide only a top-level `plugins:` list. You do **not** write an `includes:` key — the entrypoint owns it. On every boot it copies your `dynamic-plugins.yaml` to a writable shadow and **rebuilds** the `includes:` chain itself (marketplace state + any preset fragments); any `includes:` you add is replaced. `dynamic-plugins.default.yaml` is documentation only (a vitrine) and is **not** part of the runtime chain.
-
-What it does **not** do is merge your `plugins:` list with the image's. A mounted file replaces `/app/dynamic-plugins.yaml` wholesale, so the core chrome plugins (global header, homepage, About) survive only because the shipped file lists them. Keep those entries in your file, then add your own:
-
-```yaml
-plugins:
-  # keep the shipped core-chrome entries, then add your overrides below
-  - package: './dynamic-plugins/dist/some-plugin-dynamic'
-    disabled: false
-```
-
-After the plugin install script runs, it generates `dynamic-plugins-root/app-config.dynamic-plugins.yaml` from the `pluginConfig` blocks of all enabled plugins. This generated file loads after your `app-config.local.yaml` (and before `app-config.saas.yaml` in SaaS deployments).
-
-### `extensions-install.yaml`
-
-You may notice an `extensions-install.yaml` file in the working directory. This is a write-through cache for marketplace plugin installation state — the database is the source of truth and the Node app regenerates this file on every change. The Python install script reads it at startup. Do not delete it; if it is missing, the entrypoint creates an empty one automatically.
-
-## Important Notes
-
-Dynamic plugins are a deep subject on their own. Please refer to the [Plugins](/devportal/plugins/) section for more information. The dynamic plugins feature is based on the same plugin system used by Red Hat Developer Hub, so Red Hat documentation is also a good resource on this topic.
-
-:::warning
-Dynamic plugins require a special kind of packaging. All DevPortal pre-installed dynamic plugins are published on the public NPM registry and pulled at build time into the `veecode/devportal` distro image. **Not all plugins are available as dynamic plugins**, so please check each plugin's documentation to see if it is available as such. There is usually a `-dynamic` suffix in a dynamic plugin package name, and they tend to exist in both forms in the NPM registry.
-:::
-
-## Examples
-
-OCI plugins are fetched via `skopeo` at boot. See the [Dynamic Plugins](/devportal/plugins/) section for OCI registry usage examples.
-
-## Viewing Available Plugins
-
-To see which plugins are pre-installed in your image, check the logs when the container starts:
+Start the local stack with both Compose files:
 
 ```bash
-docker logs devportal | grep "dynamic-plugins"
+docker compose -f docker-compose.yml -f docker-compose.plugins.yaml up -d
 ```
+
+If you also use the overrides from [Add a configuration fragment](./custom-config.md) or [Add catalog entities](./custom-catalog.md), keep their `-f` flags in this command and in every later one, so their changes stay loaded.
+
+To apply a change to the operator file, restart with the same Compose files. This keeps the named volumes, including PostgreSQL:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.plugins.yaml down
+docker compose -f docker-compose.yml -f docker-compose.plugins.yaml up -d
+```
+
+## Plugins that need configuration
+
+Some plugins need configuration values in a custom fragment before the portal starts. If the portal stops after a plugin change, read the `devportal` service logs:
+
+```bash
+docker compose logs devportal
+```
+
+Add the required settings to [the custom configuration fragment](./custom-config.md) before enabling the plugin.
+
+## Marketplace state
+
+An install or uninstall writes the Marketplace selection to PostgreSQL and `/devportal-data/extensions-install.yaml` at once. A plain `docker compose restart devportal` does not run the plugin installer, so it does not apply the selection.
+
+To install a plugin from Marketplace, follow these steps:
+
+1. Open [http://localhost:7007/marketplace](http://localhost:7007/marketplace) after the catalog loads. If you changed `DEVPORTAL_PORT`, use that port instead of 7007.
+2. Choose a plugin, select **Install**, and confirm the restart prompt.
+3. Recreate the local stack with the same Compose files. Do not pass `-v`.
+
+If you use the operator override above, run the two Compose commands from [Mount the operator plugin file with Compose](#mount-the-operator-plugin-file-with-compose). If you use only the base local stack, run `docker compose down` and then `docker compose up -d` from the `devportal-local` directory. Use the same cycle after uninstalling a plugin.
+
+## Check what was installed
+
+Read the install service logs to see which OCI plugins were installed or skipped:
+
+```bash
+docker compose logs install-dynamic-plugins
+```
+
+The logs include lines such as `Installing OCI plugin ...` and `Skipping disabled plugin ...`.
+
+For more plugin documentation, see the [Plugins guide](../../plugins/plugins.md).

@@ -10,6 +10,10 @@ You can add dynamic plugins to your DevPortal instance at any time without rebui
 Adding a plugin is the **load** step — step 1 of 3 in the plugin activation model. A loaded plugin does nothing visible until the relevant catalog entities carry the correct annotation (context) and `app-config.yaml` configures the backend it queries. See [Composing a Portal](/platform/concepts/portal-composition) for the full model.
 :::
 
+:::note V1 is frozen — newer instances use a different OCI reference format
+This page documents the workspace-bundle OCI format (`oci://.../<workspace>:bs_<version>!<plugin-name>`) used by V1. It keeps working indefinitely on V1 instances. If you are on a current DevPortal instance, see the [current Adding Plugins guide](/devportal/plugins/adding) for the newer one-image-per-plugin format.
+:::
+
 ## Prerequisites
 
 - A running DevPortal instance

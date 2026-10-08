@@ -4,100 +4,53 @@ sidebar_label: Plugins
 title: Backstage Plugins
 ---
 
-Plugins are how the portal becomes useful beyond Day-0 setup. The base DevPortal gives you a service catalog and a template runner — plugins are what turn it into a central hub where teams actually operate their services: checking deployments, tracking pipelines, monitoring code quality, without leaving the portal.
+Plugins are how the portal becomes useful beyond day-zero setup. The base DevPortal gives you a service catalog and software templates. Plugins turn it into a central hub where teams operate their services: checking deployments, tracking pipelines, and reading code quality without leaving the portal.
 
-VeeCode DevPortal is built on top of [Backstage](https://backstage.io/) and ships with a set of bundled plugins ready to enable. Understand what each plugin adds before enabling it — the value is in the workflow it removes, not in the YAML you write.
-
-Before choosing which plugins to enable, read [Composing a Portal](/devportal/concepts/portal-composition) — it explains the three-layer activation model (load → annotation → backend) and maps plugin combinations to operational use cases.
+VeeCode DevPortal is built on top of [Backstage](https://backstage.io/) and every plugin it runs is a dynamic plugin: no rebuild of the portal image is needed to add, remove, or configure one.
 
 ## Plugin Types
 
-Backstage’s extensibility model is built around plugins that can contribute functionality either to the backend, the frontend, or as modules that extend other plugins or backend components (such as the scaffolder). VeeCode DevPortal extends this model to support dynamic plugins with reasonable defaults.
+Backstage plugins contribute functionality to the backend, the frontend, or as modules that extend other plugins.
 
 | Category | Runtime/Scope | What it is | Typical Features |
 | --- | --- | --- | --- |
-| Backend plugins | Backstage backend runtime | Packages that provide service factories and feature loaders; can be extended with backend modules | Expose secure routes, background tasks/schedulers, catalog processors; connect to external services; primary way to extend platform capabilities |
+| Backend plugins | Backstage backend runtime | Packages that provide service factories and feature loaders; can be extended with backend modules | Expose routes, background tasks, catalog processors; connect to external services |
 | Frontend plugins | Backstage frontend runtime | React-based packages that register routes and components | Render UI (routes, pages, cards, widgets); may pair with backend plugins; can work purely client-side |
-| Backend modules | Backstage backend runtime (as extensions) | Specialized backend packages that extend existing plugins or DevPortal behavior | Add catalog processors, scaffolder actions, or other composable extensions; keep core plugins lean |
+| Backend modules | Backstage backend runtime (as extensions) | Specialized backend packages that extend existing plugins or portal behavior | Add catalog processors, scaffolder actions, or other composable extensions; keep core plugins lean |
 
 ### Backend plugins
 
-Backend plugins provide server-side capabilities that run within the Backstage backend runtime. A backend plugin is:
-
-  - Delivered as a package that provides one or more service factories and feature loaders, and can be extended with backend modules when needed.
-  - Expose as a secure route, background task/scheduler or catalog processors.
-  - Is the key component in Backstage to extend any platform capabilities by connecting to external services.
+Backend plugins provide server-side capabilities that run within the Backstage backend runtime. A backend plugin is delivered as a package that provides one or more service factories and feature loaders, and can be extended with backend modules when needed. Backend plugins expose routes, background tasks, or catalog processors, and connect to external services.
 
 ### Frontend plugins
 
-Frontend plugins provide client-side capabilities that run within the Backstage frontend runtime. A frontend plugin is:
-
-  - Rendered as DevPortal UI (routes, pages, cards, widgets).
-  - Implemented as React-based packages that register routes and components with the app.
-  - Often pair with a backend plugin for APIs, but can work purely client-side when appropriate.
+Frontend plugins provide client-side capabilities that run within the Backstage frontend runtime. A frontend plugin renders portal UI (routes, pages, cards, widgets) and is implemented as a React-based package that registers routes and components with the app. Frontend plugins often pair with a backend plugin for APIs, but can work purely client-side when appropriate.
 
 ### Backend modules
 
-Backend modules are specialized backend packages that extend DevPortal behavior.
+Backend modules are specialized backend packages that extend portal behavior. A module extends an existing plugin or some generic portal behavior (for example, adding extra catalog processors to the `catalog` plugin, or new actions to the `scaffolder`). Modules let you keep the core plugin lean while enabling optional, composable extensions.
 
-  - It extends an existing plugin or some generic DevPortal behavior (for example, adding extra catalog processors to the `catalog` plugin, or new actions to the `scaffolder`).
-  - Modules let you keep the core plugin lean while enabling optional, composable extensions.
+## How plugins load in 3.x
 
-## Plugin Loading Strategies
+DevPortal 3.x loads every plugin as a dynamic plugin when the portal starts. There are two sources, layered on top of each other:
 
-There are two primary ways to load plugins in a Backstage-based portal:
+1. The default plugins: 20 digest-pinned OCI plugins baked into the portal image and listed in the default plugin file (`dynamic-plugins.veecode.yaml`), wired in through the chart's `global.dynamic.includes`. 18 are enabled and 2 ship disabled. See the [Bundled Plugin Catalog](./bundled/index.md).
+2. Your additions: entries under the chart's `global.dynamic.plugins`, which only add to the default plugins and never replace them, plus Marketplace selections stored in PostgreSQL. See [Adding Plugins](./adding.md).
 
-| Strategy | Build vs Runtime | Frontend handling | Backend handling | Pros | Cons |
-| --- | --- | --- | --- | --- | --- |
-| Static loading (traditional Backstage) | Build-time | Added to `packages/app`, routes/components wired in code; changes require rebuild/redeploy | Added to backend package and registered in composition; changes require restart/redeploy | Predictable, version-locked, simpler supply chain | Slower iteration; engineering involvement for each update |
-| Dynamic loading (VeeCode/RHDH supported) | Runtime (during DevPortal start) | Discovered/loaded from a plugin registry or manifest without rebuilding | Enabled via configuration; loaded by backend composition; activation on restart or hot-reload | Faster iteration; easy trials; enable/disable flows; marketplace-like experience | Requires runtime-safe packaging and clear compatibility constraints |
+The installer matches an override entry to a default plugin by registry, repository, and the plugin path after `!`; the tag or digest is not part of the match. A tag or digest in an override sets that version, so a stale digest pins an older artifact. To disable or reconfigure a default plugin while keeping the version the default plugin file pins, use the `{{inherit}}` tag with the full `!<plugin path>` part: `oci://quay.io/veecode/<repository>:{{inherit}}!<plugin path>`. In chart values write the tag as `{{ "{{inherit}}" }}`, because the chart renders that list as a template. In the local stack's operator plugin file write `{{inherit}}` as is. An override's `pluginConfig` replaces the default plugin's whole `pluginConfig` (no merge); copy the complete block and edit values in place. See [Adding Plugins](./adding.md) for the Kubernetes and local-stack forms.
 
-### Static loading (traditional Backstage)
+## Default plugins and Marketplace
 
-  - Plugins are compiled into the application at build time.
-  - Frontend: added to `packages/app` and wired into the app routes; any change requires a rebuild/redeploy.
-  - Backend: added to the backend package, registered in the backend builder/composition; changes usually require a restart/redeploy.
-  - Pros: predictable, version-locked, simple supply chain; Cons: slower iteration, requires engineering involvement for each update.
+[Default plugins](./bundled/index.md) ship in the image and need no download: the home page, the global header, the About page, Marketplace with the Extensions catalog provider, TechDocs, Notifications with Signals, Tech Radar, and the RBAC screens. Each bundled page names whether its plugin is a default plugin and gives the override reference for disabling it.
 
-### Dynamic loading (as supported by VeeCode and RHDH)
+[Marketplace](./bundled/marketplace.md) is the in-portal plugin store; the sidebar item **Marketplace** opens the **Extensions** page at `/marketplace`. It reads the plugin catalog index image configured with the chart's `global.catalogIndex.image`, which on 3.0.3 lists 71 installable plugins. See [Finding Plugins](./finding.md).
 
-  - Frontend dynamic plugins can be discovered and loaded at runtime from a plugin registry or manifest, without rebuilding the app.
-  - Backend dynamic plugins/modules can be enabled via configuration and loaded by the backend composition, with activation on restart or hot-reload depending on the platform.
-  - Pros: faster iteration, easier trials and enable/disable flows, marketplace-like experience; Cons: requires a runtime-safe packaging and clear compatibility constraints.
+## Plugin pages and plugin development
 
-### Why dynamic plugins?
+Each plugin page in this section explains what the plugin adds, how to install or disable it, the configuration it needs, and the catalog annotations it reads. Pages for Azure DevOps, GitHub Actions, and Jenkins describe Marketplace plugins; the remaining bundled pages describe default plugins.
 
-By providing a dynamic plugin system any organization can extend DevPortal funcionality without the need to rebuild an entire Backstage distro. This is a key feature for VeeCode DevPortal and Red Hat Developer Hub that allows little friction for customers that want to try or develop new features or enable/disable plugins as needed.
+To write your own plugin, see [Plugin development](./development/development.md). To install a plugin on a Kubernetes install or on the local stack, see [Adding Plugins](./adding.md).
 
-### Choosing between static and dynamic
+## Plugins that are not available in 3.x
 
-- Picking ready-to-use dynamic plugins is the best option for customers that do not want to spend engineers time to build and maintain plugins.
-- VeeCode Admin-UI will provide a marketplace-like experience for customers to discover and install plugins (under development).
-- You are still capable of building static plugins if you want to, but going this path will create friction for each DevPortal upgrade.
-
-## Plugin Distribution Strategies
-
-### Bundled plugins
-
-Bundled plugins are plugins that are distributed as part of the DevPortal distro. They are typically used for plugins that are part of the core functionality of the distro.
-
-**Bundled static plugins** are statically linked to DevPortal as a part of its build process as a regular project dependency (this is the common approach for "vanilla" Backstage plugins).
-
-Example: TechDocs plugin.
-
-**Bundled dynamic plugins** are not linked to DevPortal as a part of its build process, but stored in a "dynamic-plugins" folder included in DevPortal distro. DevPortal configuration can be set to load these plugins at start time. These plugins can also be referred as "pre-installed plugins".
-
-Examples of always-active preInstalled plugins: VeeCode Homepage, Global Header, About (and its backend), dynamic-plugins-info, and catalog-backend-module-extensions.
-
-Examples of bundled-but-disabled plugins: Kubernetes, GitHub Actions, Azure DevOps, Jenkins, SonarQube, GitHub Workflows.
-
-For the complete list with package names and enable instructions, see the [Bundled Plugin Catalog](./bundled/index.md).
-
-### Downloaded plugins
-
-Downloaded plugins are dynamic plugins that are downloaded from a plugin registry or manifest at start time, without rebuilding the app. They are typically used for plugins that are **not** part of the core functionality of the distro but are generally available in a reliable way.
-
-VeeCode DevPortal supports downloading plugins from:
-
-- A npm registry (public or private)
-- A generic OCI registry
+The Vault plugin is not available in 3.x. No Vault package is among the default plugins or in the Marketplace. See the [2.x Vault plugin](/devportal/v2/plugins/vault).

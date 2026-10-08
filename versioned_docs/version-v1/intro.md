@@ -10,7 +10,7 @@ import DocCard from '@site/src/components/DocCard';
 # Intro
 
 :::note You're reading the V1 docs
-V1 is the split-image release (`veecode/devportal-base` + `veecode/devportal`, profiles via `VEECODE_PROFILE`). It is still supported with security backports, but **V2** (`veecode/devportal`, composable presets) is now the current default — see the [V2 documentation](/devportal/intro). Not sure which you run? See [Which version am I running?](/devportal/which-version).
+V1 is the split-image release (`veecode/devportal-base` + `veecode/devportal`, profiles via `VEECODE_PROFILE`). It is still supported with security backports, but **V2** (`veecode/devportal`, composable presets) replaced it — see the [V2 documentation](/devportal/v2/intro). The current line is 3.x, documented at [DevPortal 3.x](/devportal/intro). Not sure which you run? See [Which version am I running?](/devportal/which-version).
 :::
 
 Welcome to VeeCode Developer Portal documentation. This guide covers installation, plugins, and concepts for running DevPortal on your infrastructure.

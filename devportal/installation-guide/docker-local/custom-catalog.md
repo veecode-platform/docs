@@ -1,239 +1,183 @@
 ---
 sidebar_position: 4
 sidebar_label: Custom Catalog
-title: Custom Catalog Examples
+title: Add catalog entities to the local stack
 ---
 
-# Custom Catalog Examples
+The local catalog includes Marketplace Package and Plugin entities. Register a catalog file location to add your own entities.
 
-You can populate your DevPortal with custom catalog entities by mounting local catalog files. This is useful for testing, demos, or when you want to manage your catalog locally.
+## Catalog entities
 
-## Understanding Catalog Entities
+The image's default catalog rules allow `Component`, `System`, `Group`, `Resource`, `Location`, `Template`, and `API` entities. A file location rejects `User` entities unless its `rules` allow `User`.
 
-Backstage catalogs are defined using YAML files (`catalog-info.yaml`) that describe:
+## Create a catalog file
 
-- **Components**: Services, libraries, websites
-- **APIs**: REST APIs, GraphQL, gRPC
-- **Resources**: Databases, S3 buckets, CDNs
-- **Systems**: Collections of components
-- **Domains**: Business domains or product areas
-
-## Creating a Catalog File
-
-Create a `catalog-info.yaml` file in your project directory:
+Create `catalog-info.yaml` in the `devportal-local` directory:
 
 ```yaml
 apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
-  name: my-service
-  description: My awesome microservice
-  annotations:
-    github.com/project-slug: my-org/my-service
-    backstage.io/techdocs-ref: dir:.
+  name: local-quickstart
+  description: A component registered from a local catalog file
 spec:
   type: service
-  lifecycle: production
-  owner: team-a
-  system: my-system
-  providesApis:
-    - my-api
----
-apiVersion: backstage.io/v1alpha1
-kind: API
-metadata:
-  name: my-api
-  description: REST API for my service
-spec:
-  type: openapi
-  lifecycle: production
-  owner: team-a
-  system: my-system
-  definition: |
-    openapi: 3.0.0
-    info:
-      title: My API
-      version: 1.0.0
-    paths:
-      /health:
-        get:
-          summary: Health check
-          responses:
-            '200':
-              description: OK
+  lifecycle: experimental
+  owner: group:default/admins
 ```
 
-## Mounting with Docker Run
-
-Mount your catalog file and configure it in `app-config.local.yaml`:
-
-```bash
-docker run --rm --name devportal -d \
-  -p 7007:7007 \
-  -v $(pwd)/catalog-info.yaml:/app/catalog-info.yaml:ro \
-  -v $(pwd)/app-config.local.yaml:/app/app-config.local.yaml:ro \
-  veecode/devportal:2.1.3
-```
-
-In your `app-config.local.yaml`:
+Add a file location to `app-config.custom.yaml`, the custom fragment from [Add a configuration fragment](./custom-config.md):
 
 ```yaml
 catalog:
   locations:
     - type: file
-      target: /app/catalog-info.yaml
+      target: /opt/app-root/src/catalog-info.yaml
 ```
 
-## Mounting with Docker Compose
+Keep the `catalog-info.yaml` location and add every other location under the same `catalog.locations` key.
 
-Create a `docker-compose.yml`:
+Entities from a new file location can take several minutes to appear; search the portal's Catalog page for a component such as `local-quickstart` to check whether it loaded.
+
+## Mount the catalog file
+
+Create `docker-compose.custom-catalog.yaml` in the `devportal-local` directory:
 
 ```yaml
 services:
   devportal:
-    image: veecode/devportal:2.1.3
-    ports:
-      - "7007:7007"
     volumes:
-      - ./catalog-info.yaml:/app/catalog-info.yaml:ro
-      - ./app-config.local.yaml:/app/app-config.local.yaml:ro
+      - ./catalog-info.yaml:/opt/app-root/src/catalog-info.yaml:ro
 ```
 
-## Multiple Catalog Files
+Start the local stack with the base Compose file and both overrides:
 
-You can mount multiple catalog files using a directory:
+```bash
+docker compose -f docker-compose.yml -f docker-compose.custom-config.yaml -f docker-compose.custom-catalog.yaml up
+```
+
+The component appears in the catalog after the backend reads the configured location.
+
+## Register several files
+
+Create a directory for catalog YAML files:
 
 ```bash
 mkdir -p catalogs
-# Create catalogs/components.yaml, catalogs/apis.yaml, etc.
 ```
 
-Then mount the directory:
-
-```yaml
-services:
-  devportal:
-    image: veecode/devportal:2.1.3
-    ports:
-      - "7007:7007"
-    volumes:
-      - ./catalogs:/app/catalogs:ro
-      - ./app-config.local.yaml:/app/app-config.local.yaml:ro
-```
-
-In `app-config.local.yaml`:
+Add a second file location with a glob to the same list in `app-config.custom.yaml`:
 
 ```yaml
 catalog:
   locations:
     - type: file
-      target: /app/catalogs/components.yaml
+      target: /opt/app-root/src/catalog-info.yaml
     - type: file
-      target: /app/catalogs/apis.yaml
+      target: /opt/app-root/src/catalogs/*.yaml
+      rules:
+        - allow: [User, Group, System, Component, API]
 ```
 
-## Example: Complete System
-
-Here's a complete example with multiple entity types:
+Add the directory mount to `docker-compose.custom-catalog.yaml`, next to the `catalog-info.yaml` mount:
 
 ```yaml
----
+services:
+  devportal:
+    volumes:
+      - ./catalog-info.yaml:/opt/app-root/src/catalog-info.yaml:ro
+      - ./catalogs:/opt/app-root/src/catalogs:ro
+```
+
+Restart the stack with the same Compose files to load the new location.
+
+## Example: A complete system
+
+Save this example as `catalogs/system.yaml`. It registers a Group, System, API with an inline OpenAPI definition, and Component:
+
+```yaml
 apiVersion: backstage.io/v1alpha1
-kind: Domain
+kind: Group
 metadata:
-  name: ecommerce
-  description: E-commerce domain
+  name: local-team
 spec:
-  owner: platform-team
+  type: team
+  children: []
 ---
 apiVersion: backstage.io/v1alpha1
 kind: System
 metadata:
-  name: checkout-system
-  description: Checkout and payment system
+  name: local-system
 spec:
-  owner: checkout-team
-  domain: ecommerce
+  owner: group:default/local-team
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: local-api
+spec:
+  type: openapi
+  lifecycle: experimental
+  owner: group:default/local-team
+  system: local-system
+  definition: |
+    openapi: 3.0.0
+    info:
+      title: Local API
+      version: 1.0.0
+    paths: {}
 ---
 apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
-  name: payment-service
-  description: Payment processing service
+  name: local-service
 spec:
   type: service
-  lifecycle: production
-  owner: checkout-team
-  system: checkout-system
----
-apiVersion: backstage.io/v1alpha1
-kind: Resource
-metadata:
-  name: payment-db
-  description: Payment database
-spec:
-  type: database
-  owner: checkout-team
-  system: checkout-system
+  lifecycle: experimental
+  owner: group:default/local-team
+  system: local-system
+  providesApis:
+    - local-api
 ```
 
-## Remote Catalog Locations
+## Load User entities
 
-You can also reference remote catalogs in your `app-config.local.yaml`. The `url` type requires a fully-resolved, direct URL to a single file — glob patterns are not supported by the `url` location type:
+The glob location above allows `User`, `Group`, `System`, `Component`, and `API` entities in this directory.
+
+Save a User entity as `catalogs/users.yaml`:
+
+```yaml
+apiVersion: backstage.io/v1alpha1
+kind: User
+metadata:
+  name: local-user
+spec:
+  memberOf:
+    - local-team
+```
+
+The default rules do not include `User`. This entity registers because the glob location allows it.
+
+## Load entities from a URL
+
+Add a `url` location for a public GitHub file to the same list. This file registers its Component without a token:
 
 ```yaml
 catalog:
   locations:
-    # Single file from a GitHub repository
+    - type: file
+      target: /opt/app-root/src/catalog-info.yaml
+    - type: file
+      target: /opt/app-root/src/catalogs/*.yaml
+      rules:
+        - allow: [User, Group, System, Component, API]
     - type: url
-      target: https://github.com/my-org/my-repo/blob/main/catalog-info.yaml
+      target: https://github.com/backstage/backstage/blob/master/packages/catalog-model/examples/components/artist-lookup-component.yaml
 ```
 
-To discover catalog files across many repositories automatically, use the GitHub or GitLab catalog provider (activated via the `github` or `gitlab` preset in `VEECODE_PRESETS`, or configured manually in `app-config.local.yaml`). For example, using the GitHub provider in `app-config.local.yaml`:
+For provider-based discovery across many repositories, see the [integrations guides](../../integrations/integrations.md).
 
-```yaml
-catalog:
-  providers:
-    github:
-      my-org:
-        organization: my-org
-        catalogPath: /catalog-info.yaml
-        filters:
-          branch: main
-        schedule:
-          frequency:
-            minutes: 30
-          timeout:
-            minutes: 3
-```
+## Continue customizing the local stack
 
-## Replacing vs adding to the demo catalog
-
-The default DevPortal image ships with demo entities registered via `/app/examples/` in `app-config.production.yaml` (see [Docker Run — What's in the demo catalog](./intro.md#whats-in-the-demo-catalog)). Backstage merges `catalog.locations[]` **additively** across config layers, so understanding the consequence matters:
-
-**Adding alongside the demo (the common case):** Anything you put in `app-config.local.yaml` under `catalog.locations[]` is appended to the demo locations. Both sets will appear in the portal. This is what every example in this page does, and it's almost always what you want for a first contact.
-
-**Removing the demo entirely:** You can't suppress an entry from a lower layer via the local config — `catalog.locations[]` does not support "remove this." The only path is to mount a replacement `app-config.production.yaml` that omits the demo locations:
-
-```bash
-# 1. Extract the existing production yaml as a starting point
-docker cp devportal:/app/app-config.production.yaml ./app-config.production.yaml
-
-# 2. Edit it — remove the /app/examples/* entries from catalog.locations
-#    Keep everything else (baseUrl, CORS, auth, RBAC paths, etc.)
-
-# 3. Mount your edited version on the next run
-docker run --rm -d -p 7007:7007 \
-  -v $(pwd)/app-config.production.yaml:/app/app-config.production.yaml:ro \
-  veecode/devportal:2.1.3
-```
-
-:::warning
-Mounting your own `app-config.production.yaml` replaces the file entirely. Make sure you start from the version in the image you're actually using — values change between releases. Re-extract after every image upgrade.
-:::
-
-## Next Steps
-
-- [Custom App Configuration](./custom-config.md)
-- [Configure Dynamic Plugins](./custom-plugins.md)
-- [Backstage Catalog Documentation](https://backstage.io/docs/features/software-catalog/)
+- [Add a configuration fragment](./custom-config.md)
+- [Configure dynamic plugins](./custom-plugins.md)

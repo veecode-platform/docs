@@ -6,21 +6,18 @@ title: Which version am I running?
 
 # Which version am I running?
 
-VeeCode DevPortal has three lines. **The docs you're reading now are V2**, the
-current default, and they include the [DevPortal 3.x](./v3/intro.md) guides in
-their own section. If your running install is still **V1**, switch to the V1
-docs so the instructions match what you actually deployed.
+These docs cover DevPortal 3.x. Check one signal from your installation against the table below.
 
 ## Quick check
 
-Look at any **one** of these on your running deployment:
+| Signal | V1 | 2.x | 3.x |
+| --- | --- | --- | --- |
+| Container image | Two images, `veecode/devportal-base` and `veecode/devportal`, or the `1.x` image line | `veecode/devportal:2.x` | `veecode/devportal:3.x` |
+| Enablement environment variable | `VEECODE_PROFILE=<profile>` | `VEECODE_PRESETS=<preset-list>` | None for plugin selection. Default plugins ship in the image; chart values configure additions and overrides. |
+| Helm chart | `veecode-devportal` | `veecode-devportal-platform` | `devportal` |
+| Plugin model | Plugins are baked into the distribution image. | Presets or OCI references select plugins. | Default plugins ship in the image. Use chart values or Marketplace installs to add or change plugins. |
 
-| Signal | You're on **V1** | You're on **V2** | You're on **3.x** |
-|---|---|---|---|
-| Container image | two images: `veecode/devportal-base` + `veecode/devportal` (or `veecode/devportal:1.x`) | one image: `veecode/devportal:2.1.3` | one image: `veecode/devportal:3.x.y` |
-| Enablement env var | `VEECODE_PROFILE=<github\|gitlab\|…>` | `VEECODE_PRESETS=<a,b,c>` | neither: default plugins ship in the image and are changed through chart values |
-| Helm chart name | `veecode-devportal` (appVersion `1.x`) | `veecode-devportal-platform` (appVersion `2.1.3`) | `devportal` (appVersion `3.x.y`) |
-| Plugin model | plugins baked into the distro image | plugins disabled by default, enabled by presets / OCI refs | default plugins enabled in the image, overridable per plugin; more from the marketplace |
+Check the image, environment variables, and chart on a running installation with these commands:
 
 ```sh
 # Docker
@@ -32,26 +29,18 @@ kubectl get deploy -A -o jsonpath='{..image}' | tr ' ' '\n' | grep devportal
 helm list -A | grep -E 'devportal'   # chart name and app version
 ```
 
-## You're on V1
+## V1
 
-That's the prior split-image line — still supported with security backports,
-but no longer the default. **[Go to the V1 documentation →](/devportal/v1/intro)**
+Read the [V1 documentation](/devportal/v1/intro) and its [V1-to-2.x migration guide](/devportal/v2/migrating-from-v1). To continue to 3.x, follow the [2.x-to-3.x migration guide](./migrating-from-2x.md).
 
-When you're ready to move to the unified image, see
-[Migrating from V1 to V2](./migrating-from-v1.md).
+## 2.x
 
-## You're on 3.x
-
-Go to the [DevPortal 3.x guides](./v3/intro.md): install, upgrade, support and
-the release sheets. Moving a 2.x install to 3.x is covered in
-[Migrating from 2.x to 3.x](./migrating-from-2x.md).
-
-## You're on V2
-
-You're in the right place — keep reading. V2 is the current default: the
-`veecode/devportal:2.1.3` image, presets, and the `veecode-devportal-platform`
-Helm chart are documented here.
+Read the [2.x documentation](/devportal/v2/intro). To move to 3.x, follow the [2.x-to-3.x migration guide](./migrating-from-2x.md).
 
 :::note
-`veecode/devportal:latest` is the 2.x line. It keeps moving within 2.x and stays on 2.x until 2.x leaves support, and it never points at a 3.x image. Pin a version tag in every install you keep.
+The `veecode/devportal:latest` tag belongs to the 2.x line. It is not a 3.x tag.
 :::
+
+## 3.x
+
+These docs cover 3.x. Start with the [DevPortal 3.x introduction](./intro.md). If you are moving from 2.x, follow the [2.x-to-3.x migration guide](./migrating-from-2x.md).

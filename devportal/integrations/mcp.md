@@ -1,229 +1,80 @@
 ---
-sidebar_position: 10
-sidebar_label: MCP (AI Tooling)
-title: MCP — AI Tooling Integration
+sidebar_position: 7
+sidebar_label: MCP Actions
+title: Expose DevPortal tools to AI clients
 ---
 
-DevPortal exposes an MCP (Model Context Protocol) server that lets external AI tools — Claude Code, Codex CLI, Cursor — query the catalog, read TechDocs, and execute scaffolder templates using your portal as a context source.
+MCP Actions runs an MCP server inside DevPortal 3.x that lets external AI clients use catalog, scaffolder, TechDocs, and Kubernetes tools. AI clients connect over HTTP with a static token. This page covers MCP Actions only.
 
-Two independent capabilities:
+## Install the MCP server
 
-1. **MCP server for external clients** — OAuth per-user authentication, no LLM API key required
-2. **AI Chat in-portal** — optional; requires an LLM API key (OpenAI, Anthropic, Gemini, or Ollama)
-
-## For platform teams
-
-### SaaS (customer portal)
-
-Go to **Configure → Integrations** and open the **MCP + AI Chat** card.
-
-1. Click **Connect**
-2. The dialog opens with the default action **"Enable MCP server"**
-3. (Optional) Toggle **"Also add AI Chat in portal"**
-4. If AI Chat is on, select provider (OpenAI, Anthropic, Gemini, or Ollama) and provide the API key
-5. Confirm — the button label reflects what will be provisioned:
-   - **Enable MCP server** — MCP server only
-   - **Enable MCP + AI Chat** — MCP server + in-portal chat
-
-**What happens on confirm:**
-
-Always:
-- Provisions the MCP server for external clients
-- Activates `mcp-actions-backend` + catalog, TechDocs, and scaffolder extras
-
-If AI Chat is enabled:
-- Validates the API key with the provider
-- Automatically resolves a compatible model
-- Activates `mcp-chat-backend` and `mcp-chat`
-- Injects `mcpChat` block in app-config with provider and model
-
-After connecting, the card shows:
-- The MCP endpoint URL (e.g., `https://<instance>/api/mcp-actions/v1`)
-- A switch for enabling/disabling AI Chat independently
-
-**Disabling AI Chat only** (without disconnecting MCP):
-Use the switch on the connected card. This removes `mcp-chat-backend`, `mcp-chat`, the `mcpChat:` block, and the LLM API key — without affecting the MCP server or external clients.
-
-**Disconnecting entirely:**
-The trash icon on the connected card removes both the MCP server and AI Chat. Both this full disconnect and the AI-Chat-only switch above require an instance restart to take effect.
-
-### Self-hosted (preset activation)
-
-Activate the `mcp` preset (and optionally `mcp-chat`) via `VEECODE_PRESETS`:
-
-```sh
-# MCP server only — no LLM API key required
-VEECODE_PRESETS=recommended,mcp
-
-# MCP server + in-portal AI Chat
-VEECODE_PRESETS=recommended,mcp,mcp-chat
-MCP_CHAT_PROVIDER=openai
-MCP_CHAT_API_KEY=sk-xxxx
-MCP_CHAT_MODEL=gpt-4o
-```
-
-The `mcp` preset (`presets/mcp.yaml`) has no required variables — the OAuth/DCR configuration is already baked into the base image's `app-config.production.yaml`. It enables the following plugins at boot:
-
-- `backstage-plugin-mcp-actions-backend` (exposes `/api/mcp-actions/v1`)
-- `red-hat-developer-hub-backstage-plugin-software-catalog-mcp-extras`
-- `red-hat-developer-hub-backstage-plugin-techdocs-mcp-extras`
-- `red-hat-developer-hub-backstage-plugin-scaffolder-mcp-extras`
-
-The `mcp-chat` preset (`presets/mcp-chat.yaml`) requires:
-
-| Variable | Description |
-|---|---|
-| `MCP_CHAT_PROVIDER` | LLM provider ID: `openai` or `claude` |
-| `MCP_CHAT_API_KEY` | API key for the selected provider |
-| `MCP_CHAT_MODEL` | Model name (e.g., `gpt-4o` for openai, `claude-sonnet-4-6-latest` for claude — check the provider's current model catalogue) |
-
-:::note
-For self-hosted (preset) deployments, `MCP_CHAT_PROVIDER` accepts only `openai` or `claude`. Gemini and Ollama are SaaS-only.
-:::
-
-:::warning
-`mcp-chat` talks loopback to `mcp-actions-backend`. Without the `mcp` preset, the MCP backend does not mount and every tool invocation in chat will fail. Always compose as `mcp,mcp-chat`.
-:::
-
-:::warning
-Do not also activate `mcp-actions-backend` via a raw `dynamic-plugins.yaml` mount when using the `mcp` preset (or via a static import in a custom backend build). Duplicate registration causes a boot failure: `Plugin 'mcp-actions' is already registered`.
-:::
-
-**Available toolsets:**
-
-| `pluginSource` | Origin | Tools exposed |
-|---|---|---|
-| `mcp-actions` | VeeCode overlay | `explain` |
-| `catalog` | Backstage built-in | `get-catalog-entity`, `validate-entity` |
-| `scaffolder` | Backstage built-in | `validate-scaffolder` |
-| `software-catalog-mcp-extras` | RHDH | `query-catalog-entities`, `register-entity`, `unregister-entity` |
-| `techdocs-mcp-extras` | RHDH | `analyze-techdocs-coverage`, `fetch-techdocs`, `retrieve-techdocs-content` |
-| `scaffolder-mcp-extras` | RHDH | `execute-template`, `fetch-template-metadata`, `list-scaffolder-tasks`, `get-scaffolder-task-logs`, `list-scaffolder-actions`, `dry-run-template` |
-
-:::note Restricting the exposed toolset (self-hosted only)
-`pluginSources` is itself an overridable list, not a fixed set. To expose fewer tools — for example, dropping `explain` — mount a `dynamic-plugins.yaml` with the same plugin and a trimmed list:
+The `mcp-actions-backend` module is a Marketplace plugin. Install it from the Extensions page, or add this entry to an operator plugin file (see [Configure dynamic plugins for the local stack](../installation-guide/docker-local/custom-plugins.md)):
 
 ```yaml
 plugins:
-  - disabled: false
-    package: oci://quay.io/veecode/backstage:bs_<backstage-version>!backstage-plugin-mcp-actions-backend
+  - package: oci://quay.io/veecode/backstage-plugin-mcp-actions-backend@sha256:d4d24e08d7630eb352fa7e6dc1da797ebc4e667aba347575dd94d4bcde82e8e2
+    disabled: false
     pluginConfig:
       backend:
-        actions:
-          pluginSources:
-            - catalog
-            - scaffolder
+        auth:
+          externalAccess:
+            - type: static
+              options:
+                token: ${MCP_TOKEN}
+                subject: mcp-clients
 ```
 
-See [Adding Plugins](../plugins/adding.md#via-yaml-override) for how operator-mounted overrides interact with preset fragments. Not available on SaaS, where the `mcp` preset's default toolset is fixed.
-:::
+Set `MCP_TOKEN` to a long random value of your choice (at least 8 characters) and pass it as an environment variable on the `devportal` service in a Compose override, or through a Kubernetes Secret referenced with `${...}`. The token goes in the `Authorization: Bearer <token>` header of every MCP client request. Anyone holding it can call the MCP tools, so treat it as a secret.
 
-### OAuth / DCR configuration (self-hosted)
+## Add tool extras
 
-External clients authenticate via OAuth 2.1 with Dynamic Client Registration (DCR) — each user authenticates as their own Backstage identity (`user:default/<name>`), established on first authorization in the client, so permissions and RBAC apply per that identity rather than a shared service account. This configuration is already baked into the base image when using the V2 unified image. For reference, the relevant app-config blocks are:
+The tool sets for each domain come from separate Marketplace modules. Install the ones you want from the Extensions page, or add their entries to the same operator plugin file:
 
 ```yaml
-auth:
-  experimentalDynamicClientRegistration:
-    enabled: true
-    allowedRedirectUriPatterns:
-      - 'http://127.0.0.1:*/callback'
-      - 'http://localhost:*/callback'
-  experimentalRefreshToken:
-    enabled: true
-    tokenLifetime: { days: 30 }
-    maxRotationLifetime: { years: 1 }
-    maxTokensPerUser: 20
-
-backend:
-  auth:
-    dangerouslyDisableDefaultAuthPolicy: false
+plugins:
+  - package: oci://quay.io/veecode/red-hat-developer-hub-backstage-plugin-software-catalog-mcp-extras@sha256:908e807eb7733d34cd5c1bb2061df41905ac8565c17ba46c7eea63c94c02ca5d
+    disabled: false
+  - package: oci://quay.io/veecode/red-hat-developer-hub-backstage-plugin-techdocs-mcp-extras@sha256:f8ddd8242bab97849548c5acdb212c98bd979b19948279122fc116d40f910947
+    disabled: false
+  - package: oci://quay.io/veecode/red-hat-developer-hub-backstage-plugin-scaffolder-mcp-extras@sha256:43bed3ca2ed9f8b737d8c4a58f99260a35fc853013183969140e55cc3af62098
+    disabled: false
+  - package: oci://quay.io/veecode/red-hat-developer-hub-backstage-plugin-kubernetes-mcp-extras@sha256:1a75f47882b587fca47c5fb509814115c89ef6fcafa7f50e027e4abb041bbc4f
+    disabled: false
 ```
 
-Prerequisites:
-- `permission.enabled: true`
-- Persistent database (Postgres) to preserve signing keys and sessions across restarts
+The extras register their tools with the MCP server:
 
-## For developers
+- `software-catalog-mcp-extras`: query catalog entities and their metadata.
+- `techdocs-mcp-extras`: read TechDocs documentation.
+- `scaffolder-mcp-extras`: scaffolder tools.
+- `kubernetes-mcp-extras`: Kubernetes tools.
 
-### Claude Code
+Recreate the stack after changing the operator file so the installer picks the entries up (see [Configure dynamic plugins for the local stack](../installation-guide/docker-local/custom-plugins.md)).
 
-Add to `.mcp.json` at the project root or `~/.mcp.json` globally:
+## Connect a client
+
+The MCP server uses streamable HTTP at `http(s)://<portal-host>/api/mcp-actions/v1`.
+
+Check your MCP client's documentation for which endpoint style it needs. Authenticate with the static token in the `Authorization` header.
+
+Example client configuration, with `<portal-host>` replaced by your portal address and `<token>` by the `MCP_TOKEN` value:
 
 ```json
 {
   "mcpServers": {
-    "devportal": {
-      "type": "http",
-      "url": "https://<your-instance>/api/mcp-actions/v1"
+    "devportal-actions": {
+      "url": "https://<portal-host>/api/mcp-actions/v1",
+      "headers": {
+        "Authorization": "Bearer <token>"
+      }
     }
   }
 }
 ```
 
-Or via the CLI:
-
-```shell
-claude mcp add --transport http --scope user devportal https://<your-instance>/api/mcp-actions/v1
-```
-
-### Codex CLI
-
-Add to `~/.codex/config.toml`:
-
-```toml
-[mcp_servers.devportal]
-url = "https://<your-instance>/api/mcp-actions/v1"
-```
-
-On first use, the client opens a browser window for the OAuth authorization flow. No manual token management is needed.
-
-### Cursor
-
-Add to your Cursor MCP configuration (`.cursor/mcp.json` in the project root, or the global Cursor settings under **Settings → MCP**):
-
-```json
-{
-  "mcpServers": {
-    "devportal": {
-      "url": "https://<your-instance>/api/mcp-actions/v1"
-    }
-  }
-}
-```
-
-On first use, Cursor triggers the OAuth authorization flow and stores the resulting token. The server will appear in the Cursor MCP panel under **Tools**.
-
-## Advanced configuration
-
-To customize prompts, models, or add additional MCP servers to the in-portal chat, use **Configure → App Config**:
-
-```yaml
-mcpChat:
-  mcpServers:
-    - id: devportal
-      name: DevPortal MCP
-      url: http://localhost:7007/api/mcp-actions/v1
-      type: streamable-http
-    - id: github
-      name: GitHub MCP
-      url: https://api.githubcopilot.com/mcp/
-      type: streamable-http
-      headers:
-        Authorization: Bearer ${GITHUB_MCP_TOKEN}
-```
-
-:::note
-Use `http://localhost:7007/...` (loopback) for the DevPortal MCP entry — `mcp-chat-backend` and `mcp-actions-backend` run in the same process. Do not substitute the public hostname here.
-:::
 
 ## Troubleshooting
 
-| Symptom | Likely cause | Fix |
-|---|---|---|
-| `Plugin 'mcp-actions' is already registered` on boot | Activated via both static import and dynamic plugin | Remove one of the activations |
-| `401` when connecting an MCP client | Expired session or token | Re-run the OAuth authorization flow in the client |
-| `405` on GET `/api/mcp-actions/v1` | Expected — MCP uses POST | Validate via an MCP client, not a browser |
-| Tools missing in client | Incomplete `pluginSources` list | Review `pluginSources` in `pluginConfig` |
-| AI Chat not activating in portal | Invalid API key or wrong provider | Fix the key and reapply the configuration |
-| Disabling AI Chat disconnected external MCP clients | Full disconnect used instead of partial | Reconnect the card and use the AI Chat switch to disable chat only |
+- Client gets `401 Unauthorized`: the `Authorization` header is missing or the token does not match `MCP_TOKEN`. Confirm the environment variable reached the backend.
+- No tools listed: the extras modules are not installed or the stack was not recreated after adding them. Check the install service logs for their entries.
+- Connection refused on the local stack: use the published portal address and port (`DEVPORTAL_PORT`), not the container-internal address.

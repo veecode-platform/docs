@@ -4,84 +4,93 @@ sidebar_label: Creating Your Own Plugin
 title: "Creating Your Own Plugin"
 ---
 
-[Bootstrapping](./bootstrap.md) through [Wiring](./wiring.md) cover the mechanical steps of building a plugin. This page covers what those steps don't: what actually happens once a dynamic plugin runs inside a production DevPortal instance. It's grounded in shipping one — a custom theme plugin — to production without forking the base image, plus the loader-behavior gotchas that surfaced along the way.
+[Bootstrapping](./bootstrap.md) through [Wiring](./wiring.md) cover the mechanical steps of building a plugin. This page strings those steps into one loop you can run end to end: scaffold, build, export, load into devportal-local, and see the plugin run.
 
-## Build with `export-dynamic`, not `package build`
-
-If your plugin imports CSS (common for anything touching styling or a custom UI shell), export it with the RHDH CLI's dynamic-export path:
+You need a Linux machine with Docker, Node 22 or 24, and Yarn 4.12.0. Clone the two public repositories side by side:
 
 ```bash
-npx @red-hat-developer-hub/cli@latest plugin export
+git clone https://github.com/veecode-platform/devportal-plugins.git
+git clone https://github.com/veecode-platform/devportal-local.git
 ```
 
-Do not build it with `@backstage/cli package build` and try to load the result as a dynamic plugin. That path breaks on how Rollup handles CSS imports — a stylesheet imported in your plugin's `index.ts` is silently dropped instead of bundled. `export-dynamic` is the only reliable way to ship global CSS with a dynamic plugin.
+## 1. Scaffold a workspace
 
-## Iterate locally without publishing
-
-You don't need `npm publish` or a local registry like Verdaccio to test changes during development. Export, then mount the result directly into a running container:
+From the `devportal-plugins` checkout, create a workspace for the plugin type you need:
 
 ```bash
-npx @red-hat-developer-hub/cli@latest plugin export
-docker rm -f devportal-dev 2>/dev/null
-docker run -d --name devportal-dev \
-  -v "$(pwd)/dist-dynamic:/app/dynamic-plugins-root/your-plugin-id:ro" \
-  -v "$(pwd)/dynamic-plugins.yaml:/app/dynamic-plugins.yaml:ro" \
-  -v "$(pwd)/app-config.local.yaml:/app/app-config.local.yaml:ro" \
-  -p 7007:7007 \
-  veecode/devportal:latest
+cd devportal-plugins
+yarn create-workspace my-workspace --role frontend-plugin
+cd workspaces/my-workspace
+yarn install
 ```
 
-:::note
-The example runs `veecode/devportal:latest`, which is the 2.x line. To develop against the 3.x line, run the current 3.x tag, such as `docker.io/veecode/devportal:3.0.0`, instead.
-:::
+See [Bootstrapping](./bootstrap.md) for the roles and the host Backstage line.
 
-Re-export and `docker rm -f && docker run` again after each change. This is a much tighter loop than round-tripping through a registry for every iteration — save publishing for when you actually need to distribute the plugin.
+## 2. Build the plugin
 
-## The wiring surface is bigger than one example shows
+Develop the plugin as described in [Example: Frontend Plugin](./frontend-plugin.md), [Example: Backend Plugin](./backend-plugin.md), or [Example: Custom Action](./custom-action.md). Then check and build every package in the workspace:
 
-[Wiring a Frontend Plugin](./wiring.md) demonstrates `dynamicRoutes`. That's one of several `dynamicPlugins.frontend.<plugin-id>` keys the loader understands — `mountPoints` (used throughout [Adding Plugins](../adding.md) for entity-page cards) and `appIcons` and `entityTabs` are others. Before assuming a customization isn't possible, check whether it's exposed as one of these keys rather than requiring a fork — the real surface is broader than any single plugin's config tends to show.
+```bash
+yarn tsc
+yarn build:all
+```
 
-One specific, non-obvious case: the `/` home route itself is overridable. Disable the default home page (`disabled: true` on its entry) and register your own via `dynamicRoutes` in its place.
+## 3. Export the workspace
 
-### Collision semantics differ by key
+Register each new package before you export. `yarn dev:dynamic` exports only the plugin directories listed in the `dev:dynamic` script in the workspace root `package.json`, and it needs a matching entry in the workspace `dynamic-plugins.yaml` for each one:
 
-If two plugins (or your plugin and a bundled default) declare the same route, icon, or tab, what wins depends on **which key** you're using — this is not a single consistent rule:
+1. Append the plugin directory to the `dev:dynamic` script arguments. For example, change `export-dev-dynamic.sh plugins/dummy plugins/dummy-backend` to `export-dev-dynamic.sh plugins/dummy plugins/dummy-backend plugins/my-back-plugin-backend`.
+2. Add the export entry to `dynamic-plugins.yaml`:
 
-| Key | Collision behavior |
-|---|---|
-| `dynamicRoutes` | First-registered wins. No dedupe, no warning. |
-| `appIcons` | Last-merged wins (later config overwrites earlier). |
-| `entityTabs` | Explicit `console.warn` logged on collision — check backend logs if a tab silently isn't where you expect. |
+```yaml
+plugins:
+  - package: ./dynamic-plugins/dist/internal-backstage-plugin-my-back-plugin-backend-dynamic
+    disabled: false
+```
 
-Don't assume the rule for one key applies to another.
+A backend entry has no `pluginConfig`.
 
-## Theming and MUI-layer traps
+Then export the workspace packages as dynamic plugins:
 
-If your plugin touches styling (a custom theme, a header, or any component with hand-written CSS), three MUI/Backstage-UI layering quirks caused real breakage while building VeeCode's own theme plugin:
+```bash
+yarn dev:dynamic
+```
 
-- **`createUnifiedTheme` (v4/JSS) only accepts flat root-level style props for a component** — you can't target a nested selector the way you would in plain MUI. If you need to reach a nested element, write the CSS against a substring/tag selector instead of relying on the theme override to reach it.
-- **v4 and v5 class-name prefixes differ.** A selector you hand-write against a v5-style class name (`.MuiButton-root`) silently won't match if the component actually renders under the v4 prefix, or vice versa — target the HTML tag or a `data-*` attribute when you're not sure which version a given bundled component uses.
-- **The page canvas background isn't part of the MUI palette.** It's driven by a Backstage-UI CSS variable, `--bui-bg-app`, entirely outside `theme.palette`. Overriding `palette.background.default` won't change it — you have to set the CSS variable directly.
+The command writes each plugin export under `dynamic-plugins-root-dev` in the workspace and prints the exact Compose command that loads the export into devportal-local.
 
-## Dependency `resolutions` don't reach into your plugin
+## 4. Load the export in devportal-local
 
-If the host DevPortal image sets a `resolutions` entry to pin a shared dependency version, that does **not** propagate into your plugin's own bundled dependencies. The dynamic-plugin loader resolves each plugin's dependencies locally — there's no hoisting from the host. If your plugin needs a specific version of something the host also uses, pin it in your own `package.json`; don't rely on the host's resolution.
+From the `devportal-local` checkout, run the command `yarn dev:dynamic` prints:
 
-## Publishing your own plugin as an OCI artifact
+```bash
+docker compose -f docker-compose.yml -f docker-compose.dynamic-plugins-root.yml -f dynamic-plugins-root-dev/docker-compose.dynamic-plugins-root.local.yml up -d
+```
 
-[Packaging your Plugin](./packaging.md#packaging-options) covers `plugin package` as an alternative to `plugin export` when you want an OCI artifact instead of an npm package. The reference needs the trailing `!<selector>` even when the image contains only one plugin — omitting it produces an opaque `not enough values to unpack` error at load time, not a clear "missing selector" message.
+The export writes `dynamic-plugins-root-dev/docker-compose.dynamic-plugins-root.local.yml` on every run.
 
-## Embedding an iframe? Check `frame-src`, not just `img-src`
+The override mounts `dynamic-plugins-root-dev` into the portal at `/opt/app-root/src/dynamic-plugins-root`, so the portal loads your export without rebuilding its image. The first start on a fresh database takes about two minutes while PostgreSQL and the plugin installer initialize. Open [http://localhost:7007](http://localhost:7007) and sign in as guest.
 
-If your plugin embeds an external tool (a dashboard, a status page) via `<iframe>`, the relevant Content-Security-Policy directive is `backend.csp.frame-src`, not `img-src`. A missing `frame-src` entry blocks the embed with **no network error at all** — just a blank space where the iframe should be. See [External domains and CSP](../../customization/branding.md#external-domains-and-csp) for how CSP overrides work in this image (the same array-replace-not-merge rule applies).
+After a frontend edit, run `yarn dev:dynamic` again and refresh the portal. After a backend edit, re-export and restart the portal so the backend process loads the new code.
 
-## Know your ceiling
+## 5. Confirm the plugin loaded
 
-Some things genuinely require forking the base image — no config surface reaches them:
+Get a guest token, then check the loaded plugins endpoint:
 
-- The shell structure itself (`Sidebar`, `AppRouter`) — these are React components, not configuration.
-- The base entity-tab component — you can add tabs via `entityTabs`, but not replace the tab shell itself.
-- Catalog table columns.
-- Icons that are imported directly into a component rather than resolved through the icon registry.
+```bash
+TOKEN=$(curl -s http://localhost:7007/api/auth/guest/refresh -H 'X-Requested-With: XMLHttpRequest' | python3 -c 'import sys,json; print(json.load(sys.stdin)["backstageIdentity"]["token"])')
+curl -H "Authorization: Bearer $TOKEN" http://localhost:7007/api/dynamic-plugins-info/loaded-plugins
+```
 
-If your requirement lands on one of these, plan for a fork or a support request rather than looking for a YAML key that doesn't exist.
+This works while guest sign-in is on, which is the local stack default. If the token request fails right after the portal starts, wait a few seconds and run it again: the backend can answer 503 for a short time after `/healthcheck` returns 200.
+
+Your package appears in the list. Then confirm it runs: open the configured frontend route in the browser, request a backend route such as `/api/my-back-plugin/ping`, or open `/create/actions` for a Scaffolder action module.
+
+## 6. Publish and install
+
+When the plugin works locally, publish it as an OCI image in a registry your DevPortal can pull from and install it with a plugin entry, as described in [Packaging your Plugin](./packaging.md) and [Configure dynamic plugins for the local stack](../../installation-guide/docker-local/custom-plugins.md).
+
+## Notes from the loop
+
+- Frontend and backend plugins configure differently. A frontend plugin needs a `pluginConfig.dynamicPlugins.frontend` block with its routes, menu items, and mount points, described in [Wiring a Frontend Plugin](./wiring.md). A backend plugin needs no `pluginConfig`: the loader discovers it by its package role, and its runtime settings go in regular top-level app configuration.
+- An OCI reference to an image that holds one plugin can leave out the `!<plugin path>` suffix: the installer reads the path from the image manifest. An entry that overrides a default plugin keeps the full suffix, as [Adding Plugins](../adding.md) describes.
+- Some things genuinely require forking the base image because no configuration reaches them: the shell structure itself (`Sidebar`, `AppRouter`), the base entity-tab component (you can add tabs, but not replace the tab shell), catalog table columns, and icons imported directly into a component rather than resolved through the icon registry. If your requirement lands on one of these, plan for a fork or a support request rather than looking for a YAML key that does not exist.

@@ -1,207 +1,123 @@
 ---
 sidebar_position: 1
-sidebar_label: Azure / Microsoft
-title: Azure / Microsoft Auth & Integrations
+sidebar_label: Microsoft and Azure DevOps
+title: Sign in with Microsoft and connect Azure DevOps
 ---
 
-V2 DevPortal splits Azure/Microsoft capabilities into two composable presets:
+Microsoft connects to DevPortal 3.x in three independent parts. Microsoft sign-in lets users enter with their Entra ID account. The Microsoft Graph module imports users and groups into the catalog. Azure DevOps access lets the catalog and entity pages read repositories, pipelines, and pull requests. Configure each part on its own; none implies the others.
 
-- **`azure`** — Azure DevOps as SCM: catalog discovery, scaffolder, and the Azure DevOps UI tabs (pipelines, PRs). Does **not** configure sign-in.
-- **`azure-auth`** — Microsoft (Entra ID / Azure AD) as identity: OIDC sign-in + Microsoft Graph org sync. Does **not** configure Azure DevOps repo access.
+The 3.x backend registers the `microsoft` sign-in provider, with the `userIdMatchingUserEntityAnnotation` resolver as its default. Sign-in succeeds only when the catalog already holds a matching User entity, so set up organization sync before you test sign-in.
 
-Compose both for a full Microsoft stack, or use either independently.
+## Prerequisites
 
-## Overview
+You need:
 
-- **`azure` preset**: The catalog discovers `catalog-info.yaml` files across Azure DevOps repositories. The scaffolder can create repos, push branches, and open PRs. The Azure DevOps UI tabs appear on entity pages.
-- **`azure-auth` preset**: Users sign in with their Microsoft accounts via OIDC (Entra ID). Microsoft Graph ingests Entra ID users and groups as Backstage `User` and `Group` entities.
+- An Entra ID app registration. Create one in the [Azure portal](https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade), following the [Backstage Microsoft provider documentation](https://backstage.io/docs/auth/microsoft/provider). Add a `Web` platform with redirect URI `http(s)://<portal-host>/api/auth/microsoft/handler/frame`, grant the delegated Microsoft Graph permissions `email`, `offline_access`, `openid`, `profile`, and `User.Read`, and create a client secret. Note the Application (client) ID, the secret, and the Directory (tenant) ID.
+- Guest sign-in turned off. On the local stack, drop the guest fragment from the configuration chain, as described in [Add configuration to the local stack](../../installation-guide/docker-local/custom-config.md). On Kubernetes, set `global.veecode.guestAuth.enabled: false`, as shown in [Install DevPortal on Kubernetes](../../installation-guide/production-setup/setup.md).
 
-:::important
-`azure-auth` belongs to the exclusive `identity` group. Only one identity preset can be active per deployment. You cannot combine `azure-auth` with `github-auth`, `gitlab`, `keycloak`, or `ldap`.
-:::
+## Configure Microsoft sign-in
 
-## `azure` preset — Azure DevOps SCM
-
-### Required environment variables
-
-| Variable | Description |
-|---|---|
-| `AZURE_DEVOPS_TOKEN` | Azure DevOps Personal Access Token with `Code (Read)`, `Build (Read)`, and `Project and Team (Read)` scopes |
-| `AZURE_DEVOPS_HOST` | Azure DevOps host (e.g., `dev.azure.com` for Azure DevOps Services) |
-| `AZURE_DEVOPS_ORG` | Azure DevOps organization slug |
-| `AZURE_DEVOPS_PROJECT` | Azure DevOps project slug for catalog discovery |
-
-### What the preset configures
-
-The `azure` preset (`presets/azure.yaml`) produces the following `app-config` at boot:
+Add this block to a custom configuration fragment on the local stack (see [Add configuration to the local stack](../../installation-guide/docker-local/custom-config.md)), or to an `extraAppConfig` fragment in the chart `values.yaml`. Replace the placeholder values with your app registration credentials. The `production` entry must match `auth.environment`.
 
 ```yaml
-integrations:
-  azure:
-    - host: ${AZURE_DEVOPS_HOST}
-      credentials:
-        - personalAccessToken: ${AZURE_DEVOPS_TOKEN}
-
-azureDevOps:
-  host: ${AZURE_DEVOPS_HOST}
-  organization: ${AZURE_DEVOPS_ORG}
-  token: ${AZURE_DEVOPS_TOKEN}
-
-catalog:
-  providers:
-    azureDevOps:
-      default:
-        host: ${AZURE_DEVOPS_HOST}
-        organization: ${AZURE_DEVOPS_ORG}
-        project: ${AZURE_DEVOPS_PROJECT}
-        schedule:
-          frequency: { minutes: 30 }
-          timeout: { minutes: 3 }
-```
-
-It also enables the Azure DevOps frontend and backend dynamic plugins (pipeline + PR cards on entity pages).
-
-### Creating an Azure DevOps PAT
-
-1. Go to **Azure DevOps → User Settings → Personal Access Tokens**.
-2. Click **New Token**.
-3. Set the following permissions:
-   - **Code**: Read
-   - **Build**: Read
-   - **Project and Team**: Read
-4. Save the token — you will not see it again.
-
-## `azure-auth` preset — Entra ID / Azure AD identity
-
-### Required environment variables
-
-| Variable | Description |
-|---|---|
-| `AZURE_AUTH_TENANT_ID` | Entra ID (Azure AD) tenant ID |
-| `AZURE_AUTH_CLIENT_ID` | App registration (client) ID from Entra ID |
-| `AZURE_AUTH_CLIENT_SECRET` | Client secret from the app registration |
-
-### What the preset configures
-
-The `azure-auth` preset (`presets/azure-auth.yaml`) produces:
-
-```yaml
-signInPage: microsoft
-
-platform:
-  guest:
-    enabled: false
-  signInProviders:
-    - microsoft
-
 auth:
   environment: production
   providers:
     microsoft:
       production:
-        clientId: ${AZURE_AUTH_CLIENT_ID}
-        clientSecret: ${AZURE_AUTH_CLIENT_SECRET}
-        tenantId: ${AZURE_AUTH_TENANT_ID}
+        clientId: ${AUTH_MICROSOFT_CLIENT_ID}
+        clientSecret: ${AUTH_MICROSOFT_CLIENT_SECRET}
+        tenantId: ${AUTH_MICROSOFT_TENANT_ID}
         signIn:
           resolvers:
-            - resolver: emailMatchingUserEntityProfileEmail
-            - resolver: emailLocalPartMatchingUserEntityName
-
-catalog:
-  providers:
-    microsoftGraphOrg:
-      default:
-        tenantId: ${AZURE_AUTH_TENANT_ID}
-        clientId: ${AZURE_AUTH_CLIENT_ID}
-        clientSecret: ${AZURE_AUTH_CLIENT_SECRET}
-        schedule:
-          frequency: { hours: 1 }
-          timeout: { minutes: 5 }
+            - resolver: userIdMatchingUserEntityAnnotation
+signInPage: microsoft
 ```
 
-### Creating an Entra ID App Registration
+What the keys do:
 
-1. Go to [Azure Portal → App registrations](https://portal.azure.com/#blade/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/RegisteredApps).
-2. Click **New registration**.
-3. Set the redirect URI to `https://<your-instance>/api/auth/microsoft/handler/frame` (type: Web).
-4. Go to **Certificates & secrets → New client secret** and copy the secret value.
-5. Note the **Application (client) ID** and **Directory (tenant) ID**.
-6. Under **API permissions**, grant the required permissions and click **Grant admin consent**:
-   - `User.Read`, `email`, `openid`, `profile` (for sign-in)
-   - `User.Read.All`, `Group.Read.All`, `GroupMember.Read.All` (for Microsoft Graph org sync)
+- `clientId`, `clientSecret`, and `tenantId` are the Application ID, client secret, and Directory ID from the app registration. See the [Backstage Microsoft provider documentation](https://backstage.io/docs/auth/microsoft/provider).
+- `signIn.resolvers` maps the Microsoft identity to a catalog User entity. The default resolver matches the user profile ID against the `graph.microsoft.com/user-id` annotation on the User entity, which the Graph sync module sets.
+- `signInPage: microsoft` makes Microsoft the sign-in method.
 
-### Sign-in resolvers
+Pass the secrets as environment variables rather than writing them into the file. On the local stack, set them on the `devportal` service in a Compose override. On Kubernetes, store them in the runtime Secret and reference them with `${...}` placeholders. Restart the portal so it loads the new configuration. The portal can take up to two minutes before `/healthcheck` returns 200; test sign-in after that.
 
-The two resolvers are tried in order:
+## Import users and groups
 
-| Resolver | What it matches |
-|---|---|
-| `emailMatchingUserEntityProfileEmail` | Microsoft account email → `spec.profile.email` on the User entity |
-| `emailLocalPartMatchingUserEntityName` | Email local part → `metadata.name` |
+The `microsoft-graph-catalog-integration` module imports Entra ID users and groups as User and Group entities on a schedule. Install it from the Marketplace Extensions page, or add this entry to an operator plugin file (see [Configure dynamic plugins for the local stack](../../installation-guide/docker-local/custom-plugins.md)):
 
-## Composition examples
-
-### Full Microsoft stack (DevOps repos + Entra identity)
-
-```sh
-VEECODE_PRESETS=recommended,azure,azure-auth
-AZURE_DEVOPS_TOKEN=<pat>
-AZURE_DEVOPS_HOST=dev.azure.com
-AZURE_DEVOPS_ORG=my-org
-AZURE_DEVOPS_PROJECT=my-project
-AZURE_AUTH_TENANT_ID=00000000-0000-0000-0000-000000000000
-AZURE_AUTH_CLIENT_ID=00000000-0000-0000-0000-000000000000
-AZURE_AUTH_CLIENT_SECRET=azure-oauth-secret
+```yaml
+plugins:
+  - package: oci://quay.io/veecode/backstage-plugin-catalog-backend-module-msgraph@sha256:4e35f3c39026325949be60af2a9b0e04938de87a3e1e8d6caff8a0bc9ccb80b2
+    disabled: false
+    pluginConfig:
+      catalog:
+        providers:
+          microsoftGraphOrg:
+            providerId:
+              target: https://graph.microsoft.com/v1.0
+              tenantId: ${MICROSOFT_TENANT_ID}
+              clientId: ${MICROSOFT_CLIENT_ID}
+              clientSecret: ${MICROSOFT_CLIENT_SECRET}
+              schedule:
+                frequency:
+                  minutes: 60
+                initialDelay:
+                  seconds: 15
+                timeout:
+                  minutes: 15
 ```
 
-```bash
-docker run -p 7007:7007 \
-  -e VEECODE_PRESETS=recommended,azure,azure-auth \
-  -e AZURE_DEVOPS_TOKEN=<pat> \
-  -e AZURE_DEVOPS_HOST=dev.azure.com \
-  -e AZURE_DEVOPS_ORG=my-org \
-  -e AZURE_DEVOPS_PROJECT=my-project \
-  -e AZURE_AUTH_TENANT_ID=<tenant-id> \
-  -e AZURE_AUTH_CLIENT_ID=<client-id> \
-  -e AZURE_AUTH_CLIENT_SECRET=<client-secret> \
-  veecode/devportal:2.1.3
+Set the tenant ID, client ID, and client secret from the same app registration. The app registration needs permission to read users and groups.
+
+After the first sync runs, open the catalog and check that User entities from your directory are present. Then sign in with a Microsoft account from that directory.
+
+## Connect Azure DevOps repositories
+
+Backend Azure DevOps access uses the `integrations.azure` configuration with either a personal access token or a service principal. Create a token in Azure DevOps following [Microsoft's token guide](https://learn.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate), with Code read and Build read access for entity data. Then add this block to a custom configuration fragment:
+
+```yaml
+integrations:
+  azure:
+    - host: dev.azure.com
+      credentials:
+        - personalAccessToken: ${AZURE_TOKEN}
 ```
 
-### Azure DevOps repos + GitHub identity
+For a service principal with a client secret, use this form instead:
 
-```sh
-VEECODE_PRESETS=recommended,azure,github-auth
-AZURE_DEVOPS_TOKEN=<pat>
-AZURE_DEVOPS_HOST=dev.azure.com
-AZURE_DEVOPS_ORG=my-org
-AZURE_DEVOPS_PROJECT=my-project
-GITHUB_PAT=ghp_xxxx
-GITHUB_ORG=my-github-org
-GITHUB_AUTH_CLIENT_ID=Iv1.abcdef0123456789
-GITHUB_AUTH_CLIENT_SECRET=github-oauth-secret
+```yaml
+integrations:
+  azure:
+    - host: dev.azure.com
+      credentials:
+        - clientId: ${AZURE_CLIENT_ID}
+          clientSecret: ${AZURE_CLIENT_SECRET}
+          tenantId: ${AZURE_TENANT_ID}
 ```
 
-### Entra identity + GitHub repos (no Azure DevOps)
+See the [Backstage Azure DevOps integration documentation](https://backstage.io/docs/integrations/azure/locations) for managed identity options and per-organization credentials. Repository locations listed under `catalog.locations` use these credentials.
 
-```sh
-VEECODE_PRESETS=recommended,github,azure-auth
-GITHUB_PAT=ghp_xxxx
-GITHUB_ORG=my-org
-AZURE_AUTH_TENANT_ID=00000000-0000-0000-0000-000000000000
-AZURE_AUTH_CLIENT_ID=00000000-0000-0000-0000-000000000000
-AZURE_AUTH_CLIENT_SECRET=azure-oauth-secret
+The Azure DevOps entity content (pipelines, pull requests) and the `azure:*` scaffolder actions come from their own Marketplace modules. Install `azure-devops` and the Azure scaffolder actions module from the Extensions page. The backend module reads its organization and token from this configuration:
+
+```yaml
+plugins:
+  - package: oci://quay.io/veecode/backstage-community-plugin-azure-devops-backend@sha256:6e33292432cbeaa38b2913acf34cda9b819c84373675bb4fbdc62b9c1242cbc6
+    disabled: false
+    pluginConfig:
+      azureDevOps:
+        host: dev.azure.com
+        token: ${AZURE_TOKEN}
+        organization: ${AZURE_ORG}
 ```
+
+## Which combinations to use
+
+- Full Microsoft setup: configure sign-in, Graph sync, and Azure DevOps access. One app registration covers sign-in and sync; repository access additionally needs an Azure DevOps token or service principal.
+- Azure DevOps repositories with another identity: configure only repository access, and sign in through a different provider such as [Keycloak](../Keycloak/keycloak-auth.md). No Entra ID app registration is needed.
+- Entra ID identity without Azure DevOps: configure only sign-in and Graph sync. No Azure DevOps token is needed.
 
 ## Troubleshooting
 
-- **Redirect URI mismatch**: The URI registered in Azure must match `https://<your-instance>/api/auth/microsoft/handler/frame` exactly (including scheme and path).
-- **MS Graph groups not ingesting**: Ensure the App Registration has `Group.Read.All` and `GroupMember.Read.All` permissions with admin consent granted.
-- **Azure DevOps catalog empty**: Verify `AZURE_DEVOPS_TOKEN` has **Code (Read)** scope and `AZURE_DEVOPS_PROJECT` is set to the correct project name.
-- **Exclusive-group conflict at boot**: `azure-auth` belongs to the `identity` group. Do not combine with `github-auth`, `gitlab`, `keycloak`, or `ldap`.
-
-## References
-
-- [Backstage Microsoft Auth Provider](https://backstage.io/docs/auth/microsoft/provider/)
-- [Backstage Azure DevOps Integration](https://backstage.io/docs/integrations/azure/org/)
-- [Entra ID App Registrations](https://learn.microsoft.com/en-us/azure/active-directory/develop/quickstart-register-app)
-- [Azure DevOps PATs](https://learn.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate)
+- Sign-in fails with an identity resolution error: the User entity is missing from the catalog. Wait for the next Graph sync and confirm the user appears in the catalog before signing in again.
+- Entity pages show no pipeline data: check that `integrations.azure` lists the right host with valid credentials, and that the Azure DevOps modules are installed with the right organization.

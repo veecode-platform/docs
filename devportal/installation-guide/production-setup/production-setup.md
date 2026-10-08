@@ -1,40 +1,34 @@
 ---
 sidebar_position: 1
-sidebar_label: Production Setup
-title: Production Setup (Kubernetes)
+sidebar_label: Kubernetes install
+title: Kubernetes installation overview
 ---
 
-This section covers deploying VeeCode DevPortal V2 on a Kubernetes cluster. The canonical install path uses the published **`veecode-devportal-platform`** Helm chart. A no-Helm fallback using raw manifests is documented in the [Setup guide](setup.md).
+# Kubernetes installation overview
+
+Install DevPortal 3.x on Kubernetes with the `devportal` Helm chart. The guide covers planning, installation, and upgrades.
 
 ## What is covered
 
-- [Plan your setup](plan.md) — namespace, secrets strategy, persistent volumes, and ingress before you install
-- [Setup guide](setup.md) — step-by-step Helm install (and raw-manifest fallback)
+- [Plan your setup](./plan.md) covers the namespace, plugins, runtime Secret, PostgreSQL, Ingress, TLS, and sign-in decisions.
+- [Install DevPortal on Kubernetes](./setup.md) walks through the `devportal` chart install and includes a path for clusters without internet access.
+- [Upgrade DevPortal 3.x](./upgrade.md) backs up the portal databases, upgrades the chart, and verifies the result.
 
 ## When to use this guide
 
-Use this guide when you need a persistent, team-accessible DevPortal instance — for example, a staging or production environment. If you are experimenting locally, see the [Docker Local](../docker-local/intro) or [VKDR Local](../vkdr-local/vkdr-setup.md) guides instead.
+Use this guide when you need a Kubernetes installation with a public HTTPS address, PostgreSQL, and OIDC sign-in. For local evaluation, use the [Docker Compose quickstart](../docker-local/intro.md).
 
 ## Key requirements
 
-- Kubernetes cluster with an ingress controller (nginx or Kong)
-- `helm` v3 and `kubectl` installed and configured against the target cluster
-- DNS hostname pointing to your cluster's ingress load balancer
-- Git provider credentials (see [Integrations](/devportal/integrations))
+- A Kubernetes cluster with `kubectl`, Helm 3, and an Ingress controller.
+- DNS names for the portal and identity provider, plus a TLS certificate stored in a Kubernetes Secret.
+- A PostgreSQL database that you operate. Give the portal a user that can create databases.
+- An OIDC identity provider.
+- A runtime Secret with the PostgreSQL, backend, and identity provider settings.
+- `openssl` and `curl` on your machine, and a browser that allows pop-ups from the portal.
 
 ## Deployment approach
 
-DevPortal V2 is distributed as the `veecode-devportal-platform` Helm chart published in the `next-charts` Helm repository. The chart deploys the `docker.io/veecode/devportal` image and manages the following resources on your behalf:
+The `devportal` chart installs the portal image and its default plugins. Configure application settings, plugin additions, and plugin overrides through chart values. The chart installs no database, so provide PostgreSQL separately.
 
-| Resource | Purpose |
-|----------|---------|
-| `Deployment` | Runs the DevPortal container |
-| `PersistentVolumeClaim` (×2, opt-in) | Only when `persistence.*` is enabled for the SQLite dev path — catalog state (`/app/data`) and plugin bundles (`/app/dynamic-plugins-root`). None created in the default stateless/PostgreSQL posture |
-| `Secret` (optional) | Chart-managed credentials (dev convenience; `existingSecret` is recommended for production) |
-| `Service` | Exposes port 7007 within the cluster |
-| `Ingress` | Routes external traffic (opt-in via `ingress.enabled`) |
-| `ClusterRole` / `ClusterRoleBinding` | Required only when the `kubernetes` preset is enabled (`rbac.clusterRoles.create=true`) |
-
-:::note V2 vs V1
-The `veecode-devportal-platform` chart and `docker.io/veecode/devportal:2.1.3` image are V2 only. The V1 chart (`veecode-devportal`) and image remain unchanged and deploy the 1.x distribution. Do not mix V1 and V2 resources.
-:::
+If your cluster cannot reach public Helm repositories or registries, follow [Install without internet access](./setup.md#install-without-internet-access) to prepare a chart archive and mirror.

@@ -6,9 +6,9 @@ title: Marketplace Plugin
 
 # Marketplace Plugin
 
-The Marketplace plugin is the in-portal interface for discovering, enabling, and disabling dynamic plugins without editing YAML files. It is accessible at `/marketplace` in the sidebar.
+The Marketplace plugin is the in-portal interface for discovering, installing, and uninstalling dynamic plugins without editing YAML files. The sidebar item **Marketplace** opens it as the **Extensions** page at `/marketplace`.
 
-**Status:** Always loaded (preInstalled). No `dynamic-plugins.yaml` entry required.
+**Status:** Default plugin, enabled by default. No chart values entry is required.
 
 ---
 
@@ -16,37 +16,26 @@ The Marketplace plugin is the in-portal interface for discovering, enabling, and
 
 | Package | Role |
 |---|---|
-| `devportal-marketplace-frontend-dynamic` | Frontend — Marketplace UI at `/marketplace` |
-| `devportal-marketplace-backend-dynamic-dynamic` | Backend — plugin catalog and install state management |
-| `red-hat-developer-hub-backstage-plugin-catalog-backend-module-extensions` | Catalog module — registers Extension/Package/Collection entity kinds |
+| `devportal-marketplace-frontend-dynamic` | Frontend: Marketplace UI at `/marketplace` |
+| `devportal-marketplace-backend` | Backend: plugin catalog and install state (`/api/extensions/*`) |
+| `red-hat-developer-hub-backstage-plugin-catalog-backend-module-extensions` | Catalog module: ingests the extracted index entities so Marketplace can list them |
 
-The DevPortal Marketplace is a fork of the Red Hat Developer Hub Extensions plugin, customized for VeeCode DevPortal.
+Marketplace is the VeeCode plugin experience built on the Red Hat Developer Hub Extensions mechanism: the Extensions catalog provider reads the plugin catalog index image, and the Marketplace frontend installs from it.
 
 ---
 
 ## What it does
 
-- Displays all available plugins (bundled + OCI-published)
-- Shows which plugins are enabled or disabled
-- **Enable** button saves the plugin selection to `extensions-install.yaml`
-- **Pending Changes** badge appears in the header when a restart is needed to apply changes
-- After restart, enabled plugins load from `extensions-install.yaml`
+- Lists the installable plugins from the catalog index as cards
+- Shows which plugins are installed
+- An **Install** selection is written to PostgreSQL and to `/devportal-data/extensions-install.yaml` at once; the card shows a pending state until the stack restarts
+- The **Installed packages** tab lists the packages the portal runs
 
 ---
 
-## How plugin persistence works
+## Configuration
 
-When you enable a plugin via the Marketplace:
-
-1. The backend writes an entry to `/app/extensions-install.yaml`
-2. A **Pending Changes** indicator appears in the header
-3. On the next pod restart, `install-dynamic-plugins.py` reads `extensions-install.yaml` (included in `dynamic-plugins.yaml`) and installs the selected plugins
-
-This means Marketplace selections **persist across restarts** once the pod is restarted.
-
----
-
-## Mount point configuration
+The default plugin file (`dynamic-plugins.veecode.yaml`) enables all three packages and configures the frontend route and sidebar entry:
 
 ```yaml
 pluginConfig:
@@ -66,4 +55,23 @@ pluginConfig:
           marketplace:
             title: Marketplace
             icon: pluginsIcon
+            priority: 72
 ```
+
+The extensions catalog module and the Marketplace backend ship with no `pluginConfig`. Which plugins the Marketplace lists is set by the chart's `global.catalogIndex.image`; see [Finding Plugins](../finding.md). Install selections need a full stack restart to take effect: a plain restart of the portal container does not run the plugin installer. See [Adding Plugins](../adding.md).
+
+## Turn it off
+
+Add the override entries with the `{{inherit}}` tag and the full `!<plugin path>` part, plus `disabled: true`, under `global.dynamic.plugins` on Kubernetes or in the operator plugin file on the local stack. On Kubernetes write the tag as `{{ "{{inherit}}" }}`; in the operator plugin file write `{{inherit}}` as is:
+
+```yaml
+plugins:
+  - package: oci://quay.io/veecode/devportal-marketplace-frontend-dynamic:{{inherit}}!devportal-marketplace-frontend-dynamic
+    disabled: true
+  - package: oci://quay.io/veecode/devportal-marketplace-backend:{{inherit}}!devportal-marketplace-backend
+    disabled: true
+  - package: oci://quay.io/veecode/red-hat-developer-hub-backstage-plugin-catalog-backend-module-extensions:{{inherit}}!red-hat-developer-hub-backstage-plugin-catalog-backend-module-extensions
+    disabled: true
+```
+
+Disabling Marketplace also removes the in-portal path for installing plugins; chart-values and operator-file entries keep working. See [Adding Plugins](../adding.md) for where to put these entries and how to apply them.

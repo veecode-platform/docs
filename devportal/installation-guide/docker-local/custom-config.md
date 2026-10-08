@@ -1,167 +1,96 @@
 ---
 sidebar_position: 3
 sidebar_label: Custom Configuration
-title: Custom App Configuration
+title: Add configuration to the local stack
 ---
 
-## Custom App Configuration
+Use a configuration fragment to change portal settings in `devportal-local`. The Compose command passes `dynamic-plugins-root/app-config.dynamic-plugins.yaml`, `app-config.veecode-auth.yaml`, `app-config.veecode-branding.yaml`, `app-config.extensions.yaml`, and `app-config.veecode-product.yaml` with `--config`, in that order.
 
-You can use a combination of `docker compose`, presets, configuration files, and environment variables to customize the behavior of the DevPortal instance.
+The files under `config/` and the root `dynamic-plugins.yaml` are derived from the pinned chart. Do not edit them. Add a separate file for local changes.
 
-The recommended approach is to mount a custom `app-config.local.yaml` file. This lets you override default settings without modifying the container image.
+## Add a custom configuration fragment
 
-## Config File Precedence
-
-All configuration files are loaded and merged in this order (later entries override earlier ones):
-
-1. `app-config.yaml` — base image defaults
-2. `app-config.production.yaml` — production overrides baked into image
-3. `app-config.distro.yaml` — VeeCode distro defaults (baked in)
-4. `app-config.preset-{name}.yaml` — one file per active preset in `VEECODE_PRESETS` (resolved at boot from `/app/presets/`)
-5. **`app-config.local.yaml`** ← your custom file, mounted at `/app/app-config.local.yaml`
-6. `dynamic-plugins-root/app-config.dynamic-plugins.yaml` — generated at startup by the plugin install script
-7. `app-config.saas.yaml` — SaaS mode only; decoded from `VEECODE_APP_CONFIG`
-
-Your `app-config.local.yaml` (layer 5) wins over the base and preset defaults, but plugin-injected config (layer 6) is loaded after it. If a setting in `local.yaml` seems to be ignored, check whether an enabled plugin's `pluginConfig` block is overriding it.
-
-:::note Layer 7 and `VEECODE_APP_CONFIG`
-`app-config.saas.yaml` (layer 7), decoded from `VEECODE_APP_CONFIG`, loads last and wins over all layers including layer 6. Use it for deployment-specific values (database URLs, ingress hosts) that must not be hardcoded in a mounted file. See [Configuration Hierarchy](/devportal/concepts/configuration-hierarchy).
-:::
-
-## Creating a Custom Config File
-
-Create an `app-config.local.yaml` file in your project directory:
+Create `app-config.custom.yaml` in the `devportal-local` directory to set `app.title`:
 
 ```yaml
 app:
-  title: My Company DevPortal
-  baseUrl: http://localhost:7007
-
-organization:
-  name: My Company
-
-backend:
-  baseUrl: http://localhost:7007
-  listen:
-    port: 7007
-  cors:
-    origin: http://localhost:7007
-    methods: [GET, HEAD, PATCH, POST, PUT, DELETE]
-    credentials: true
-
-# Example: Configure GitHub integration
-integrations:
-  github:
-    - host: github.com
-      token: ${GITHUB_PAT}
-
-# Example: Add a catalog location
-catalog:
-  locations:
-    - type: url
-      target: https://github.com/your-org/your-repo/blob/main/catalog-info.yaml
+  title: Local DevPortal
 ```
 
-## Mounting with Docker Run
-
-Use the `-v` flag to mount your config file:
-
-```bash
-docker run --rm --name devportal -d \
-  -p 7007:7007 \
-  -v $(pwd)/app-config.local.yaml:/app/app-config.local.yaml:ro \
-  veecode/devportal:2.1.3
-```
-
-## Mounting with Docker Compose
-
-Update your `docker-compose.yml`:
+Create `docker-compose.custom-config.yaml` in the same directory. The Compose `command` replaces the base command, so keep the local stack's existing arguments and add your file last:
 
 ```yaml
 services:
   devportal:
-    image: veecode/devportal:2.1.3
-    ports:
-      - "7007:7007"
-    environment:
-      - GITHUB_PAT=${GITHUB_PAT}
     volumes:
-      - ./app-config.local.yaml:/app/app-config.local.yaml:ro
+      - ./app-config.custom.yaml:/opt/app-root/src/app-config.custom.yaml:ro
+    command:
+      - --config
+      - dynamic-plugins-root/app-config.dynamic-plugins.yaml
+      - --config
+      - app-config.veecode-auth.yaml
+      - --config
+      - app-config.veecode-branding.yaml
+      - --config
+      - app-config.extensions.yaml
+      - --config
+      - app-config.veecode-product.yaml
+      - --config
+      - app-config.custom.yaml
 ```
 
-Then run:
+Start the local stack with both Compose files:
 
 ```bash
-docker compose up -d
+docker compose -f docker-compose.yml -f docker-compose.custom-config.yaml up
 ```
 
-## Development Mode
+The product fragment is the last default file, and your custom file loads after it. The published UI port and portal base URLs follow `DEVPORTAL_PORT`. A list in a later file replaces the same list from an earlier file instead of merging with it, so repeat every entry you want to keep.
 
-Set `DEVELOPMENT=true` to enable nodemon hot-reload. DevPortal will watch `app-config.yaml`, `app-config.production.yaml`, `app-config.local.yaml`, and the generated `dynamic-plugins-root/app-config.dynamic-plugins.yaml` for changes and restart automatically:
+To apply a change after startup, restart with the same Compose files. Do not add `-v` if you want to keep Marketplace installation state:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.custom-config.yaml down
+docker compose -f docker-compose.yml -f docker-compose.custom-config.yaml up -d
+```
+
+## Use environment variables in configuration
+
+Reference an environment variable in `app-config.custom.yaml` with `${NAME}` syntax, then set it on the `devportal` service in a Compose override. This lets you pass values such as secrets and tokens through the service environment instead of placing them in the configuration file.
+
+For example, set the portal title from an environment variable:
+
+```yaml
+app:
+  title: ${LOCAL_PORTAL_TITLE}
+```
+
+Save this Compose override as `docker-compose.env.yaml`:
 
 ```yaml
 services:
   devportal:
-    image: veecode/devportal:2.1.3
-    ports:
-      - "7007:7007"
     environment:
-      - DEVELOPMENT=true
-    volumes:
-      - ./app-config.local.yaml:/app/app-config.local.yaml:ro
+      LOCAL_PORTAL_TITLE: Env DevPortal
 ```
 
-You can also expose the Node.js debugger by setting `DEBUG_PORT`:
+Add `-f docker-compose.env.yaml` after `-f docker-compose.custom-config.yaml` in the start command above, and keep it in every later command that starts or stops the stack.
 
-```yaml
-    environment:
-      - DEVELOPMENT=true
-      - DEBUG_PORT=9229
-    ports:
-      - "7007:7007"
-      - "9229:9229"
-```
+## Database
 
-## Common Configuration Examples
+The local stack runs PostgreSQL 16. Set `POSTGRES_PASSWORD` in `.env` to change the database password.
 
-### GitHub Authentication
+## Settings the stack reads from the environment
 
-```yaml
-auth:
-  environment: development
-  providers:
-    github:
-      development:
-        clientId: ${GITHUB_AUTH_CLIENT_ID}
-        clientSecret: ${GITHUB_AUTH_CLIENT_SECRET}
-```
+The local stack reads these environment variables:
 
-### Database Configuration
+- `DEVPORTAL_PORT` sets the published UI port and portal base URLs.
+- `POSTGRES_PASSWORD` sets the PostgreSQL password.
+- `DEVPORTAL_IMAGE` selects the portal image used by the local stack. By default, the stack uses the digest pinned for the chart.
 
-```yaml
-backend:
-  database:
-    client: pg
-    connection:
-      host: ${POSTGRES_HOST}
-      port: ${POSTGRES_PORT}
-      user: ${POSTGRES_USER}
-      password: ${POSTGRES_PASSWORD}
-```
+For sign-in and integration settings, see the [integration guides](../../integrations/integrations.md).
 
-## Environment Variables
+## Continue customizing the local stack
 
-You can reference environment variables in your config file using the `${VAR_NAME}` syntax. Pass them via Docker:
-
-```bash
-docker run --rm --name devportal -d \
-  -p 7007:7007 \
-  -e GITHUB_PAT=your_token_here \
-  -v $(pwd)/app-config.local.yaml:/app/app-config.local.yaml:ro \
-  veecode/devportal:2.1.3
-```
-
-## Next Steps
-
-- [Configure Dynamic Plugins](./custom-plugins)
-- [Add Custom Catalog](./custom-catalog)
+- [Add catalog entities](./custom-catalog.md)
+- [Configure dynamic plugins](./custom-plugins.md)

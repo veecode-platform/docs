@@ -49,12 +49,13 @@ const config = {
           routeBasePath: "devportal",
           sidebarPath: require.resolve("./sidebars.js"),
           showLastUpdateTime: true,
-          // V2 (the unified devportal-platform image, driven by presets) is the
-          // default, served at the root (/devportal/). V1 is the prior
-          // split-image line, kept at /devportal/v1/ for installs still on it.
+          // 3.x (the current tree) is the default, served at the root
+          // (/devportal/). 2.x is frozen at /devportal/v2/ and still supported;
+          // V1, the split-image line, is kept at /devportal/v1/.
           lastVersion: "current",
           versions: {
-            current: { label: "v2", path: "", banner: "none" },
+            current: { label: "v3", path: "", banner: "none" },
+            "v2": { label: "v2", path: "v2", banner: "none" },
             "v1": { label: "v1", path: "v1", banner: "unmaintained" },
           },
         },
@@ -115,29 +116,94 @@ const config = {
         redirects: [
           {
             from: '/devportal/installation-guide/VKDR',
-            to: '/devportal/installation-guide/vkdr-local/vkdr-setup'
+            to: '/devportal/v2/installation-guide/vkdr-local/vkdr-setup'
           },
           {
             from: '/devportal/installation-guide/local-setup/vkdr-setup',
-            to: '/devportal/installation-guide/vkdr-local/vkdr-setup'
+            to: '/devportal/v2/installation-guide/vkdr-local/vkdr-setup'
           },
           {
             from: '/devportal/installation-guide/local-setup/docker-setup',
             to: '/devportal/installation-guide/docker-local/intro'
           },
-          // The 3.x guides moved out of the installation guides into their own
-          // section, and the migration guide moved up next to the V1 one.
+          // Pages that exist only in the 2.x docs keep their old root URLs working.
+          {
+            from: '/devportal/concepts/presets',
+            to: '/devportal/v2/concepts/presets'
+          },
+          {
+            from: '/devportal/installation-guide/docker-local/presets',
+            to: '/devportal/v2/installation-guide/docker-local/presets'
+          },
+          {
+            from: '/devportal/customization/theme-hack',
+            to: '/devportal/v2/customization/theme-hack'
+          },
+          {
+            from: '/devportal/migrating-from-v1',
+            to: '/devportal/v2/migrating-from-v1'
+          },
+          {
+            from: '/devportal/plugins/vault',
+            to: '/devportal/v2/plugins/vault'
+          },
+          {
+            from: '/devportal/concepts/iac-template',
+            to: '/devportal/v2/concepts/iac-template'
+          },
+          {
+            from: '/devportal/concepts/environment-cluster-journey-veecode-platform',
+            to: '/devportal/v2/concepts/environment-cluster-journey-veecode-platform'
+          },
+          ...['access-and-testing', 'deployment', 'github', 'infra', 'requirements', 'vkdr-install', 'vkdr-setup'].map((page) => ({
+            from: `/devportal/installation-guide/vkdr-local/${page}`,
+            to: `/devportal/v2/installation-guide/vkdr-local/${page}`,
+          })),
+          // Redirect retired V3 paths to their final locations in the 3.x tree.
+          {
+            from: '/devportal/v3/intro',
+            to: '/devportal/installation-guide/production-setup/setup'
+          },
+          {
+            from: '/devportal/v3/upgrade',
+            to: '/devportal/installation-guide/production-setup/upgrade'
+          },
+          {
+            from: '/devportal/v3/support',
+            to: '/devportal/support'
+          },
+          {
+            from: '/devportal/v3/release-sheets',
+            to: '/devportal/release-sheets/'
+          },
+          {
+            from: '/devportal/v3/release-sheets/release-sheet-3-0-0',
+            to: '/devportal/release-sheets/release-sheet-3-0-0'
+          },
+          {
+            from: '/devportal/v3/release-sheets/release-sheet-3-0-1',
+            to: '/devportal/release-sheets/release-sheet-3-0-1'
+          },
+          {
+            from: '/devportal/v3/release-sheets/release-sheet-3-0-2',
+            to: '/devportal/release-sheets/release-sheet-3-0-2'
+          },
+          {
+            from: '/devportal/v3/release-sheets/release-sheet-3-0-3',
+            to: '/devportal/release-sheets/release-sheet-3-0-3'
+          },
+          // V3 preview URLs now point directly to the final pages.
           {
             from: '/devportal/installation-guide/v3-preview/intro',
-            to: '/devportal/v3/intro'
+            to: '/devportal/installation-guide/production-setup/setup'
           },
           {
             from: '/devportal/installation-guide/v3-preview/upgrade',
-            to: '/devportal/v3/upgrade'
+            to: '/devportal/installation-guide/production-setup/upgrade'
           },
           {
             from: '/devportal/installation-guide/v3-preview/support',
-            to: '/devportal/v3/support'
+            to: '/devportal/support'
           },
           {
             from: '/devportal/installation-guide/v3-preview/migrate-from-2x',
@@ -145,38 +211,25 @@ const config = {
           },
           {
             from: '/devportal/installation-guide/v3-preview/release-sheets',
-            to: '/devportal/v3/release-sheets/'
+            to: '/devportal/release-sheets/'
           },
           {
             from: '/devportal/installation-guide/v3-preview/release-sheet-3-0-0',
-            to: '/devportal/v3/release-sheets/release-sheet-3-0-0'
+            to: '/devportal/release-sheets/release-sheet-3-0-0'
           },
           {
             from: '/devportal/installation-guide/v3-preview/release-sheet-3-0-1',
-            to: '/devportal/v3/release-sheets/release-sheet-3-0-1'
+            to: '/devportal/release-sheets/release-sheet-3-0-1'
           },
           {
             from: '/devportal/installation-guide/v3-preview/release-sheet-3-0-2',
-            to: '/devportal/v3/release-sheets/release-sheet-3-0-2'
+            to: '/devportal/release-sheets/release-sheet-3-0-2'
           },
           {
             from: '/devportal/installation-guide/v3-preview/release-sheet-3-0-3',
-            to: '/devportal/v3/release-sheets/release-sheet-3-0-3'
+            to: '/devportal/release-sheets/release-sheet-3-0-3'
           },
         ],
-        // V2 is now served at the root (/devportal/). Preserve the preview-era
-        // links that circulated under /devportal/v2/… by redirecting each V2
-        // page from its old /devportal/v2/ path. V1 pages (/devportal/v1/…) and
-        // the other doc instances are left untouched.
-        createRedirects(existingPath) {
-          if (
-            existingPath.startsWith("/devportal/") &&
-            !existingPath.startsWith("/devportal/v1/")
-          ) {
-            return [existingPath.replace("/devportal/", "/devportal/v2/")];
-          }
-          return undefined;
-        },
       },
     ],
     'docusaurus-plugin-image-zoom',
@@ -246,8 +299,6 @@ const config = {
             type: "docsVersionDropdown",
             docsPluginId: "default",
             position: "right",
-            // The 3.x docs live inside the current (v2) tree, under /devportal/v3/.
-            dropdownItemsBefore: [{ to: "/devportal/v3/intro", label: "v3" }],
           },
           {
             href: "https://github.com/veecode-platform/support",

@@ -29,7 +29,7 @@ describe("createServer bundledPath resolution", () => {
   });
 
   it("accepts an explicit version with an explicit bundledPath", async () => {
-    for (const version of ["v1", "v2"] as const) {
+    for (const version of ["v1", "v2", "v3"] as const) {
       const { server, dispose } = await createServer({
         version,
         bundledPath: fixturePath,
@@ -44,6 +44,6 @@ describe("createServer bundledPath resolution", () => {
     process.env.VEECODE_DOCS_MCP_VERSION = "bogus";
     await expect(
       createServer({ bundledPath: fixturePath, offline: true }),
-    ).rejects.toThrow(/Invalid docs version/);
+    ).rejects.toThrow(/"v1".*"v2".*"v3"/);
   });
 });

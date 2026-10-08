@@ -6,9 +6,9 @@ title: Pending Changes Plugin
 
 # Pending Changes Plugin
 
-The Pending Changes plugin adds a badge to the Global Header indicating that plugin configuration changes have been saved but not yet applied. It signals that a pod restart is needed to activate the changes.
+The Pending Changes plugin adds an indicator to the global header that appears after a Marketplace install or uninstall. It signals that the selection is saved but not yet applied, and that the stack needs a restart to install or remove the plugin.
 
-**Status:** Always loaded (preInstalled). No `dynamic-plugins.yaml` entry required.
+**Status:** Default plugin, enabled by default. No chart values entry is required.
 
 ---
 
@@ -20,13 +20,15 @@ The Pending Changes plugin adds a badge to the Global Header indicating that plu
 
 ## What it does
 
-- Polls for pending plugin changes every 30 seconds (configurable)
-- Displays a badge next to the Notifications bell in the header when changes are pending
-- Clicking the badge navigates to the restart/apply flow in the customer portal
+- Polls for unsaved plugin changes every 30 seconds
+- Displays an indicator in the header when a Marketplace change is waiting for a restart
+- Clears once the stack restarts and the installer applies the selection
 
 ---
 
-## Mount point configuration
+## Configuration
+
+The default plugin file (`dynamic-plugins.veecode.yaml`) enables the package and mounts its button into the header:
 
 ```yaml
 pluginConfig:
@@ -42,4 +44,16 @@ pluginConfig:
                 pollingIntervalMs: 30000
 ```
 
-To change the polling interval, override `pollingIntervalMs` in your `dynamic-plugins.yaml`.
+To change the polling interval, copy this whole `pluginConfig` block into an override entry for the same package and edit `pollingIntervalMs` in place. Match the entry by registry, repository, and the plugin path after `!`, and use the `{{inherit}}` tag to keep the version the default plugin file pins. An override that sets `pluginConfig` replaces the whole block (no merge), so keep the mount point entry intact. See [Adding Plugins](../adding.md) for the Kubernetes and local-stack override forms.
+
+## Turn it off
+
+Add the override entry with the `{{inherit}}` tag and the full `!<plugin path>` part, plus `disabled: true`, under `global.dynamic.plugins` on Kubernetes or in the operator plugin file on the local stack. On Kubernetes write the tag as `{{ "{{inherit}}" }}`; in the operator plugin file write `{{inherit}}` as is:
+
+```yaml
+plugins:
+  - package: oci://quay.io/veecode/devportal-pending-changes-dynamic:{{inherit}}!devportal-pending-changes-dynamic
+    disabled: true
+```
+
+Without the indicator there is no header signal for a pending Marketplace change; the install still applies on the next full stack restart. See [Adding Plugins](../adding.md) for where to put this entry and how to apply it.

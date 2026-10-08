@@ -25,23 +25,29 @@ The GitHub Workflows plugin provides manual workflow triggering from within a De
 
 | Package | Role |
 |---|---|
-| `veecode-platform-backstage-plugin-github-workflows-dynamic` | Frontend — entity card and tab |
-| `veecode-platform-backstage-plugin-github-workflows-backend-dynamic` | Backend — GitHub API proxy |
+| `veecode-platform-backstage-plugin-github-workflows` | Frontend — entity card and tab |
+| `veecode-platform-backstage-plugin-github-workflows-backend` | Backend — GitHub API proxy |
 
-Both are preloaded in the DevPortal image and **disabled by default**. No image rebuild is needed.
+Both are versioned packages in the active package index (`1.3.7`) and are **not default plugins**. Install them from the Marketplace or by package reference.
 
 ---
 
 ## Enabling the plugin
 
-Add the following to your `dynamic-plugins.yaml` (or the equivalent YAML section in your deployment):
+### Via Marketplace
+
+Search for the GitHub Workflows entry in the Marketplace and install it, then recreate the stack so the installer runs. A plain container restart does not apply a Marketplace selection. See [Configure dynamic plugins for the local stack](../installation-guide/docker-local/custom-plugins.md) for the apply procedure.
+
+### Via the operator file (local stack)
+
+Add both index references to your operator file (`dynamic-plugins.local.yaml`):
 
 ```yaml
 plugins:
-  - package: ./dynamic-plugins/dist/veecode-platform-backstage-plugin-github-workflows-backend-dynamic
+  - package: oci://quay.io/veecode/veecode-platform-backstage-plugin-github-workflows-backend@sha256:f7f824e5af6777af901438d085fd6606eaac9050fb6404f194f3b812a6b13856
     disabled: false
 
-  - package: ./dynamic-plugins/dist/veecode-platform-backstage-plugin-github-workflows-dynamic
+  - package: oci://quay.io/veecode/veecode-platform-backstage-plugin-github-workflows@sha256:db84ae0a758bda91657154346be2c510149cb1955ced2960329b124e04f65c44
     disabled: false
     pluginConfig:
       dynamicPlugins:
@@ -58,28 +64,29 @@ plugins:
                       lg: "1"
                     gridColumnEnd:
                       lg: "span 6"
-                  if:
-                    anyOf:
-                      - hasAnnotation: "github.com/workflows"
-                      - hasAnnotation: "vee.codes/has-github-workflows"
 ```
 
-Restart DevPortal after saving. Via the Marketplace UI you can click **Enable** instead of editing YAML manually.
+### On Kubernetes
+
+Add the same two package references under `global.dynamic.plugins` in your chart values.
 
 ---
 
 ## GitHub integration
 
-The plugin reads workflow data from the GitHub API using the GitHub integration configured in `app-config.yaml`. Ensure `integrations.github` is configured with a token or GitHub App credentials.
+The backend calls the GitHub API with a GitHub App. Configure the app credentials where the portal reads its app config — a configuration fragment on the local stack, `upstream.backstage.appConfig` on Kubernetes — with secrets passed through environment variables or a referenced Secret:
 
 ```yaml
 integrations:
   github:
     - host: github.com
-      token: ${GITHUB_TOKEN}
+      apps:
+        - appId: ${GITHUB_APP_ID}
+          clientId: ${GITHUB_CLIENT_ID}
+          clientSecret: ${GITHUB_CLIENT_SECRET}
+          privateKey: |
+            ${GITHUB_PRIVATE_KEY}
 ```
-
-No proxy configuration is needed for DevPortal — the backend plugin handles GitHub API calls server-side.
 
 ---
 
@@ -151,24 +158,6 @@ github.com/workflows: build.yml,deploy.yml,release.yml
 
 ## Integration with GitHub Actions plugin
 
-The GitHub Workflows plugin integrates with the bundled GitHub Actions plugin (`backstage-community-plugin-github-actions-dynamic`). In the Workflows List, clicking **Logs** opens the corresponding GitHub Actions run. In Workflow Cards, clicking the label navigates to the Actions tab.
+The GitHub Workflows plugin integrates with the GitHub Actions plugin (`backstage-community-plugin-github-actions`). In the Workflows List, clicking **Logs** opens the corresponding GitHub Actions run. In Workflow Cards, clicking the label navigates to the Actions tab.
 
-To use this integration, also enable the GitHub Actions plugin:
-
-```yaml
-  - package: ./dynamic-plugins/dist/backstage-community-plugin-github-actions-dynamic
-    disabled: false
-    pluginConfig:
-      dynamicPlugins:
-        frontend:
-          backstage-community.plugin-github-actions:
-            mountPoints:
-              - mountPoint: entity.page.ci/cards
-                importName: EntityGithubActionsContent
-                config:
-                  layout:
-                    gridColumn: "1 / -1"
-                  if:
-                    allOf:
-                      - isGithubActionsAvailable
-```
+To use this integration, also enable the GitHub Actions plugin. See [CI/CD Plugins](./cicd.md) for its package reference and annotation.

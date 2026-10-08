@@ -1,161 +1,89 @@
 ---
 sidebar_position: 1
-sidebar_label: Keycloak Auth
-title: Keycloak Authentication & Org Sync
+sidebar_label: Keycloak Authentication
+title: Sign in with Keycloak
 ---
 
-The `keycloak` preset connects VeeCode DevPortal to a Keycloak instance for OIDC-based user sign-in and realm-based org sync (users and groups).
+This page configures Keycloak sign-in for DevPortal 3.x over OIDC, plus the Keycloak organization sync that imports users and groups into the catalog. The two are separate: sign-in is application configuration, and organization sync is a Marketplace module with its own configuration.
 
-## Overview
+The tested Keycloak run for 3.x is [Install DevPortal on Kubernetes](../../installation-guide/production-setup/setup.md), Steps 4 to 6. Those steps start Keycloak with the realm, client, and service account the portal needs, store the credentials in a runtime Secret, and install the portal with the OIDC and catalog configuration. Follow them for a Kubernetes install instead of duplicating their commands here. The sections below explain the configuration for the local stack and what each part does.
 
-- **Authentication**: Users sign in via OIDC using a Keycloak realm. The `oidc` Backstage auth provider handles the flow.
-- **Org sync**: The `keycloakOrg` catalog provider ingests realm users and groups as Backstage `User` and `Group` entities.
+The 3.x backend registers the generic `oidc` sign-in provider, which is what Keycloak connects through. Its default resolvers match the Keycloak user ID and LDAP UUID annotations on catalog User entities. Sign-in succeeds only when the catalog already holds a matching User entity, so set up organization sync before you test sign-in.
 
-:::important
-The `keycloak` preset belongs to the exclusive `identity` group. Only one identity preset can be active per deployment. You cannot combine `keycloak` with `github-auth`, `gitlab`, `azure-auth`, or `ldap`.
-:::
+## What the install guide sets up
 
-## Activating the preset
+Step 4 creates a `devportal` realm with a confidential `devportal` client (standard flow on), a redirect URI of `https://<portal-host>/*`, and a service account holding the `realm-management` roles `view-users`, `query-users`, `query-groups`, and `view-realm`. Step 5 stores the Keycloak address, realm, client ID, and client secret in the runtime Secret. Step 6 installs the portal with guest sign-in off (`global.veecode.guestAuth.enabled: false`), the OIDC provider, and the Keycloak catalog module.
 
-```sh
-VEECODE_PRESETS=recommended,keycloak
-```
+For any other OIDC provider, keep the same shape and point the metadata URL, client ID, and client secret at it.
 
-## Required environment variables
+## Configure Keycloak sign-in
 
-| Variable | Description |
-|---|---|
-| `KEYCLOAK_BASE_URL` | Keycloak base URL (e.g., `https://keycloak.example.com/auth`) |
-| `KEYCLOAK_REALM` | Keycloak realm name |
-| `KEYCLOAK_CLIENT_ID` | OAuth client ID registered in the realm |
-| `KEYCLOAK_CLIENT_SECRET` | OAuth client secret for the registered client |
-| `AUTH_SESSION_SECRET` | Random secret used to sign session cookies (min 32 chars) |
-
-The OIDC discovery URL is built from `KEYCLOAK_BASE_URL` + `KEYCLOAK_REALM`:
-
-```
-${KEYCLOAK_BASE_URL}/realms/${KEYCLOAK_REALM}
-```
-
-## Prerequisites
-
-1. A Keycloak realm configured for your organization.
-2. A Keycloak client with:
-   - **Client protocol**: `openid-connect`
-   - **Access type**: `confidential`
-   - **Valid redirect URIs**: `https://<your-instance>/api/auth/oidc/handler/frame`
-   - **Standard Flow Enabled**: yes
-   - **Service Accounts Enabled**: yes (required for org sync)
-   - **Client roles** or realm roles granting `view-users` and `query-groups` to the service account.
-
-## What the preset configures
-
-The `keycloak` preset (`presets/keycloak.yaml`) produces the following `app-config` at boot:
+Add this block to a custom configuration fragment on the local stack (see [Add configuration to the local stack](../../installation-guide/docker-local/custom-config.md)), or to an `extraAppConfig` fragment in the chart `values.yaml`. The `production` entry must match `auth.environment`.
 
 ```yaml
-signInPage: keycloak
-
-platform:
-  guest:
-    enabled: false
-  signInProviders:
-    - keycloak
-
 auth:
+  environment: production
   session:
     secret: ${AUTH_SESSION_SECRET}
-    cookieName: backstage-auth-session
-    sameSite: lax
-    secure: false
-  environment: production
   providers:
     oidc:
       production:
-        metadataUrl: ${KEYCLOAK_BASE_URL}/realms/${KEYCLOAK_REALM}
+        metadataUrl: ${KEYCLOAK_BASE_URL}/realms/${KEYCLOAK_REALM}/.well-known/openid-configuration
         clientId: ${KEYCLOAK_CLIENT_ID}
         clientSecret: ${KEYCLOAK_CLIENT_SECRET}
         prompt: auto
-        signIn:
-          resolvers:
-            - resolver: oidcSubClaimMatchingKeycloakUserId
-            - resolver: preferredUsernameMatchingUserEntityName
-            - resolver: emailMatchingUserEntityProfileEmail
-            - resolver: emailLocalPartMatchingUserEntityName
-
-catalog:
-  providers:
-    keycloakOrg:
-      default:
-        baseUrl: ${KEYCLOAK_BASE_URL}
-        loginRealm: ${KEYCLOAK_REALM}
-        realm: ${KEYCLOAK_REALM}
-        clientId: ${KEYCLOAK_CLIENT_ID}
-        clientSecret: ${KEYCLOAK_CLIENT_SECRET}
-        schedule:
-          frequency: { minutes: 10 }
-          initialDelay: { seconds: 15 }
-          timeout: { minutes: 10 }
+signInPage: oidc
 ```
+
+What the keys do:
+
+- `metadataUrl` is the realm's OpenID configuration document. The backend reads the token, user information, and signing key endpoints from it.
+- `clientId` and `clientSecret` identify the confidential client created in Step 4 of the install guide.
+- `prompt: auto` lets Keycloak decide whether to ask for credentials or skip the login prompt when the user has a session.
+- `signInPage: oidc` makes the OIDC provider the sign-in method.
+
+Pass the secrets as environment variables rather than writing them into the file. On the local stack, set them on the `devportal` service in a Compose override. On Kubernetes, store them in the runtime Secret as Step 5 does. Also turn guest sign-in off: drop the guest fragment from the local configuration chain, or keep `global.veecode.guestAuth.enabled: false` on Kubernetes. Restart the portal so it loads the new configuration. The portal can take up to two minutes before `/healthcheck` returns 200; test sign-in after that.
+
+## Import users and groups
+
+The `keycloak-catalog-integration` module imports Keycloak users and groups as User and Group entities on a schedule. Install it from the Marketplace Extensions page, or add it through chart configuration as Step 6 does:
+
+```yaml
+global:
+  dynamic:
+    plugins:
+      - package: ./dynamic-plugins/dist/backstage-community-plugin-catalog-backend-module-keycloak-dynamic
+        disabled: false
+        pluginConfig:
+          catalog:
+            providers:
+              keycloakOrg:
+                default:
+                  baseUrl: ${KEYCLOAK_BASE_URL}
+                  loginRealm: ${KEYCLOAK_REALM}
+                  realm: ${KEYCLOAK_REALM}
+                  clientId: ${KEYCLOAK_CLIENT_ID}
+                  clientSecret: ${KEYCLOAK_CLIENT_SECRET}
+                  schedule:
+                    frequency: {minutes: 5}
+                    initialDelay: {seconds: 15}
+                    timeout: {minutes: 3}
+```
+
+What the keys do:
+
+- `baseUrl` is the address the portal backend uses to reach Keycloak. `loginRealm` is the realm used to authenticate, and `realm` is the realm to read users from.
+- `clientId` and `clientSecret` authenticate the service account that reads users and groups. It needs the `realm-management` roles listed above.
+- The schedule imports 15 seconds after the portal starts and then every 5 minutes.
+
+The portal signs a user in only after it has imported that user. For a user who is not in the catalog yet, sign-in fails until the next import runs.
 
 ## Sign-in resolvers
 
-The resolvers are tried in order; the first match establishes the Backstage identity:
-
-| Resolver | What it matches |
-|---|---|
-| `oidcSubClaimMatchingKeycloakUserId` | OIDC `sub` claim → `keycloak.org/id` annotation on the User entity |
-| `preferredUsernameMatchingUserEntityName` | Keycloak `preferred_username` → `metadata.name` |
-| `emailMatchingUserEntityProfileEmail` | OIDC `email` → `spec.profile.email` |
-| `emailLocalPartMatchingUserEntityName` | Email local part → `metadata.name` |
-
-:::tip
-`oidcSubClaimMatchingKeycloakUserId` is the most robust resolver when org sync is active, because Keycloak UUIDs are stable across username changes. The fallback resolvers handle cases where the org sync has not yet run or the user entity has no `keycloak.org/id` annotation.
-:::
-
-## Org sync
-
-The `keycloakOrg` provider uses the client's service account to list realm users and groups. The service account must have the `view-users` and `query-groups` roles assigned (in Keycloak, under **Clients → your-client → Service Account Roles**).
-
-## Quick start
-
-```bash
-docker run -p 7007:7007 \
-  -e VEECODE_PRESETS=recommended,keycloak \
-  -e KEYCLOAK_BASE_URL=https://keycloak.example.com/auth \
-  -e KEYCLOAK_REALM=my-realm \
-  -e KEYCLOAK_CLIENT_ID=devportal \
-  -e KEYCLOAK_CLIENT_SECRET=<client-secret> \
-  -e AUTH_SESSION_SECRET=<random-secret-min-32-chars> \
-  veecode/devportal:2.1.3
-```
-
-### Docker Compose
-
-```yaml
-services:
-  devportal:
-    image: veecode/devportal:2.1.3
-    ports:
-      - "7007:7007"
-    environment:
-      VEECODE_PRESETS: recommended,keycloak
-      KEYCLOAK_BASE_URL: https://keycloak.example.com/auth
-      KEYCLOAK_REALM: my-realm
-      KEYCLOAK_CLIENT_ID: devportal
-      KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET}
-      AUTH_SESSION_SECRET: ${AUTH_SESSION_SECRET}
-```
+The backend default for OIDC tries the Keycloak user ID resolver and then the LDAP UUID resolver against the annotations on catalog User entities. When users come from the Keycloak sync module, the default works without further configuration. See [Sign-in identities and resolvers](https://backstage.io/docs/auth/identity-resolver) for custom options.
 
 ## Troubleshooting
 
-- **OIDC discovery fails**: Verify `KEYCLOAK_BASE_URL` is reachable from the DevPortal container. The discovery URL is `${KEYCLOAK_BASE_URL}/realms/${KEYCLOAK_REALM}/.well-known/openid-configuration`.
-- **Sign-in resolvers all fail**: Run org sync first so User entities with `keycloak.org/id` annotations exist in the catalog. Until the first sync completes, only the email-based fallback resolvers will work.
-- **Org sync 403**: The service account is missing `view-users` or `query-groups` roles. Assign them under **Clients → your-client → Service Account Roles** in the Keycloak admin console.
-- **Session errors**: `AUTH_SESSION_SECRET` must be stable across restarts. Changing it invalidates all existing sessions.
-- **Exclusive-group conflict at boot**: You have more than one identity preset in `VEECODE_PRESETS`. Keep only `keycloak` or switch to a different identity preset.
-
-## References
-
-- [Backstage OIDC Auth Provider](https://backstage.io/docs/auth/oidc/)
-- [Backstage Keycloak Org Provider](https://backstage.io/docs/integrations/keycloak/org/)
-- [Keycloak Documentation](https://www.keycloak.org/docs/latest/)
+- Sign-in fails with an identity resolution error: the User entity is missing from the catalog. Wait for the next import and confirm the user appears in the catalog before signing in again.
+- The OIDC button does not appear: check that `auth.environment` matches the provider entry name (`production` in the example) and that the portal restarted with the fragment loaded.
+- Sign-out fails: the backend calls Keycloak at its public address when a user signs out. The backend must resolve that name and trust its certificate, as described in Step 6 of the install guide.

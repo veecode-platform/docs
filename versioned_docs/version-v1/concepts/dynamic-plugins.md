@@ -8,6 +8,10 @@ title: Dynamic Plugins
 
 Dynamic plugins are the mechanism DevPortal uses to ship, enable, and configure Backstage plugins **without rebuilding the container image**. This is one of the core differentiators of the distro.
 
+:::note V1 is frozen — newer instances use a different OCI reference format
+This page documents the workspace-bundle OCI format (`oci://.../<workspace>:bs_<version>!<plugin-name>`) used by V1. It keeps working indefinitely on V1 instances. If you are on a current DevPortal instance, see the [current Dynamic Plugins guide](/devportal/concepts/dynamic-plugins) for the newer one-image-per-plugin format.
+:::
+
 ---
 
 ## Loading is step 1 of 3

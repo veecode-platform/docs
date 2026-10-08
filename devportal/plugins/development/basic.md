@@ -4,23 +4,25 @@ sidebar_label: Basics
 title: Basics & Prerequisites
 ---
 
-The same requirements for Backstage development described in the [Backstage documentation](https://backstage.io/docs/getting-started/#prerequisites) apply to plugin development. Below are the most important ones:
+The same requirements for Backstage development described in the [Backstage documentation](https://backstage.io/docs/getting-started/#prerequisites) apply to plugin development. For DevPortal 3.x the versions come from the plugin workspaces, not from a generic Backstage app. Below are the most important ones:
 
-- Node.js current LTS version (we recommend using `nvm` to manage it).
+- Node.js 22 or 24, as declared by each workspace (`"node": "22 || 24"` in the workspace `package.json`). We recommend using `nvm` to manage it.
     - Install `nvm` from [here](https://github.com/nvm-sh/nvm?tab=readme-ov-file#installing-and-updating).
-- Yarn version 4.4.1.
-    - Enable Corepack: `corepack enable`, then set Yarn: `yarn set version 4.4.1`.
-- Git
+    - Check with `node --version` and compare the output with the workspace's `package.json` and `backstage.json`.
+- Yarn 4.12.0, as pinned by each workspace (`"packageManager": "yarn@4.12.0"`).
+    - Enable Corepack: `corepack enable`, then check with `yarn --version`.
+- Git.
 - A proper IDE (for example, VS Code).
+- Docker, for the local test run in devportal-local.
 
 ## Plugin guidelines
 
 A few critical points to consider when developing plugins:
 
 - Write plugin code in TypeScript.
-- Plan your project structure and folders to accelerate the development process.
-- Develop plugins alongside a vanilla Backstage repo that loads the plugin statically (as a local package).
-- Release plugins as npm packages (one static, one dynamic).
+- Build related plugins together in one workspace from the [devportal-plugins](https://github.com/veecode-platform/devportal-plugins) repository, instead of creating a standalone Backstage app.
+- Develop against the workspace's development host, which loads the plugin statically as a local package. Ship to DevPortal as a dynamic plugin. The host is a harness; the dynamic export is the product artifact.
+- Keep every `@backstage/*` dependency pinned to the DevPortal host line. New workspaces arrive pinned; do not upgrade past the host.
 - Avoid reinventing the wheel—check if a plugin already does what you need.
 - Build your UI with [Backstage components](https://backstage.io/storybook/) and [Material UI](https://mui.com/material-ui/).
 

@@ -1,5 +1,5 @@
 /**
- * Docusaurus plugin that emits mcp-snapshot.json during build.
+ * Docusaurus plugin that emits docs MCP snapshots during build.
  * Wires the snapshot-builder against the site's docs plugins.
  */
 module.exports = function mcpSnapshotPlugin(context, options) {

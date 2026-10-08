@@ -1,127 +1,108 @@
 ---
 sidebar_position: 2
-sidebar_label: GitLab Auth & Integration
-title: GitLab Authentication & Integration
+sidebar_label: GitLab Authentication
+title: Sign in with GitLab
 ---
 
-In V2, GitLab authentication is not a separate preset from GitLab SCM integration — both are provided by the single `gitlab` preset. This page documents the authentication-specific steps and configuration details. For the full activation guide including SCM and org sync, see [GitLab Auth & Integrations](./gitlab.md).
+This page configures GitLab OAuth sign-in for DevPortal 3.x and the GitLab organization sync that imports users and groups into the catalog. The two are separate: sign-in is application configuration, and organization sync is a Marketplace module with its own configuration.
 
-## How GitLab auth works in V2
-
-The `gitlab` preset configures:
-
-- **OAuth 2.0 sign-in** via a GitLab OAuth application (`GITLAB_AUTH_CLIENT_ID` / `GITLAB_AUTH_CLIENT_SECRET`)
-- **Org sync** via the `catalog-backend-module-gitlab` provider, which ingests GitLab groups and users as Backstage `Group`/`User` entities
-- **SCM integration** via `GITLAB_TOKEN` (Personal or Group Access Token) used for catalog discovery and scaffolder operations
-
-All three are part of the same `gitlab` preset. You cannot activate GitLab auth without also activating the SCM integration and org sync.
+The 3.x backend registers the `gitlab` sign-in provider, with the `userIdMatchingUserEntityAnnotation` resolver as its default. Sign-in succeeds only when the catalog already holds a matching User entity, so set up organization sync before you test sign-in.
 
 ## Prerequisites
 
-1. A GitLab account with owner access to your group or instance.
-2. Decide whether you are using **GitLab.com** (SaaS) or a **self-hosted GitLab** instance.
+You need:
 
-## Step 1: Create a GitLab OAuth application
+- A GitLab OAuth application. Create one from your GitLab user or admin settings, following [GitLab's OAuth provider guide](https://docs.gitlab.com/ee/integration/oauth_provider.html). Set the redirect URI to `http(s)://<portal-host>/api/auth/gitlab/handler/frame`, with no trailing slash after `frame`, and request the `read_user`, `openid`, `profile`, and `email` scopes, as described in the [Backstage GitLab provider documentation](https://backstage.io/docs/auth/gitlab/provider). Note the Application ID and generate a Secret.
+- Guest sign-in turned off. On the local stack, drop the guest fragment from the configuration chain, as described in [Add configuration to the local stack](../../installation-guide/docker-local/custom-config.md). On Kubernetes, set `global.veecode.guestAuth.enabled: false`, as shown in [Install DevPortal on Kubernetes](../../installation-guide/production-setup/setup.md).
 
-1. Go to your group or user **Settings → Applications** (for a self-hosted instance, you can also use the admin area).
-2. Fill in:
-   - **Name**: VeeCode DevPortal
-   - **Redirect URI**: `https://<your-instance>/api/auth/gitlab/handler/frame`
-   - **Scopes**: `read_user`, `openid`, `profile`, `email`
-3. Save the application and note the **Application ID** and **Secret**.
+## Configure GitLab sign-in
 
-## Step 2: Create a Group or Personal Access Token (integration)
-
-The backend integration requires a token with `read_api` scope so the catalog and scaffolder can read repository data.
-
-1. Go to **User Settings → Access Tokens** (or a group's **Settings → Access Tokens** for a group token).
-2. Select scopes: `read_api` (and `write_repository` if scaffolder needs to create branches/PRs).
-3. Save the token — you will not see it again.
-
-## Step 3: Activate the preset
-
-```sh
-VEECODE_PRESETS=recommended,gitlab
-GITLAB_HOST=gitlab.com
-GITLAB_AUTH_CLIENT_ID=<app-id>
-GITLAB_AUTH_CLIENT_SECRET=<app-secret>
-GITLAB_TOKEN=<access-token>
-GITLAB_GROUP=<root-group>
-```
-
-## The generated auth configuration
-
-At boot, the `gitlab` preset writes the following auth block:
+Add this block to a custom configuration fragment on the local stack (see [Add configuration to the local stack](../../installation-guide/docker-local/custom-config.md)), or to an `extraAppConfig` fragment in the chart `values.yaml`. Replace the placeholder values with your OAuth application credentials. The `production` entry must match `auth.environment`.
 
 ```yaml
-signInPage: gitlab
-
-platform:
-  guest:
-    enabled: false
-  signInProviders:
-    - gitlab
-
 auth:
   environment: production
   providers:
     gitlab:
       production:
-        clientId: ${GITLAB_AUTH_CLIENT_ID}
-        clientSecret: ${GITLAB_AUTH_CLIENT_SECRET}
-        # For self-hosted GitLab uncomment:
-        # audience: https://${GITLAB_HOST}
+        clientId: ${AUTH_GITLAB_CLIENT_ID}
+        clientSecret: ${AUTH_GITLAB_CLIENT_SECRET}
         signIn:
           resolvers:
-            - resolver: usernameMatchingUserEntityName
-            - resolver: emailMatchingUserEntityProfileEmail
-            - resolver: emailLocalPartMatchingUserEntityName
+            - resolver: userIdMatchingUserEntityAnnotation
+signInPage: gitlab
 ```
 
-:::note
-The `audience` field is only required for self-hosted instances. For `gitlab.com`, it can be omitted. To override this for a self-hosted instance, add an `app-config.local.yaml` that sets `auth.providers.gitlab.production.audience`.
-:::
-
-## Org sync
-
-Org sync ingests groups and users from a root GitLab group into the Backstage catalog. The `catalog-backend-module-gitlab` provider is static (compiled into the backend) and is configured by the preset's `appConfig` block:
+For self-hosted GitLab, add the instance URL:
 
 ```yaml
-catalog:
+auth:
+  environment: production
   providers:
     gitlab:
-      default:
-        host: ${GITLAB_HOST}
-        group: ${GITLAB_GROUP}
-        orgEnabled: true
-        restrictUsersToGroup: true
-        includeUsersWithoutSeat: true
-        relations:
-          - INHERITED
-          - DESCENDANTS
-          - SHARED_FROM_GROUPS
-        groupPattern: ${GITLAB_GROUP_PATTERN}
-        branch: main
-        fallbackBranch: master
-        skipForkedRepos: false
-        entityFilename: catalog-info.yaml
-        rules:
-          - allow: [Group, User]
-        schedule:
-          frequency: { minutes: 5 }
-          timeout: { minutes: 3 }
+      production:
+        clientId: ${AUTH_GITLAB_CLIENT_ID}
+        clientSecret: ${AUTH_GITLAB_CLIENT_SECRET}
+        audience: https://gitlab.example.com
+        signIn:
+          resolvers:
+            - resolver: userIdMatchingUserEntityAnnotation
+signInPage: gitlab
 ```
+
+What the keys do:
+
+- `clientId` and `clientSecret` are the Application ID and Secret from your GitLab OAuth application. `audience` is the base URL of a self-hosted GitLab instance. See the [Backstage GitLab provider documentation](https://backstage.io/docs/auth/gitlab/provider).
+- `signIn.resolvers` maps the GitLab identity to a catalog User entity. The default resolver matches the GitLab user ID against the user-id annotation on the User entity (`gitlab.com/user-id`, or `<host>/user-id` for self-hosted instances), which the organization sync module sets.
+- `signInPage: gitlab` makes GitLab the sign-in method.
+
+Pass the secrets as environment variables rather than writing them into the file. On the local stack, set them on the `devportal` service in a Compose override:
+
+```yaml
+services:
+  devportal:
+    environment:
+      AUTH_GITLAB_CLIENT_ID: your-gitlab-application-id
+      AUTH_GITLAB_CLIENT_SECRET: your-gitlab-secret
+```
+
+On Kubernetes, store them in the runtime Secret and reference them with `${...}` placeholders, following the `veecode-runtime-secrets` pattern in [Install DevPortal on Kubernetes](../../installation-guide/production-setup/setup.md). Restart the portal so it loads the new configuration. The portal can take up to two minutes before `/healthcheck` returns 200; test sign-in after that.
+
+## Import users and groups
+
+The `gitlab-org` module imports GitLab users and groups as User and Group entities on a schedule. Install it from the Marketplace Extensions page, or add this entry to an operator plugin file (see [Configure dynamic plugins for the local stack](../../installation-guide/docker-local/custom-plugins.md)):
+
+```yaml
+plugins:
+  - package: oci://quay.io/veecode/backstage-plugin-catalog-backend-module-gitlab-org@sha256:1bd009a2bca08356ee46eddc9738ba2137fe7762e54fc17c5c2d923b64ad4664
+    disabled: false
+    pluginConfig:
+      catalog:
+        providers:
+          gitlab:
+            orgProvider:
+              host: ${GITLAB_HOST}
+              orgEnabled: true
+              group: ${GITLAB_ORG_GROUP}
+              schedule:
+                frequency:
+                  minutes: 30
+                timeout:
+                  minutes: 3
+                initialDelay:
+                  seconds: 15
+```
+
+Set `GITLAB_HOST` to your GitLab host (`gitlab.com` or your self-hosted host) and `GITLAB_ORG_GROUP` to the group to import. The module authenticates with the `integrations.gitlab` token described in [GitLab integrations](./gitlab.md).
+
+After the first sync runs, open the catalog and check that User entities from your group are present. Then sign in with a GitLab account from that group.
+
+## Sign-in resolvers
+
+The backend default is `userIdMatchingUserEntityAnnotation`: it matches the GitLab user ID with the User entity carrying the same user-id annotation. Other resolvers from the [Backstage GitLab provider documentation](https://backstage.io/docs/auth/gitlab/provider#resolvers), such as `emailMatchingUserEntityProfileEmail`, work when your User entities carry the matching fields. List resolvers in order; each one is tried until one finds a match.
 
 ## Troubleshooting
 
-- **Callback URL mismatch**: The redirect URI in your GitLab application must match `https://<your-instance>/api/auth/gitlab/handler/frame` exactly.
-- **Sign-in resolvers failing**: Ensure users in the catalog have `spec.profile.email` or `metadata.name` matching their GitLab username. The three resolvers are tried in order; the first match wins.
-- **Catalog not ingesting repos**: Verify the `GITLAB_TOKEN` has `read_api` scope and is scoped to the correct group.
-- **Self-hosted instance**: Set `audience: https://${GITLAB_HOST}` in the auth provider config. Without it, token validation may fail.
-- **Exclusive-group conflict**: `gitlab` belongs to the `identity` group. Combining it with `github-auth`, `azure-auth`, `keycloak`, or `ldap` will fail at boot.
-
-## References
-
-- [Backstage GitLab Auth Provider](https://backstage.io/docs/auth/gitlab/provider/)
-- [Backstage GitLab Integration](https://backstage.io/docs/integrations/gitlab/locations/)
-- [GitLab OAuth Applications](https://docs.gitlab.com/ee/integration/oauth_provider.html)
+- Sign-in fails with an identity resolution error: the User entity is missing from the catalog. Wait for the next organization sync and confirm the user appears in the catalog before signing in again.
+- The GitLab button does not appear: check that `auth.environment` matches the provider entry name (`production` in the example) and that the portal restarted with the fragment loaded.
+- Redirect mismatch after GitLab approval: the redirect URI in the OAuth application must exactly match `http(s)://<portal-host>/api/auth/gitlab/handler/frame`, with no trailing slash.

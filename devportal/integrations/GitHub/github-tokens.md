@@ -1,25 +1,20 @@
 ---
 sidebar_position: 4
 sidebar_label: GitHub Tokens
-title: GitHub Tokens
+title: Create a GitHub token for DevPortal
 ---
 
-This document explains **GitHub personal access tokens (PATs)**, which DevPortal uses to securely connect to GitHub and access repositories, workflows, and other resources. In V2, the variable name is `GITHUB_PAT` (not `GITHUB_TOKEN`).
+This page shows how to create a GitHub personal access token (PAT) for DevPortal's backend GitHub access, and how to wire it into the portal configuration. The token authenticates the portal to the GitHub API for catalog discovery, scaffolder operations, and entity data. For user sign-in, see [Sign in with GitHub](./github-auth.md) instead.
 
-PATs are used by two presets:
-
-- **`github` preset** — requires `GITHUB_PAT` with `repo` and `read:org` scopes for catalog discovery and scaffolder operations.
-- **`github-auth` preset** — also requires `GITHUB_PAT` with `read:org` scope for the `githubOrg` catalog provider (org/team sync). If you use both presets, a single PAT with `repo` + `read:org` satisfies both.
-
-PATs are the simplest way to authenticate with GitHub. They are the recommended credential for local development and PoCs. For production, consider adding a GitHub App overlay (see [GitHub Integrations](./github-integrations.md)) for better rate limits and more granular permissions.
+PATs are the simplest credential for local evaluation. For shared or production setups, consider a [GitHub App](https://docs.github.com/en/apps/creating-github-apps/about-creating-github-apps/about-creating-github-apps) instead, which gives higher rate limits and narrower permissions (see [GitHub backend integrations](./github-integrations.md)).
 
 :::warning
-For local environments, a single PAT is usually enough.
+A single PAT is usually enough for local evaluation.
 
-However, for production or shared setups, it's recommended to combine a PAT with a [GitHub App](https://docs.github.com/en/apps/creating-github-apps/about-creating-github-apps/about-creating-github-apps) for higher rate limits. If you rely solely on a PAT in production, prefer a **fine-grained token** for better security and permission control.
+For production or shared setups, prefer a **fine-grained token** for better permission control, or a GitHub App for higher rate limits.
 :::
 
-## About GitHub Personal Access Tokens
+## About GitHub personal access tokens
 
 A **personal access token** is a credential you generate and use instead of your GitHub password. It allows tools such as DevPortal to securely connect to GitHub and access repositories, workflows, and other resources.
 
@@ -34,24 +29,24 @@ For more details, see GitHub's official documentation:
 - [Fine-grained personal access tokens](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token#creating-a-fine-grained-personal-access-token)
 :::
 
-### PAT Types
+### Token types
 
 GitHub offers two types of PATs:
 
-- **Classic PATs**: Broad scopes (e.g., `repo`, `admin:org`), long-lived, account-wide access
-- **Fine-grained PATs**: Limited to specific repositories/organizations, shorter-lived, more secure
+- **Classic PATs**: Broad scopes (e.g., `repo`, `read:org`), long-lived, account-wide access
+- **Fine-grained PATs**: Limited to specific repositories or organizations, shorter-lived, more secure
 
-## Steps Overview
+## Steps overview
 
 In this section, you will:
 
 1. **Create a personal access token** (classic or fine-grained).
-1. **Store the token** securely for later use in DevPortal.
-1. **Set the token as an environment variable** for immediate use in your terminal session.
+1. **Store the token** securely.
+1. **Wire the token into the portal configuration** so `integrations.github` uses it.
 
-By the end, you will have a GitHub personal access token ready for use as `GITHUB_PAT`.
+By the end, you will have a GitHub token that DevPortal uses for backend GitHub access.
 
-## Step 1: Create a Personal Access Token
+## Step 1: Create a personal access token
 
 There are two ways to create a personal access token on GitHub:
 
@@ -70,7 +65,7 @@ When creating the fine-grained token, select the test organization as the resour
 
 :::
 
-### Option 1: Create a Classic Access Token (Simplest Option) {#classic-pat}
+### Option 1: Create a classic access token (simplest option) {#classic-pat}
 
 1. Go to [New personal access token (classic)](https://github.com/settings/tokens/new).
 1. Fill out the form with the following:
@@ -79,11 +74,11 @@ When creating the fine-grained token, select the test organization as the resour
 
    - **Expiration:** This sets how long the token will remain valid. A recommended value is `90 days`, after which the token will expire automatically. This helps reduce security risks if the token is ever leaked.
 
-   - **Scopes:** These define what the token can do and which resources it can access. For DevPortal, select at least:
+   - **Scopes:** These define what the token can do and which resources it can access. Match them to the DevPortal features you enable:
 
-     - `repo` – Grants full access to your repositories, including reading and writing code, issues, pull requests, and repository settings. Required by the `github` preset.
+     - `repo` – Grants full access to your repositories, including reading and writing code, issues, pull requests, and repository settings. Needed for catalog discovery and scaffolder operations.
      - `workflow` – Allows the token to trigger and manage GitHub Actions workflows.
-     - `read:org` – Allows reading organization membership. Required by both the `github` and `github-auth` presets.
+     - `read:org` – Allows reading organization membership. Needed for organization and team sync.
 
 1. Click the `Generate token` button at the bottom of the page.
 
@@ -95,7 +90,7 @@ Only select the scopes you actually need. Limiting scopes improves security by r
 
 :::
 
-### Option 2: Create a Fine-grained Access Token (More Secure) {#fine-grained-pat}
+### Option 2: Create a fine-grained access token (more secure) {#fine-grained-pat}
 
 1.  Go to [New fine-grained personal access token](https://github.com/settings/personal-access-tokens/new).
 
@@ -158,23 +153,28 @@ After generating your GitHub token (classic or fine-grained), store it in a secu
 
     The key points are that you can always retrieve the token and that other people should never have access to it.
 
-## Step 3: Set the Environment Variable
+## Step 3: Wire the token into the portal configuration
 
-Set your GitHub token as `GITHUB_PAT` (note: V2 uses `GITHUB_PAT`, not `GITHUB_TOKEN`):
+The portal reads the token from the `integrations.github` configuration, with the value passed through an environment variable. Set `GITHUB_TOKEN` on the `devportal` service in a Compose override on the local stack:
 
-```bash
-export GITHUB_PAT=ghp_...
+```yaml
+services:
+  devportal:
+    environment:
+      GITHUB_TOKEN: ghp_your_token_here
 ```
 
-> Note: This variable will only persist for the current shell session. If you open a new terminal, you'll need to set it again or add it to your shell profile (~/.bashrc, ~/.zshrc, etc.) for longer-term use.
+On Kubernetes, store the token in the runtime Secret and reference it as `${GITHUB_TOKEN}` in the `integrations.github` block, following the `veecode-runtime-secrets` pattern in [Install DevPortal on Kubernetes](../../installation-guide/production-setup/setup.md).
 
-### Check GITHUB_PAT
+The `integrations.github` block that uses it is shown in [GitHub backend integrations](./github-integrations.md). Restart the portal so it loads the new value.
 
-Run the following command in the same terminal session:
+### Check the token
+
+Run the following command to confirm the token is valid:
 
 ```sh
 curl -s -o /dev/null -w "%{http_code}\n" \
-  -H "Authorization: Bearer $GITHUB_PAT" \
+  -H "Authorization: Bearer $GITHUB_TOKEN" \
   https://api.github.com/user
 ```
 
@@ -184,8 +184,4 @@ Expected output (example):
 200
 ```
 
-If the return code is `200`, the environment variable is set properly and contains a valid token.
-
----
-
-With your GitHub token created, securely stored, and available in your shell session as `GITHUB_PAT`, you're ready to configure DevPortal using the `github` or `github-auth` preset.
+If the return code is `200`, the token is valid. This check confirms the token works against GitHub; the portal also needs the `integrations.github` block above to use it.

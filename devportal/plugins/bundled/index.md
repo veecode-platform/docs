@@ -4,71 +4,41 @@ sidebar_label: Bundled Plugins
 title: Bundled Plugin Catalog
 ---
 
-# Bundled Plugin Catalog
+DevPortal 3.x ships 20 digest-pinned OCI plugins baked into the portal image. They install from the default plugin file (`dynamic-plugins.veecode.yaml`) without any entry in your values: 18 are enabled by default and 2 ship disabled. The [production setup guide](../../installation-guide/production-setup/setup.md#what-ships-by-default) lists the same set from the install side.
 
-DevPortal ships with a set of **preinstalled dynamic plugins** baked into the distro image. They are available immediately — no download or rebuild needed. Most are **disabled by default** and are enabled by adding an entry to `dynamic-plugins.yaml` (or via the Marketplace).
+## Default plugins
 
-A few core plugins (`preInstalled: true` in `dynamic-plugins.yaml`) are always loaded — they power the UI shell, navigation, and marketplace itself.
-
-Think of this catalog in terms of capability layers, not a flat install list. The always-on plugins establish the shell. The disabled-by-default plugins represent operational capabilities — CI/CD visibility, infrastructure observability, code quality — that your team activates based on what context-switches it wants to eliminate. Each plugin connects to a service entity via an annotation; the right question before enabling any plugin is "which entities will carry this annotation, and what does it replace for their developers?" See [Composing a Portal](/devportal/concepts/portal-composition) for the full three-layer model.
-
----
-
-## Always-on plugins (preInstalled, no YAML entry needed)
-
-These plugins are extracted into the image at build time with `preInstalled: true` and are active on every boot regardless of preset selection.
-
-| Plugin | Package | What it does |
+| Plugin | Status | Page |
 |---|---|---|
-| [Homepage](./homepage.md) | `veecode-platform-plugin-veecode-homepage-dynamic` | Customizable landing page at `/` |
-| [Global Header](./global-header.md) | `veecode-platform-plugin-veecode-global-header-dynamic` | Unified top navigation bar (search, notifications, profile) |
-| [About](./about.md) | `veecode-platform-backstage-plugin-about-dynamic` + `veecode-platform-backstage-plugin-about-backend-dynamic` | DevPortal version and instance info at `/about` |
-| Catalog Extensions Module | `red-hat-developer-hub-backstage-plugin-catalog-backend-module-extensions` | Registers Extension/Package/Collection entity kinds; reads `extensions-install.yaml` |
+| RHDH stock home page (superseded by the VeeCode home page) | Disabled | No page |
+| [VeeCode home page](./homepage.md) | Enabled | [Homepage](./homepage.md) |
+| [Global header and sidebar ordering](./global-header.md) | Enabled | [Global Header](./global-header.md) |
+| [RBAC screens](./rbac.md) | Enabled (permission checks are off by default) | [RBAC](./rbac.md) |
+| Legacy VeeCode theme (superseded by app-config branding) | Disabled | No page |
+| [About page](./about.md) | Enabled | [About](./about.md) |
+| About backend | Enabled | [About](./about.md) |
+| Extensions catalog provider (Marketplace loop) | Enabled | [Marketplace](./marketplace.md) |
+| Marketplace backend | Enabled | [Marketplace](./marketplace.md) |
+| Pending-changes install indicator | Enabled | [Pending Changes](./pending-changes.md) |
+| Marketplace UI at `/marketplace` | Enabled | [Marketplace](./marketplace.md) |
+| TechDocs frontend | Enabled | [TechDocs](../techdocs.md) |
+| TechDocs backend | Enabled | [TechDocs](../techdocs.md) |
+| TechDocs add-ons | Enabled | [TechDocs](../techdocs.md) |
+| [Notifications frontend](./notifications.md) | Enabled | [Notifications](./notifications.md) |
+| Signals frontend (notifications transport) | Enabled | No page |
+| Notifications backend | Enabled | [Notifications](./notifications.md) |
+| Signals backend | Enabled | No page |
+| [Tech Radar frontend](./tech-radar.md) | Enabled | [Tech Radar](./tech-radar.md) |
+| Tech Radar backend | Enabled | [Tech Radar](./tech-radar.md) |
 
----
+To turn off an enabled default plugin, add an override entry with the `{{inherit}}` tag and the full `!<plugin path>` part, plus `disabled: true`, as described in [Adding Plugins](../adding.md). Each plugin page below gives the override reference.
 
-## Enabled by the `recommended` preset
+## Plugins that moved to Marketplace
 
-These plugins are in the bundled catalog with `disabled: true` and are activated when the `recommended` preset is included in `VEECODE_PRESETS`. They are not unconditionally on.
+These pages from the 2.x bundled set are not default plugins in 3.x. They install from Marketplace or through a plugin entry:
 
-| Plugin | Package | What it does |
-|---|---|---|
-| [RBAC](./rbac.md) | `backstage-community-plugin-rbac` | Role-based access control UI at `/rbac` |
-| [Tech Radar](./tech-radar.md) | `backstage-community-plugin-tech-radar` + `backstage-community-plugin-tech-radar-backend` | Technology adoption radar at `/tech-radar` |
-| [Marketplace](./marketplace.md) | `devportal-marketplace-frontend-dynamic` + `devportal-marketplace-backend` | In-portal plugin discovery and enable/disable UI at `/marketplace` |
-| [Pending Changes](./pending-changes.md) | `devportal-pending-changes-dynamic` | Header badge indicating pending restart when plugins are enabled/disabled via Marketplace |
+- [Azure DevOps](./azure-devops.md): Marketplace plugin `azure-devops`.
+- [GitHub Actions](./github-actions.md): Marketplace plugin `github-actions`.
+- [Jenkins](./jenkins.md): Marketplace plugin `backstage-community-plugin-jenkins`.
 
----
-
-## Disabled-by-default plugins (bundled, require enabling)
-
-| Plugin | Package | What it does |
-|---|---|---|
-| [Kubernetes](../kubernetes.md) | `backstage-plugin-kubernetes` | Kubernetes workload viewer on entity pages |
-| [GitHub Actions](./github-actions.md) | `backstage-community-plugin-github-actions` | GitHub Actions run history on entity CI tab |
-| [Azure DevOps](./azure-devops.md) | `backstage-community-plugin-azure-devops` | Azure Pipelines and Pull Requests on entity pages |
-| [Jenkins](./jenkins.md) | `backstage-community-plugin-jenkins` + `backstage-community-plugin-jenkins-backend` | Jenkins build status on entity CI tab |
-| [SonarQube](../Sonar.md) | `backstage-community-plugin-sonarqube` + `backstage-community-plugin-sonarqube-backend` | Code quality metrics on entity overview and Code Quality tab |
-| Security Insights | `roadiehq-backstage-plugin-security-insights` | GitHub Dependabot alerts and security advisories |
-| GitHub Insights | `roadiehq-backstage-plugin-github-insights` | GitHub code insights on entity pages |
-| Global FAB | `red-hat-developer-hub-backstage-plugin-global-floating-action-button` | Configurable floating action button |
-
----
-
-## OCI-only plugins (not in distro image, enable via dynamic-plugins.yaml)
-
-These must be downloaded at startup from `quay.io/veecode`. See [Adding Plugins](../adding.md) for configuration details.
-
-| Plugin | OCI Reference |
-|---|---|
-| MCP Actions Backend | `oci://quay.io/veecode/backstage:bs_1.49.4!backstage-plugin-mcp-actions-backend` |
-| MCP Catalog Extras | `oci://quay.io/veecode/mcp-integrations:bs_1.49.4!red-hat-developer-hub-backstage-plugin-software-catalog-mcp-extras` |
-| MCP TechDocs Extras | `oci://quay.io/veecode/mcp-integrations:bs_1.49.4!red-hat-developer-hub-backstage-plugin-techdocs-mcp-extras` |
-| MCP Scaffolder Extras | `oci://quay.io/veecode/mcp-integrations:bs_1.49.4!red-hat-developer-hub-backstage-plugin-scaffolder-mcp-extras` |
-| MCP Chat Backend | `oci://quay.io/veecode/mcp-chat:bs_1.49.4!backstage-community-plugin-mcp-chat-backend` |
-| MCP Chat Frontend | `oci://quay.io/veecode/mcp-chat:bs_1.49.4!backstage-community-plugin-mcp-chat` |
-| GitLab Pipelines | `oci://quay.io/veecode/gitlab:bs_1.48.4!immobiliarelabs-backstage-plugin-gitlab` |
-
----
-
-For plugins not listed here (Grafana, Vault, Tech Insights, and others), see [Finding Plugins](../finding.md) and [Adding Plugins](../adding.md).
+For plugins not listed here (Grafana, SonarQube, Kubernetes, and others), see [Finding Plugins](../finding.md) and [Adding Plugins](../adding.md). Grafana is an installable package in the default plugin index but has no Marketplace card on 3.0.3: enable it with a plugin entry and set `grafana.domain` before the portal starts. The Vault plugin is not available in 3.x at all; see [Backstage Plugins](../plugins.md#plugins-that-are-not-available-in-3x).

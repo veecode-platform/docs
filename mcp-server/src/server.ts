@@ -81,37 +81,37 @@ const TOOLS = [
   },
 ] as const;
 
-export type DocsVersion = "v1" | "v2";
+export type DocsVersion = "v1" | "v2" | "v3";
 
-// Each docs version maps to its own bundled snapshot file and refresh URL. The
-// snapshots are built separately (see plugins/mcp-snapshot): mcp-snapshot.json is
-// the current/V2 tree, mcp-snapshot-v1.json is the frozen V1 tree. Binding the
-// refresh URL per-version means the auto-refresh can never pull the other
-// version's content — no cross-version drift.
+// Each docs version maps to its own bundled snapshot file and refresh URL, so
+// the refresh can never pull another version's content.
 const SNAPSHOT_SOURCES: Record<DocsVersion, { bundledFile: string; remoteUrl: string }> = {
   v1: {
     bundledFile: "snapshot-v1.json",
     remoteUrl: "https://docs.platform.vee.codes/mcp-snapshot-v1.json",
   },
   v2: {
+    bundledFile: "snapshot-v2.json",
+    remoteUrl: "https://docs.platform.vee.codes/mcp-snapshot-v2.json",
+  },
+  v3: {
     bundledFile: "snapshot.json",
     remoteUrl: "https://docs.platform.vee.codes/mcp-snapshot.json",
   },
 };
 
-// Default is v2: it is the current default docs version (the unified
-// devportal-platform image). Pass --version v1 (or VEECODE_DOCS_MCP_VERSION=v1)
-// for the prior split-image line.
+// v3 is built from the current DevPortal tree, so it is the default.
 export function resolveVersion(opt?: string): DocsVersion {
   const source = opt ?? process.env.VEECODE_DOCS_MCP_VERSION;
-  if (source == null) return "v2"; // default: the current docs line
+  if (source == null) return "v3";
   const raw = source.trim().toLowerCase();
   if (raw === "v1") return "v1";
   if (raw === "v2") return "v2";
+  if (raw === "v3") return "v3";
   // Fail closed: a typo'd or unexpected value must not silently serve the
   // wrong docs line. Surfaces via index.ts as a clean fatal + exit 1.
   throw new Error(
-    `Invalid docs version "${source}" — use "v1" or "v2" ` +
+    `Invalid docs version "${source}" — use "v1", "v2", or "v3" ` +
       `(via --version or VEECODE_DOCS_MCP_VERSION).`,
   );
 }
@@ -132,14 +132,23 @@ function defaultCacheDir(): string {
     : join(homedir(), ".cache", "veecode-docs-mcp");
 }
 
+// The cache keeps one snapshot per directory with no version field, so a shared
+// directory would let one version load a snapshot refreshed for another.
+function resolveCacheDir(version: DocsVersion, opt?: string | null): string | null {
+  if (opt === null) return null;
+  const cacheRoot = opt ?? process.env.VEECODE_DOCS_MCP_CACHE_DIR ?? defaultCacheDir();
+  return join(cacheRoot, version);
+}
+
 export interface CreateServerOptions {
   /**
-   * Docs version to serve: "v2" (default) or "v1" (prior split-image line).
+   * DevPortal docs version to serve: "v3" (default), "v2", or "v1".
    * Already-validated value — untrusted input (CLI/env) must pass through
    * resolveVersion() first.
    */
   version?: DocsVersion;
   bundledPath?: string;
+  /** Base directory for per-version cached snapshots. */
   cacheDir?: string | null;
   remoteUrl?: string | null;
   offline?: boolean;
@@ -153,10 +162,7 @@ export async function createServer(opts: CreateServerOptions = {}): Promise<{
   // (via resolveVersion) only when the caller didn't specify one.
   const version = opts.version ?? resolveVersion();
   const bundledPath = resolveBundledPath(version, opts.bundledPath);
-  const cacheDir =
-    opts.cacheDir === null
-      ? null
-      : opts.cacheDir ?? process.env.VEECODE_DOCS_MCP_CACHE_DIR ?? defaultCacheDir();
+  const cacheDir = resolveCacheDir(version, opts.cacheDir);
   const remoteUrl =
     opts.remoteUrl ??
     process.env.VEECODE_DOCS_MCP_SNAPSHOT_URL ??
@@ -219,7 +225,7 @@ export async function createServer(opts: CreateServerOptions = {}): Promise<{
   };
 }
 
-/** Parse `--version <v1|v2>` / `--version=<v1|v2>` from argv (CLI flag wins over env). */
+/** Parse `--version <v1|v2|v3>` / `--version=<v1|v2|v3>` from argv (CLI flag wins over env). */
 function parseVersionArg(argv: string[]): string | undefined {
   const eq = argv.find((a) => a.startsWith("--version="));
   if (eq) return eq.slice("--version=".length);

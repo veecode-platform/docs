@@ -1,0 +1,18 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: docs-site
+  description: >-
+    Public documentation site for the VeeCode platform. Documents the
+    charts distributed through next-charts; receives plugin-catalog-update
+    dispatches from the export pipeline.
+  annotations:
+    github.com/project-slug: veecode-platform/docs
+  tags: [docs]
+spec:
+  type: documentation
+  lifecycle: production
+  owner: group:default/veecode-platform
+  system: veecode-devportal
+  dependsOn:
+    - component:default/next-charts

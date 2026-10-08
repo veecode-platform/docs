@@ -8,6 +8,7 @@ on:
       - plugins/mcp-snapshot/**
       - schemas/**
       - devportal/**
+      - versioned_docs/**
       - platform/**
       - admin-ui/**
       - vkdr/**
@@ -42,9 +43,10 @@ jobs:
       - name: Copy snapshots into mcp-server/bundled/
         run: |
           mkdir -p mcp-server/bundled
-          # V2 (current tree) and V1 (frozen) snapshots ship bundled so both
-          # `--version` selections work offline. Fail loudly if either is missing.
+          # V3 (current tree), V2, and V1 snapshots ship bundled so every
+          # `--version` selection works offline. Fail loudly if any is missing.
           cp build/mcp-snapshot.json mcp-server/bundled/snapshot.json
+          cp build/mcp-snapshot-v2.json mcp-server/bundled/snapshot-v2.json
           cp build/mcp-snapshot-v1.json mcp-server/bundled/snapshot-v1.json
       - name: Build MCP server
         run: yarn mcp:build

@@ -6,17 +6,20 @@ title: Observability Dashboard
 
 This page explains how to configure the Grafana plugin in DevPortal and what catalog annotations are required to surface observability data on entity pages.
 
-DevPortal does **not** embed Prometheus, Jaeger, or Loki directly. Instead, it integrates with externally-deployed instances of these tools through the Grafana plugin and catalog entity annotations.
+DevPortal does **not** embed Prometheus directly. Instead, it integrates with an externally-deployed Grafana instance through the Grafana plugin and catalog entity annotations.
 
 ---
 
 ## **Setting Up the Grafana Plugin**
 
-The Grafana plugin is not bundled in the default image. Add it to your `dynamic-plugins.yaml` as an external plugin. Refer to the [Grafana plugin guide](/devportal/plugins/grafana) for the full plugin package reference and configuration.
+The Grafana plugin is not a default plugin and has no Marketplace entry. Install it from the default plugin index by its package reference. Refer to the [Grafana plugin guide](../plugins/grafana.md) for the package reference and the tested local-stack example.
 
-At minimum, configure the Grafana proxy in your app-config:
+At minimum, configure the Grafana domain and proxy endpoint in your app config:
 
 ```yaml
+grafana:
+  domain: ${GRAFANA_DOMAIN}
+
 proxy:
   endpoints:
     /grafana/api:
@@ -24,10 +27,9 @@ proxy:
       headers:
         Authorization: Bearer ${GRAFANA_TOKEN}
       changeOrigin: true
-
-grafana:
-  domain: https://your-grafana-instance.example.com
 ```
+
+Set `grafana.domain` before you start the stack. Without it, the backend logs `Config must have required property 'domain'` at `/grafana`, but the healthcheck still returns 200 and the plugin still loads. Pass the secrets through environment variables on the local stack or a referenced Secret on Kubernetes.
 
 ---
 
@@ -40,7 +42,7 @@ To enable observability panels on an entity page, add the following annotations 
 ```yaml
 metadata:
   annotations:
-    grafana/dashboard-selector: "title @> 'My Service'"
+    grafana/overview-dashboard: "my-service-overview"
 ```
 
 ### Grafana Alert Status Panel
@@ -51,26 +53,19 @@ metadata:
     grafana/alert-label-selector: "service=my-service"
 ```
 
-### External Trace Links (Jaeger)
+Each card renders on the entity overview page only when its annotation is present.
 
-Jaeger traces are surfaced as external links — clicking opens Jaeger in a new browser tab:
+### External Trace and Log Links
 
-```yaml
-metadata:
-  annotations:
-    jaeger/service-name: my-service
-```
-
-*(Exact annotation keys depend on which Jaeger/tracing annotation plugin you have enabled.)*
-
-### External Log Links (Loki)
-
-Loki logs are surfaced as external links to the Grafana Explore view:
+Trace and log tools are surfaced as external entity links — clicking opens the tool in a new browser tab:
 
 ```yaml
 metadata:
-  annotations:
-    grafana/tag-filter: "service=my-service"
+  links:
+    - url: https://jaeger.example.com/search?service=my-service
+      title: Jaeger traces
+    - url: https://grafana.example.com/explore?orgId=1&left=%7Bservice%3D%22my-service%22%7D
+      title: Logs in Grafana Explore
 ```
 
 ---
@@ -78,15 +73,15 @@ metadata:
 ## **Accessing the Observability Data**
 
 1. **Navigate to the Catalog:** Select the component you want to observe.
-2. **Open the entity page:** Look for the Grafana plugin tab or cards in the Overview section.
-3. **Metrics view:** Grafana dashboards matching the `dashboard-selector` annotation are displayed inline.
+2. **Open the entity page:** Look for the Grafana dashboards and alerts cards in the Overview section.
+3. **Metrics view:** The Grafana dashboard matching the `overview-dashboard` annotation is displayed inline.
 4. **Alert status:** Alert panels matching the `alert-label-selector` annotation show current alert state.
-5. **Trace/Log links:** If trace or log annotations are configured, links appear on the entity page that open the respective tools in your browser.
+5. **Trace/Log links:** If entity links are configured, they appear on the entity page and open the respective tools in your browser.
 
 ---
 
 :::info External tools required
-The Grafana, Prometheus, Loki, and Jaeger instances must be separately deployed and accessible to both DevPortal's backend (for API calls) and end users' browsers (for direct links). DevPortal does not provision or manage these services.
+The Grafana and Prometheus instances must be separately deployed and accessible to both DevPortal's backend (for API calls) and end users' browsers (for direct links). DevPortal does not provision or manage these services.
 :::
 
-For more on the plugin, see the [Grafana Plugin guide](/devportal/plugins/grafana).
+For more on the plugin, see the [Grafana plugin guide](../plugins/grafana.md).

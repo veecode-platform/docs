@@ -6,53 +6,42 @@ title: GitHub Actions Plugin
 
 # GitHub Actions Plugin
 
-Without this plugin, CI history lives only in GitHub — the developer has to leave the portal to check whether a build passed or trace a failed run back to a commit. Enable the plugin, add `github.com/project-slug` to the entity, and a CI tab appears showing recent Actions run history with status, duration, and direct links to logs. Build health becomes part of the service's entity, not a separate GitHub tab.
+Without this plugin, CI history lives only in GitHub: you leave the portal to check whether a build passed or trace a failed run back to a commit. Enable the plugin, add `github.com/project-slug` to the entity, and a CI card appears showing recent Actions run history with status, duration, and direct links to logs.
 
-The GitHub Actions plugin displays GitHub Actions workflow run history in the CI tab of catalog entities. It is the standard Backstage community plugin for GitHub Actions integration.
+The GitHub Actions plugin displays GitHub Actions workflow run history on catalog entities. It is the standard Backstage community plugin for GitHub Actions integration.
 
-**Status:** Listed in `dynamic-plugins.default.yaml` (reference) as `disabled: true`. Fetched from the OCI registry at boot when enabled — no image rebuild needed. Activated automatically by the `github` preset.
+**Status:** Not a default plugin. Install it from Marketplace (plugin `github-actions`) or with a plugin entry.
 
 ---
 
 ## Package
 
-`backstage-community-plugin-github-actions`
+`backstage-community-plugin-github-actions` (frontend: entity CI card)
 
 ---
 
 ## What it does
 
-- Adds a **CI** tab to entity pages showing recent GitHub Actions workflow runs
+- Adds a **CI** card to entity pages showing recent GitHub Actions workflow runs
 - Displays run status, duration, branch, and commit
 - Links to the GitHub Actions run for logs and details
 - Shows only for entities with the `github.com/project-slug` annotation
 
 ---
 
-## Enabling the plugin
+## Install it
 
-The simplest path is to add the `github` preset to `VEECODE_PRESETS` — it enables the GitHub Actions plugin along with the rest of the GitHub integration. See [Presets](/devportal/concepts/presets) for details.
+In Marketplace, search for `github-actions`, select **Install**, and restart the stack as described in [Adding Plugins](../adding.md).
 
-To enable manually, add the following to your `dynamic-plugins.yaml`:
+Alternatively, add the digest-pinned reference from the default plugin index under `global.dynamic.plugins` on Kubernetes, or in the operator plugin file on the local stack:
 
 ```yaml
 plugins:
-  - package: oci://${PLUGIN_REGISTRY}/github-actions:bs_1.48.4!backstage-community-plugin-github-actions
+  - package: oci://quay.io/veecode/backstage-community-plugin-github-actions@sha256:fe9cea3a11097339f85bab0bf095ecf1dc95b972194d41e4c9ca0e34c85ecebd
     disabled: false
-    pluginConfig:
-      dynamicPlugins:
-        frontend:
-          backstage-community.plugin-github-actions:
-            mountPoints:
-              - mountPoint: entity.page.ci/cards
-                importName: EntityGithubActionsContent
-                config:
-                  layout:
-                    gridColumn: "1 / -1"
-                  if:
-                    allOf:
-                      - isGithubActionsAvailable
 ```
+
+The index supplies the frontend mount point (`EntityGithubActionsContent` on `entity.page.ci/cards`, shown when `isGithubActionsAvailable` is true).
 
 ---
 
@@ -64,15 +53,19 @@ metadata:
     github.com/project-slug: my-org/my-repo
 ```
 
+The [upstream plugin README](https://github.com/backstage/community-plugins/tree/main/workspaces/github/plugins/github-actions) documents this annotation key and the card views it enables.
+
 ---
 
 ## GitHub integration
 
-The plugin uses `integrations.github` in `app-config.yaml`. Ensure a GitHub token or GitHub App is configured:
+The plugin calls the GitHub API, so the portal needs GitHub credentials. Configure a GitHub integration in app configuration:
 
 ```yaml
 integrations:
   github:
     - host: github.com
-      token: ${GITHUB_PAT}
+      token: ${GITHUB_TOKEN}
 ```
+
+Place this under `upstream.backstage.appConfig` in the chart values, or in the custom configuration fragment on the local stack. For GitHub sign-in through an OAuth app, the upstream README also shows the `auth.providers.github` settings.

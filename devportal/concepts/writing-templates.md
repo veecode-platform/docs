@@ -6,7 +6,9 @@ title: Writing Templates
 
 # Writing Templates
 
-This guide covers how to **author** a Backstage software template — the YAML entity that drives the scaffolder wizard. It assumes you know how to run a template as a developer. If you're looking to use existing templates, see [Software Templates](./software-template).
+This guide covers how to **author** a Backstage software template — the YAML entity that drives the scaffolder wizard. It assumes you know how to run a template as a developer. If you want to run templates, see [Software Templates](./software-template.md).
+
+Template steps may only invoke actions your portal has. A default install has the 16 actions listed in [Available Actions](./available-actions.md); every example on this page uses only those, so each one runs on a default install.
 
 ---
 
@@ -18,13 +20,13 @@ A template is a catalog entity of `kind: Template`. When the scaffolder backend 
 2. It executes a sequence of steps from `spec.steps`
 3. It shows links and text from `spec.output`
 
-The template YAML lives in a Git repository. You register it by pointing a `catalog.locations` entry in `app-config.yaml` at it.
+The template YAML lives in a Git repository beside its skeleton directory. You register it by pointing a `catalog.locations` entry at it.
 
 ---
 
 ## Registering a template
 
-Add a location entry to your `app-config.yaml` (or any config layer that is loaded at startup):
+On the local stack, add a file or URL location to the custom configuration fragment, as described in [Add catalog entities](../installation-guide/docker-local/custom-catalog.md):
 
 ```yaml
 catalog:
@@ -35,16 +37,7 @@ catalog:
         - allow: [Template]
 ```
 
-For files inside the container (e.g., baked into the image at `/app/examples/`):
-
-```yaml
-catalog:
-  locations:
-    - type: file
-      target: /app/examples/my-template/template.yaml
-      rules:
-        - allow: [Template]
-```
+On Kubernetes, set `catalog.locations` in the chart values under `upstream.backstage.appConfig`. A list in a later configuration file replaces the same list from an earlier file, so repeat every location you want to keep.
 
 ---
 
@@ -59,7 +52,7 @@ metadata:
   name: my-template        # unique ID — used in URLs and entity refs
   title: My Template       # display name shown in the template catalog
   description: Does X      # one-line summary shown in the catalog card
-  tags: [github, nodejs]   # used for filtering in the UI
+  tags: [docs, static]     # used for filtering in the UI
 spec:
   owner: group:default/platform-team
   type: service            # category label (service, website, library, etc.)
@@ -68,8 +61,6 @@ spec:
   steps: []        # defines what runs when the user clicks Create
   output: {}       # defines the links and text shown after completion
 ```
-
-Source: [Backstage — Writing Templates](https://backstage.io/docs/features/software-templates/writing-templates)
 
 ---
 
@@ -89,7 +80,7 @@ parameters:
       name:
         title: Service name
         type: string
-        description: Unique name — used for the repo and catalog entry
+        description: Unique name — used for the catalog entry
         ui:autofocus: true
       owner:
         title: Owner
@@ -116,23 +107,18 @@ These fields render specialized widgets instead of plain text inputs:
 
 | `ui:field` | What it renders | Key `ui:options` |
 |---|---|---|
-| `RepoUrlPicker` | Git repo selector (provider + org + repo name) | `allowedHosts`, `allowedOwners` |
 | `OwnerPicker` | Catalog entity picker pre-filtered to owners | `catalogFilter` |
 | `EntityPicker` | Any catalog entity picker | `catalogFilter`, `allowArbitraryValues` |
 
 ```yaml
-repoUrl:
-  title: Repository location
+owner:
+  title: Owner
   type: string
-  ui:field: RepoUrlPicker
+  ui:field: OwnerPicker
   ui:options:
-    allowedHosts:
-      - github.com
-    allowedOwners:
-      - my-org
+    catalogFilter:
+      kind: [Group, User]
 ```
-
-Source: [Backstage — Writing Templates](https://backstage.io/docs/features/software-templates/writing-templates)
 
 ### Enum with friendly labels
 
@@ -173,13 +159,11 @@ parameters:
                   type: string
 ```
 
-Source: [Backstage — Input examples](https://backstage.io/docs/features/software-templates/input-examples)
-
 ---
 
 ## Steps
 
-`spec.steps` is an array of action invocations executed in order.
+`spec.steps` is an array of action invocations executed in order. Each `action` must be an ID from [Available Actions](./available-actions.md).
 
 ### Basic step
 
@@ -204,43 +188,41 @@ input:
 # Reference a previous step's output
 # Use bracket notation when the step ID contains a dash
 input:
-  repoContentsUrl: ${{ steps['publish'].output.repoContentsUrl }}
+  entityRef: ${{ steps['fetch-owner'].output.entity.metadata.name }}
 
 # Shorthand when the step ID has no dashes
 input:
-  ref: ${{ steps.register.output.entityRef }}
+  message: Fetched ${{ steps.fetchOwner.output.entity.metadata.name }}
 ```
 
-Source: [Backstage — Writing Templates](https://backstage.io/docs/features/software-templates/writing-templates)
+The `catalog:fetch` action returns the fetched entity as `output.entity`, which later steps can read this way.
 
 ### Conditional execution
 
 A step only runs when its `if:` expression evaluates to truthy:
 
 ```yaml
-- id: publish-github
-  name: Publish to GitHub
-  if: ${{ parameters.provider === 'github' }}
-  action: publish:github
+- id: log-name
+  name: Log the service name
+  if: ${{ parameters.environment === 'prod' }}
+  action: debug:log
   input:
-    repoUrl: ${{ parameters.repoUrl }}
+    message: Creating production service ${{ parameters.name }}
 
-- id: register
-  name: Register in catalog
-  if: ${{ parameters.provider !== 'local' }}
-  action: catalog:register
+- id: remove-dev-notes
+  name: Remove developer notes
+  if: ${{ parameters.environment !== 'dev' }}
+  action: fs:delete
   input:
-    repoContentsUrl: ${{ steps['publish-github'].output.repoContentsUrl }}
-    catalogInfoPath: /catalog-info.yaml
+    files:
+      - NOTES-dev.md
 ```
 
 The `if:` field accepts any expression using `===`, `!==`, `!`, `and`, `or`, and `${{ parameters.* }}` or `${{ steps.*.output.* }}` references.
 
-Source: [Backstage — Writing Templates](https://backstage.io/docs/features/software-templates/writing-templates)
-
 ### Iteration with `each:`
 
-Repeat a step for each item in an array:
+Repeat a step for each item in an array. The parent directory in `targetPath` must already exist in the workspace, because `fetch:plain:file` does not create it:
 
 ```yaml
 - id: fetch-per-env
@@ -249,7 +231,7 @@ Repeat a step for each item in an array:
   action: fetch:plain:file
   input:
     url: ./configs/${{ each.value }}.yaml
-    targetPath: config/${{ each.value }}.yaml
+    targetPath: fetched-${{ each.value }}.yaml
 ```
 
 For arrays of objects, use `${{ each.value.fieldName }}`:
@@ -260,10 +242,8 @@ For arrays of objects, use `${{ each.value.fieldName }}`:
   action: fetch:plain:file
   input:
     url: ./templates/${{ each.value.language }}.yaml
-    targetPath: services/${{ each.value.name }}.yaml
+    targetPath: service-${{ each.value.name }}.yaml
 ```
-
-Source: [Backstage — Writing Templates](https://backstage.io/docs/features/software-templates/writing-templates)
 
 ---
 
@@ -273,65 +253,53 @@ Source: [Backstage — Writing Templates](https://backstage.io/docs/features/sof
 
 ```yaml
 output:
-  links:
-    - title: Repository
-      url: ${{ steps['publish'].output.remoteUrl }}
-    - title: Open in catalog
-      icon: catalog
-      entityRef: ${{ steps['register'].output.entityRef }}
-    - if: ${{ parameters.provider === 'github' }}
-      title: GitHub Actions
-      url: ${{ steps['publish'].output.remoteUrl }}/actions
   text:
     - title: Next steps
       content: |
-        Your service is live. Push your first commit to trigger the CI pipeline.
+        Your service files are ready. Register the written catalog-info.yaml
+        through a catalog location to see the component in the catalog.
 ```
 
 ---
 
 ## Complete example
 
-A template that creates a Node.js service on GitHub, registers it in the catalog, and notifies the owner. Based directly on the [template-nodejs example](https://github.com/veecode-platform/devportal-base/blob/main/examples/template-nodejs/template.yaml) that ships with VeeCode DevPortal.
+A template that scaffolds a static documentation site from a skeleton directory, writes its `catalog-info.yaml`, and logs a summary. It uses only default actions (`fetch:template`, `catalog:write`, `debug:log`), so it runs on a default install. The template repo holds `template.yaml` beside a `content/` skeleton directory.
 
 ```yaml
 apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
-  name: example-nodejs-template
-  title: Node.js Service
-  description: Creates a Node.js repo on GitHub and registers it in the catalog
-  tags: [github, nodejs]
+  name: example-docs-site
+  title: Documentation Site
+  description: Scaffolds a docs site and writes its catalog entry
+  tags: [docs, static]
 spec:
   owner: group:default/platform-team
-  type: service
+  type: website
 
   parameters:
-    - title: About your service
+    - title: About your site
       required:
         - name
+        - owner
       properties:
         name:
           title: Name
           type: string
           description: Unique name of the component
           ui:autofocus: true
-
-    - title: Repository location
-      required:
-        - repoUrl
-      properties:
-        repoUrl:
-          title: Repository location
+        owner:
+          title: Owner
           type: string
-          ui:field: RepoUrlPicker
+          ui:field: OwnerPicker
           ui:options:
-            allowedHosts:
-              - github.com
+            catalogFilter:
+              kind: [Group, User]
 
   steps:
     # 1. Copy the skeleton files from ./content in this template's repo,
-    #    substituting ${{ values.name }} throughout file contents and paths.
+    #    substituting values throughout file contents and paths.
     - id: fetch-base
       name: Fetch skeleton
       action: fetch:template
@@ -340,48 +308,39 @@ spec:
         values:
           name: ${{ parameters.name }}
 
-    # 2. Create the GitHub repo and push the workspace content.
-    #    The output.repoContentsUrl and output.remoteUrl are used by later steps.
-    - id: publish
-      name: Publish to GitHub
-      action: publish:github
+    # 2. Write the catalog descriptor for the new component.
+    - id: write-catalog
+      name: Write catalog entry
+      action: catalog:write
       input:
-        description: This is ${{ parameters.name }}
-        repoUrl: ${{ parameters.repoUrl }}
-        defaultBranch: main
+        entity:
+          apiVersion: backstage.io/v1alpha1
+          kind: Component
+          metadata:
+            name: ${{ parameters.name }}
+            annotations: {}
+          spec:
+            type: website
+            lifecycle: experimental
+            owner: ${{ parameters.owner }}
 
-    # 3. Register a Location entity pointing at the new catalog-info.yaml,
-    #    making the component immediately visible in the catalog.
-    - id: register
-      name: Register in catalog
-      action: catalog:register
+    # 3. Log a summary line in the execution log.
+    - id: log-done
+      name: Log summary
+      action: debug:log
       input:
-        repoContentsUrl: ${{ steps['publish'].output.repoContentsUrl }}
-        catalogInfoPath: /catalog-info.yaml
-
-    # 4. Send a notification to the user:default/guest entity.
-    #    Change entityRefs to the actual owner entity ref in your org.
-    - id: notify
-      name: Notify
-      action: notification:send
-      input:
-        recipients: entity
-        entityRefs:
-          - user:default/guest
-        title: Template executed
-        info: Your template has been executed
-        severity: normal
+        message: Scaffolded ${{ parameters.name }} for ${{ parameters.owner }}
 
   output:
-    links:
-      - title: Repository
-        url: ${{ steps['publish'].output.remoteUrl }}
-      - title: Open in catalog
-        icon: catalog
-        entityRef: ${{ steps['register'].output.entityRef }}
+    text:
+      - title: Next steps
+        content: |
+          The site files and catalog-info.yaml are in the workspace.
+          Register the catalog-info.yaml through a catalog location
+          to see the component in the catalog.
 ```
 
-To add more integrations, insert steps between `register` and `notify`. Each new step can use `${{ steps['publish'].output.remoteUrl }}` or `${{ parameters.* }}` as inputs. See [Available Actions](./available-actions) for the full list.
+To publish the result to a repository, add a publish step from a Marketplace scaffolder module (for example `github-scaffolder-actions`) and a `catalog:register` step after it. See [Available Actions](./available-actions.md) for the module list.
 
 ---
 
@@ -389,6 +348,6 @@ To add more integrations, insert steps between `register` and `notify`. Each new
 
 - [Backstage: Writing Templates](https://backstage.io/docs/features/software-templates/writing-templates) — upstream canonical reference
 - [Backstage: Input examples](https://backstage.io/docs/features/software-templates/input-examples) — parameter patterns and conditional fields
-- [Available Actions](./available-actions) — all pre-registered actions in VeeCode
-- [Custom Action](../plugins/development/custom-action) — write your own action in TypeScript when nothing in the list fits
-- [Software Templates](./software-template) — user guide for running templates
+- [Available Actions](./available-actions.md) — the 16 actions on a default install
+- [Custom Action](../plugins/development/custom-action.md) — write your own action in TypeScript when nothing in the list fits
+- [Software Templates](./software-template.md) — user guide for running templates

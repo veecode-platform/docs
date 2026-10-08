@@ -8,121 +8,68 @@ Frontend plugins must be wired to the DevPortal instance configuration during dy
 
 ## Understand Frontend Plugin Wiring
 
-All frontend plugins **must** bring their own settings in the `pluginConfig:` field, thus defining routes, sidebars, mount points, icons, APIs, etc.
+All frontend plugins **must** bring their own settings in the `pluginConfig:` field of their plugin entry, thus defining routes, sidebars, mount points, icons, APIs, etc.
 
-The sample frontend plugin we have just built and [packaged](packaging.md) defined a page and a sidebar link, so it can be wired to DevPortal by a configuration like the one below:
+The sample frontend plugin built in [Example: Frontend Plugin](./frontend-plugin.md) defines a page and a sidebar link, so it is wired to DevPortal by a configuration like the one below:
 
 ```yaml
 plugins:
-  - package: '@your-org/plugin-my-front-plugin-dynamic@x.y.z'
+  - package: ./dynamic-plugins/dist/internal-backstage-plugin-my-front-plugin-dynamic
     disabled: false
-    integrity: sha512-xxxxxxxxx
     pluginConfig:
       dynamicPlugins:
         frontend:
-          your-org.plugin-my-front-plugin:
+          internal.backstage-plugin-my-front-plugin:
             dynamicRoutes:
               - path: /my-front-plugin
                 importName: MyFrontPluginPage
                 menuItem:
-                  icon: SomeIcon
+                  icon: LibraryBooks
                   text: My Plugin Page
                   enabled: true
 ```
 
-## Testing with VKDR
+The plugin id under `dynamicPlugins.frontend.<plugin-id>` is the npm package name with `@` removed and `/` replaced by `.`. The `package` value above is the local export path used during development. A published plugin uses its OCI reference instead. See [Loading a Dynamic Plugin](./loading.md) and [Configure dynamic plugins for the local stack](../../installation-guide/docker-local/custom-plugins.md) for the entry shapes.
 
-:::note VKDR is a Helm-based local-dev path, not the V2 format
-The `vkdr devportal install --merge` flow below uses VKDR's Helm values format (`global.dynamic.plugins`), which is **not** the V2 install/override format. It still works as a local sandbox for exercising frontend wiring, but the V2 way to test a plugin locally is to mount your `dynamic-plugins.yaml` (a flat top-level `plugins:` list) into the [Docker](../../installation-guide/docker-local/custom-plugins.md) or Kubernetes deployment and restart — see [Adding Plugins](../adding.md).
-:::
+## Routes, menu entries, and mount points
 
-Our [local DevPortal setup](../../installation-guide/vkdr-local/vkdr-setup.md) using `vkdr` can be used to validate locally the wiring of a dynamic frontend plugin.
-
-### Steps
-
-What you need:
-
-- A local npm registry (run [Verdaccio](https://verdaccio.org/) at local port 4873)
-- Publish the frontend plugin to Verdaccio (as described [here](/devportal/plugins/development/packaging#publish-a-dynamic-plugin))
-- Obtain the SHA integrity signature of the published plugin
-- A local `vkdr` cluster with DevPortal properly installed - check the [local DevPortal setup](../../installation-guide/vkdr-local/vkdr-setup.md) guide for more info.
-
-### Verdaccio
-
-To start a local Verdaccio registry you may run:
-
-```bash
-verdaccio -l 0.0.0.0:4873
-```
-
-Do not forget to [package and publish the frontend plugin to Verdaccio](/devportal/plugins/development/packaging#publish-a-dynamic-plugin).
-
-### Signature
-
-To obtain the integrity signature of the published plugin you may run (replace `@your-org/plugin-my-front-plugin-dynamic@x.y.x` with your plugin name):
-
-```bash
-npm view @your-org/plugin-my-front-plugin-dynamic@x.y.z --registry http://localhost:4873 dist.integrity
-```
-
-:::important
-The integrity signature is a SHA512 hash of the plugin package. It is required for the dynamic plugin to be loaded.
-:::
-
-### VKDR Infra Up
-
-To start a local `vkdr` cluster you may run:
-
-```bash
-vkdr infra up
-```
-
-### VKDR DevPortal Setup
-
-You can provide `vkdr devportal` command a complimentary YAML file containing the configuration for the dynamic plugin you have just published to Verdaccio. Create a file named `merge-dynamic.yaml` with the following content:
+`dynamicRoutes` is one of several `dynamicPlugins.frontend.<plugin-id>` keys the loader understands. Use them to make each part of the plugin appear. The example assumes the plugin also exports an icon, `MyPluginIcon`, and an entity card, `MyFrontPluginCard`; the scaffolded plugin exports only `MyFrontPluginPage`:
 
 ```yaml
-global:
-  dynamic:
-    plugins:
-      - package: '@your-org/plugin-my-front-plugin-dynamic@x.y.z'
-        disabled: false
-        integrity: sha512-xxxxxxxxx
-        pluginConfig:
-          dynamicPlugins:
-            frontend:
-              your-org.plugin-my-front-plugin:
-                dynamicRoutes:
-                  - path: /my-front-plugin
-                    importName: MyFrontPluginPage
-                    menuItem:
-                      icon: LibraryBooks
-                      text: My Plugin Page
-                      enabled: true
+pluginConfig:
+  dynamicPlugins:
+    frontend:
+      internal.backstage-plugin-my-front-plugin:
+        appIcons:
+          - name: myPluginIcon
+            importName: MyPluginIcon
+        dynamicRoutes:
+          - path: /my-front-plugin
+            importName: MyFrontPluginPage
+            menuItem:
+              icon: myPluginIcon
+              text: My Plugin Page
+              enabled: true
+        entityTabs:
+          - path: /my-front-plugin-tab
+            title: My Plugin
+            mountPoint: entity.page.my-front-plugin
+        mountPoints:
+          - mountPoint: entity.page.overview/cards
+            importName: MyFrontPluginCard
 ```
 
-Notice this config is equivalent to the static wiring we did in the [frontend plugin](frontend-plugin.md#wire-the-plugin-into-backstage) guide, enabling a route and a sidebar link.
+Before assuming a customization is not possible, check whether it is exposed as one of these keys rather than requiring a fork. The wiring surface is broader than any single plugin's configuration shows: `mountPoints` places cards on entity pages, `entityTabs` adds tabs, and `appIcons` registers icons the menu items reference.
 
-To start `vkdr` and install DevPortal you may run (you need a valid Github token):
+## Test the wiring locally
+
+Export the workspace and load it in devportal-local, as described in [Creating Your Own Plugin](./creating-own-plugins.md):
 
 ```bash
-vkdr infra up
-vkdr devportal install --github-token $GITHUB_TOKEN \
-  --samples --npm "http://host.k3d.internal:4873" \
-  --merge ./merge-dynamic.yaml
+yarn dev:dynamic
 ```
 
-:::note
-This command installs DevPortal with the extra plugin wiring. It also installs a few sample apps and configures DevPortal to rely on Verdaccio as an external npm registry.
-
-This is the **V1** `vkdr devportal install` command (Helm-values `--merge` format), used here only as a quick local sandbox to exercise frontend wiring. To install DevPortal V2, use `vkdr devportal-platform install --github-pat ...` — see [Deployment](../../installation-guide/vkdr-local/deployment.md).
-:::
-
-### Open DevPortal (VKDR)
-
-The local installation of DevPortal should be available at `http://devportal.localhost:8000`.
-
-![VKDR DevPortal with Dynamic Frontend Plugin](/img/assets/devportal-dyn-plugin.png)
+Then run the printed Compose command from the devportal-local checkout, open the configured route in the browser, and confirm the sidebar item. If the package is absent from the UI, check `http://localhost:7007/api/dynamic-plugins-info/loaded-plugins` to see whether it loaded.
 
 ## Additional Documentation
 

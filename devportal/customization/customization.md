@@ -4,18 +4,11 @@ sidebar_label: Customizing DevPortal
 title: Customizing DevPortal
 ---
 
-VeeCode DevPortal follows Backstage's standards for customizing the UI and adds a few extra options:
+DevPortal ships with the VeeCode brand applied through native Red Hat Developer Hub settings. Change the look and feel with these pages:
 
-- **Simple branding:** there is an entire branding section under `app.branding` in the app configuration that lets you pick one of the pre-defined theme variants and its light/dark options, allowing you to customize every aspect of the theme. Place these settings in `app-config.local.yaml` (mounted at `/app/app-config.local.yaml`).
+- **Brand and colors:** [Simple branding](./branding.md) sets the title, logos, logo width, and the light and dark theme palettes through `app.branding`. Start here; it covers most branding needs.
+- **Theme palettes:** [Custom theme](./custom-theme.md) explains the `app.branding.theme` structure both modes share and what the disabled legacy theme plugin means for you.
+- **Home page:** [Custom home plugin](./custom-home.md) configures or replaces the default home page.
+- **Header:** [Custom header plugin](./custom-header.md) changes the shared header and sidebar menu items.
 
-- **Theme overrides via environment variables:** the `THEME_CUSTOM_JSON` and `THEME_DOWNLOAD_URL` environment variables allow low-level JSON overrides of the internal theme file — see [Theme overrides](./theme-hack.md) for details. For most use cases, the `app.branding.theme.*` mechanism above is sufficient and preferred.
-
-- **Custom home page plugin:** the entire home page can be customized by replacing the default homepage dynamic plugin with your own. See [Custom home plugin](./custom-home.md).
-
-- **Custom header plugin:** the header shared by all pages can also be customized as a dynamic plugin. See [Custom header plugin](./custom-header.md).
-
-:::note
-The custom home and custom header techniques described in those pages apply equally in V2. Any V2-specific differences (preset wiring, OCI references) are noted inline on each page.
-:::
-
-Usually the branding option is all you need to customize the look and feel of your DevPortal. If you need to go beyond that, you can use the custom theme hacking option or even create a custom plugin if you are feeling brave.
+On the local stack, each change is a configuration fragment that loads last in the `--config` chain, as described in [Add configuration to the local stack](../installation-guide/docker-local/custom-config.md). On Kubernetes, each change is chart values, as described in [Set up DevPortal on a cluster](../installation-guide/production-setup/setup.md). A later file wins over an earlier one, and a list in a later file replaces the same list instead of merging with it, so restate every list entry you want to keep.

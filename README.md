@@ -13,17 +13,20 @@ This website is built using [Docusaurus 3](https://docusaurus.io/), a modern sta
 
 The documentation is also available to CLI coding agents (Claude Code, Codex, Cursor) as an MCP server — [`@veecode-platform/docs-mcp`](mcp-server/README.md) — so an agent can search and read the docs without leaving the terminal.
 
-It serves **one DevPortal docs version per instance** (it never mixes V1 and V2):
+It serves **one DevPortal docs version per instance** (it never mixes versions), defaulting to **v3**:
 
 ```bash
-# V2 (default — the unified veecode/devportal / presets release)
+# V3 (default — the DevPortal 3.x docs)
 claude mcp add veecode-docs --scope user -- npx -y @veecode-platform/docs-mcp
 
-# V1 (the prior split-image / profiles release)
+# V2 (the DevPortal 2.x docs)
+claude mcp add veecode-docs-v2 --scope user -- npx -y @veecode-platform/docs-mcp --version v2
+
+# V1 (the V1 docs)
 claude mcp add veecode-docs-v1 --scope user -- npx -y @veecode-platform/docs-mcp --version v1
 ```
 
-`platform`, `admin-ui`, and `vkdr` docs are version-neutral and present in both. Full setup (Codex CLI, manual `~/.mcp.json`, global install, env vars, the exposed tools, and how the snapshot stays fresh) is in the **[MCP server README](mcp-server/README.md)**.
+`platform`, `admin-ui`, and `vkdr` docs are version-neutral and present in all three. Full setup (Codex CLI, manual `~/.mcp.json`, global install, env vars, the exposed tools, and how the snapshot stays fresh) is in the **[MCP server README](mcp-server/README.md)**.
 
 ## Development Workflow
 

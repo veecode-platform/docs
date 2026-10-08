@@ -6,7 +6,7 @@ title: SonarQube
 
 # SonarQube Plugin
 
-Without this plugin, code quality is a concern that lives separately in SonarQube — a dashboard the team checks independently, disconnected from the service entity. Enable the plugin, add `sonarqube.org/project-key` with the project key from your SonarQube instance, and a Code Quality tab appears on the entity showing bugs, vulnerabilities, coverage, and technical debt for that specific service. Quality is now part of the service's record, not an external afterthought.
+Without this plugin, code quality is a concern that lives separately in SonarQube — a dashboard the team checks independently, disconnected from the service entity. Enable the plugin, add `sonarqube.org/project-key` with the project key from your SonarQube instance, and a quality card appears on the entity overview showing bugs, vulnerabilities, coverage, and technical debt for that specific service. Quality is now part of the service's record, not an external afterthought.
 
 The SonarQube plugin displays code quality metrics — bugs, vulnerabilities, test coverage, and duplications — directly in the component catalog.
 
@@ -29,11 +29,11 @@ The SonarQube plugin displays code quality metrics — bugs, vulnerabilities, te
 
 | Package | Role |
 |---|---|
-| `backstage-community-plugin-sonarqube` | Frontend — entity card and Code Quality tab |
-| `backstage-community-plugin-sonarqube-backend-dynamic` | Backend — SonarQube API proxy |
-| `backstage-community-plugin-scaffolder-backend-module-sonarqube-dynamic` | Optional — scaffolder actions for SonarQube |
+| `backstage-community-plugin-sonarqube` | Frontend — entity overview card |
+| `backstage-community-plugin-sonarqube-backend` | Backend — SonarQube API proxy |
+| `backstage-community-plugin-scaffolder-backend-module-sonarqube` | Optional — scaffolder actions for SonarQube |
 
-All three are preloaded in the DevPortal image and **disabled by default**. No image rebuild is needed.
+All three are versioned packages in the active package index and are **not default plugins**. The frontend mounts the `EntitySonarQubeCard` in the entity overview for entities with the SonarQube annotation. Install them from the Marketplace (`sonarqube-catalog-cards` for the cards, `sonarqube-scaffolder-actions` for the scaffolder module) or by package reference.
 
 ---
 
@@ -46,67 +46,43 @@ All three are preloaded in the DevPortal image and **disabled by default**. No i
 
 ## Enabling the plugin
 
-Add the following to your `dynamic-plugins.yaml`:
+### Via Marketplace
+
+Install `sonarqube-catalog-cards` (and `sonarqube-scaffolder-actions` if you need the scaffolder actions), then recreate the stack so the installer runs. A plain container restart does not apply a Marketplace selection. See [Configure dynamic plugins for the local stack](../installation-guide/docker-local/custom-plugins.md) for the apply procedure.
+
+### Via the operator file (local stack)
+
+Add the index references to your operator file (`dynamic-plugins.local.yaml`):
 
 ```yaml
 plugins:
-  - package: ./dynamic-plugins/dist/backstage-community-plugin-sonarqube-backend-dynamic
+  - package: oci://quay.io/veecode/backstage-community-plugin-sonarqube-backend@sha256:bdf9d45d8c73c03be632174a1918c472806cf4bc52966fb3cbe8f98363abd0c5
     disabled: false
 
-  - package: ./dynamic-plugins/dist/backstage-community-plugin-sonarqube
+  - package: oci://quay.io/veecode/backstage-community-plugin-sonarqube@sha256:8473d9a47b6d198b3a1101a5eacc84434cb4af2134e77e4f2bca8ed08d03acc3
     disabled: false
-    pluginConfig:
-      dynamicPlugins:
-        frontend:
-          backstage-community.plugin-sonarqube:
-            entityTabs:
-              - path: /code-quality
-                title: Code Quality
-                mountPoint: entity.page.code-quality
-                config:
-                  if:
-                    allOf:
-                      - isSonarQubeAvailable
-            mountPoints:
-              - mountPoint: entity.page.code-quality/cards
-                importName: SonarQubeRelatedEntitiesOverview
-                config:
-                  layout:
-                    gridColumn: "1 / -1"
-                  if:
-                    allOf:
-                      - isSonarQubeAvailable
-              - mountPoint: entity.page.overview/cards
-                importName: EntitySonarQubeCard
-                config:
-                  layout:
-                    gridColumnEnd:
-                      lg: span 4
-                      md: span 6
-                      xs: span 12
-                  if:
-                    allOf:
-                      - isSonarQubeAvailable
 
   # Optional: scaffolder actions
-  - package: ./dynamic-plugins/dist/backstage-community-plugin-scaffolder-backend-module-sonarqube-dynamic
+  - package: oci://quay.io/veecode/backstage-community-plugin-scaffolder-backend-module-sonarqube@sha256:ae19e47677c08b8439aface4a37d88b2d475f07bbddd814074d70322d8e61647
     disabled: false
 ```
 
-Restart DevPortal after saving. Via the Marketplace UI you can click **Enable** instead of editing YAML manually.
+### On Kubernetes
+
+Add the same package references under `global.dynamic.plugins` in your chart values.
 
 ---
 
 ## App configuration
 
-Add SonarQube connection details to `app-config.yaml`.
+Add the SonarQube connection details where the portal reads its app config — a configuration fragment on the local stack, `upstream.backstage.appConfig` on Kubernetes — with the token passed through an environment variable or a referenced Secret. The index backend config reads the base URL from `SONARQUBE_URL` and the token from `SONARQUBE_TOKEN`.
 
 ### Single instance
 
 ```yaml
 sonarqube:
-  baseUrl: ${SONARQUBE_BASE_URL}
-  apiKey: ${SONARQUBE_API_KEY}
+  baseUrl: ${SONARQUBE_URL}
+  apiKey: ${SONARQUBE_TOKEN}
 ```
 
 `baseUrl` defaults to `https://sonarcloud.io` if omitted.
@@ -117,14 +93,12 @@ sonarqube:
 sonarqube:
   instances:
     - name: default
-      baseUrl: ${SONARQUBE_BASE_URL}
-      apiKey: ${SONARQUBE_API_KEY}
+      baseUrl: ${SONARQUBE_URL}
+      apiKey: ${SONARQUBE_TOKEN}
     - name: specialProject
-      baseUrl: ${SONARQUBE_BASE_URL_2}
-      apiKey: ${SONARQUBE_API_KEY_2}
+      baseUrl: ${SONARQUBE_URL_2}
+      apiKey: ${SONARQUBE_TOKEN_2}
 ```
-
-The valid top-level fields are `baseUrl`, `externalBaseUrl`, `apiKey`, and `instances`. There is no `instanceKey` field — that field does not exist in the schema and is silently ignored if present.
 
 ---
 
@@ -146,4 +120,11 @@ spec:
   lifecycle: production
 ```
 
-The project key value must match the project key in your SonarQube instance. The SonarQube card and Code Quality tab only appear on entities where `isSonarQubeAvailable` is true (i.e., where this annotation is set).
+The project key value must match the project key in your SonarQube instance. The SonarQube card only appears on entities where this annotation is set.
+
+---
+
+## References
+
+- [SonarQube plugin (upstream README)](https://github.com/backstage/community-plugins/tree/main/workspaces/sonarqube)
+- [CI/CD Plugins](./cicd.md)

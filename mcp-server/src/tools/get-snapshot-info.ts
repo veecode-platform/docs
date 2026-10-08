@@ -6,12 +6,12 @@ export interface SnapshotInfoInput {
   source: LoadSource;
   bundledVersion: string;
   refreshStatus: RefreshStatus;
-  docsVersion?: "v1" | "v2";
+  docsVersion?: "v1" | "v2" | "v3";
 }
 
 export interface SnapshotInfo {
-  /** Which DevPortal docs line this server is serving: "v2" (default) or "v1" (prior split-image line). */
-  docs_version: "v1" | "v2";
+  /** Which DevPortal docs version this server is serving. */
+  docs_version: "v1" | "v2" | "v3";
   version: string;
   generated_at: string;
   source: LoadSource;
@@ -24,7 +24,7 @@ export interface SnapshotInfo {
 export function getSnapshotInfo(input: SnapshotInfoInput): SnapshotInfo {
   const section_count = input.snapshot.docs.reduce((n, d) => n + d.sections.length, 0);
   return {
-    docs_version: input.docsVersion ?? "v2",
+    docs_version: input.docsVersion ?? "v3",
     version: input.snapshot.version,
     generated_at: input.snapshot.generatedAt,
     source: input.source,

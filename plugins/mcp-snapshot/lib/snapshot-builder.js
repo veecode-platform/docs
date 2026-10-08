@@ -13,6 +13,11 @@ const PRODUCTS = [
   { id: "vkdr", name: "VKDR-CLI", description: "VKDR command-line tool" },
 ];
 
+const VERSIONED_SNAPSHOTS = [
+  { directory: "version-v2", fileName: "mcp-snapshot-v2.json" },
+  { directory: "version-v1", fileName: "mcp-snapshot-v1.json" },
+];
+
 function gitShortSha(cwd) {
   try {
     return execFileSync("git", ["rev-parse", "--short=7", "HEAD"], {
@@ -67,7 +72,7 @@ async function buildSnapshot({ repoRoot, outDir, version, generatedAt, schemaPat
   const finalSchemaPath = schemaPath ?? path.join(repoRoot, "schemas", "mcp-snapshot.schema.json");
   const validate = loadValidator(finalSchemaPath);
 
-  // Current = V2: every product walked from its own dir.
+  // Current = V3: every product is walked from its current directory.
   const current = await assembleSnapshot({
     version: finalVersion,
     generatedAt: finalGeneratedAt,
@@ -75,16 +80,17 @@ async function buildSnapshot({ repoRoot, outDir, version, generatedAt, schemaPat
   });
   const outFile = await validateAndWrite(current, validate, outDir, "mcp-snapshot.json");
 
-  // Frozen V1 (only if a version was cut): devportal from versioned_docs/version-v1,
-  // the other three products from their current (versionless) dirs.
-  const v1Root = path.join(repoRoot, "versioned_docs", "version-v1");
-  if (fsSync.existsSync(v1Root)) {
-    const v1 = await assembleSnapshot({
+  // Versioned snapshots freeze DevPortal while the other product docs stay current.
+  for (const { directory, fileName } of VERSIONED_SNAPSHOTS) {
+    const versionRoot = path.join(repoRoot, "versioned_docs", directory);
+    if (!fsSync.existsSync(versionRoot)) continue;
+
+    const versioned = await assembleSnapshot({
       version: finalVersion,
       generatedAt: finalGeneratedAt,
-      rootFor: (id) => (id === "devportal" ? v1Root : path.join(repoRoot, id)),
+      rootFor: (id) => (id === "devportal" ? versionRoot : path.join(repoRoot, id)),
     });
-    await validateAndWrite(v1, validate, outDir, "mcp-snapshot-v1.json");
+    await validateAndWrite(versioned, validate, outDir, fileName);
   }
 
   return outFile;

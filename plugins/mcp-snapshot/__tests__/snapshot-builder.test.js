@@ -32,6 +32,17 @@ async function makeFakeRepoWithV1() {
   return root;
 }
 
+async function makeFakeRepoWithV2() {
+  const root = await makeFakeRepo();
+  const v2Root = join(root, "versioned_docs", "version-v2");
+  await fs.mkdir(v2Root, { recursive: true });
+  await fs.writeFile(
+    join(v2Root, "intro.md"),
+    `---\ntitle: V2 DevPortal\n---\nV2-only content.\n`,
+  );
+  return root;
+}
+
 describe("buildSnapshot", () => {
   let outDir;
   beforeAll(async () => {
@@ -120,5 +131,29 @@ describe("buildSnapshot with a frozen V1", () => {
     const devportalDocs = snap.docs.filter((d) => d.product === "devportal");
     expect(devportalDocs.length).toBe(2);
     expect(devportalDocs.every((d) => d.path.startsWith("devportal/"))).toBe(true);
+  });
+});
+
+describe("buildSnapshot with a frozen V2", () => {
+  let outDir;
+  beforeAll(async () => {
+    const repoRoot = await makeFakeRepoWithV2();
+    outDir = await mkdtemp(join(tmpdir(), "mcp-snapshot-v2-out-"));
+    await buildSnapshot({
+      repoRoot,
+      outDir,
+      version: "2026.05.25-abc1234",
+      generatedAt: "2026-05-25T00:00:00Z",
+      schemaPath: join(here, "..", "..", "..", "schemas", "mcp-snapshot.schema.json"),
+    });
+  });
+
+  it("uses version-v2 DevPortal docs and current docs for the other products", async () => {
+    const snap = JSON.parse(await fs.readFile(join(outDir, "mcp-snapshot-v2.json"), "utf8"));
+    const devportalDocs = snap.docs.filter((doc) => doc.product === "devportal");
+    expect(devportalDocs.map((doc) => doc.title)).toEqual(["V2 DevPortal"]);
+    expect(snap.products.find((product) => product.id === "platform").docCount).toBe(1);
+    expect(snap.products.find((product) => product.id === "admin-ui").docCount).toBe(1);
+    expect(snap.products.find((product) => product.id === "vkdr").docCount).toBe(1);
   });
 });

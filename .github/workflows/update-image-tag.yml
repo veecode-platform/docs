@@ -9,8 +9,10 @@ name: Update DevPortal image tag
 # stable tag on Docker Hub yet (3.x before 3.0.0 is published) is left as it is,
 # and a tag in the docs that is ahead of Docker Hub is never lowered.
 #
-# Scope is deliberately limited to `devportal/**`. The versioned V1 docs under
-# `versioned_docs/version-v1/` and any 1.x reference stay on their own line.
+# Scope is deliberately limited to `devportal/**` (the 3.x docs) and, when it
+# exists, `versioned_docs/version-v2/**` (the frozen 2.x docs, which still follow
+# the 2.x line). The V1 docs under `versioned_docs/version-v1/` and any 1.x
+# reference stay on their own line.
 # Only the tag of a `veecode/devportal:X.Y.Z` reference is rewritten, and only a
 # bare stable X.Y.Z: a pre-release (`3.0.0-beta.10`) and a reference pinned by
 # digest (`3.0.0@sha256:...`) are left alone, which is how a page keeps a reference
@@ -72,19 +74,21 @@ jobs:
         id: current
         run: |
           set -euo pipefail
+          roots=(devportal)
+          if [ -d versioned_docs/version-v2 ]; then roots+=(versioned_docs/version-v2); fi
           # The highest stable tag of each major line 2 and up that is referenced
-          # under devportal/ (sort -V, not the first match, so the result does not
+          # in the docs roots (sort -V, not the first match, so the result does not
           # depend on filesystem order). The lookahead rejects a longer version,
           # a pre-release suffix and a digest pin.
           pins=$(
-            grep -rhoP 'veecode/devportal:\K[0-9]+\.[0-9]+\.[0-9]+(?![0-9A-Za-z@-]|\.[0-9])' devportal \
+            grep -rhoP 'veecode/devportal:\K[0-9]+\.[0-9]+\.[0-9]+(?![0-9A-Za-z@-]|\.[0-9])' "${roots[@]}" \
               --include='*.md' --include='*.mdx' \
               | sort -Vu \
               | awk -F. '$1 >= 2 { highest[$1] = $0 } END { for (major in highest) print major, highest[major] }' \
               | sort -n || true
           )
           if [ -z "$pins" ]; then
-            echo "::error::Could not find a current veecode/devportal:X.Y.Z reference (2.x or later) under devportal/"
+            echo "::error::Could not find a current veecode/devportal:X.Y.Z reference (2.x or later) under ${roots[*]}"
             exit 1
           fi
           echo "Current tags in the docs:"
@@ -102,6 +106,8 @@ jobs:
           PINS: ${{ steps.current.outputs.pins }}
         run: |
           set -euo pipefail
+          roots=(devportal)
+          if [ -d versioned_docs/version-v2 ]; then roots+=(versioned_docs/version-v2); fi
           summary=""
           titles=""
           while read -r major old; do
@@ -122,13 +128,13 @@ jobs:
             # OLD never matches inside a longer version, a pre-release or a digest pin.
             export OLD="$old" NEW="$new"
             # shellcheck disable=SC2016 # $ENV is Perl's, not the shell's
-            { grep -rlZF "veecode/devportal:$old" devportal --include='*.md' --include='*.mdx' || true; } \
+            { grep -rlZF "veecode/devportal:$old" "${roots[@]}" --include='*.md' --include='*.mdx' || true; } \
               | xargs -0 --no-run-if-empty perl -pi -e 's#(veecode/devportal:)\Q$ENV{OLD}\E(?![0-9A-Za-z@-]|\.[0-9])#$1$ENV{NEW}#g'
             echo "${major}.x: ${old} to ${new}"
             summary+="- ${major}.x: \`${old}\` to \`${new}\`"$'\n'
             titles+="${titles:+, }${new}"
           done <<< "$PINS"
-          if git diff --quiet -- devportal; then
+          if git diff --quiet -- "${roots[@]}"; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
@@ -153,6 +159,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git checkout -b "$branch"
           git add devportal/
+          if [ -d versioned_docs/version-v2 ]; then git add versioned_docs/version-v2/; fi
           title="docs: bump devportal image tags to ${TITLES}"
           git commit -m "$title"
           # A fresh checkout has no remote-tracking ref for the bot's branch, and
@@ -167,7 +174,7 @@ jobs:
           Each major line moves only within itself, to the newest stable tag of that line on Docker Hub.
 
           Source: https://hub.docker.com/r/veecode/devportal/tags
-          Scope: \`devportal/**\` only — V1 docs (\`versioned_docs/version-v1/\`) and any 1.x reference are left alone.
+          Scope: \`devportal/**\` and \`versioned_docs/version-v2/**\` only — V1 docs (\`versioned_docs/version-v1/\`) and any 1.x reference are left alone.
           EOF
           )
           if gh pr view "$branch" --json number >/dev/null 2>&1; then

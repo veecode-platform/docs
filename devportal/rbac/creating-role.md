@@ -14,69 +14,98 @@ In a Role-Based Access Control (RBAC) system, a role is a set of permissions tha
 - **Enhanced Security**: Minimizes unauthorized access risks by restricting permissions based on user roles.
 - **Efficient User Management**: Assigning roles instead of individual permissions makes managing large teams easier.
 
-### Default Roles in DevPortal
+### Permission checks are off by default
 
-DevPortal ships three built-in roles defined in `rbac-policy.csv`:
+The chart ships with `permission.enabled: false`. With checks off, the permission API returns 404 and no request is checked against roles. For example, a location registration that a reader's role denies with 403 when checks are on passes the permission check when they are off.
 
-| Role | Access level |
-| --- | --- |
-| `role:default/admin` | Full access — read, create, update, delete across catalog, scaffolder, and policy management |
-| `role:default/developer` | Read/create/update access — no delete on catalog entities or tasks |
-| `role:default/viewer` | Read-only access to catalog and scaffolder templates |
+### What enabling RBAC creates
 
-Default group and user assignments (also in `rbac-policy.csv`):
-- `group:default/admins` → `role:default/admin`
-- `group:default/backstage-admins` → `role:default/admin`
-- `group:default/developers` → `role:default/developer`
-- `user:default/admin` → `role:default/admin`
+DevPortal 3.x ships no roles. Users and groups in `superUsers` get full access, including role and policy management. The policy list shows their admin policies under `role:default/rbac_admin`, and that role does not appear in the role list. Every other role comes from your own configuration, CSV file, or REST calls. The `viewer` and `developer` roles used in local examples come from that local configuration and CSV file, not from the product.
 
-The distro image (`veecode/devportal`) also appends `rbac-policy-extensions.csv` at build time, adding Extensions Marketplace permissions (`extensions.plugin.configuration.read/write`) to the default roles. See the [Permissions reference](./permissions.md) for the full list.
+## Turn on RBAC
 
-RBAC is enabled by default (`permission.enabled: true` in `app-config.yaml`). To extend or override policies, mount a custom `rbac-policy.csv` or configure additional policies via the RBAC Admin UI under **Administration**.
+Add the following app configuration:
 
----
+```yaml
+permission:
+  enabled: true
+  rbac:
+    admin:
+      superUsers:
+        - name: group:default/backstage-admins
+    defaultPermissions:
+      defaultRole: role:default/viewer
+      basicPermissions:
+        - permission: catalog.entity.read
+          action: read
+        - permission: catalog-entity
+          action: read
+    policies-csv-file: /opt/app-root/src/rbac/rbac-policy.csv
+    policyFileReload: true
+```
 
-## Steps to Create a Role in DevPortal
+`superUsers` lists the users or groups with full access, including role management. `defaultPermissions` sets the default role and the basic permissions every signed-in user keeps. The CSV settings are optional and point at a file mounted into the container.
 
-### Step 1: Access RBAC Administration
+On Kubernetes, place the permission settings under `upstream.backstage.appConfig` in the chart values:
 
-1. Log in to your DevPortal account.
-2. Click on the **Administration** menu to open the RBAC settings.
-![Optional Image Description](/img/rbac/1.png)
+```yaml
+upstream:
+  backstage:
+    appConfig:
+      permission:
+        enabled: true
+        rbac:
+          admin:
+            superUsers:
+              - name: group:default/backstage-admins
+          defaultPermissions:
+            defaultRole: role:default/viewer
+            basicPermissions:
+              - permission: catalog.entity.read
+                action: read
+              - permission: catalog-entity
+                action: read
+```
 
-### Step 2: Create a New Role
+## Create a role with the permission API
 
-1. Click on the **Create** button.
-2. Fill in the **Name** and **Description** fields to identify the role.
-3. Click on **Next** to proceed.
-![Optional Image Description](/img/rbac/2.png)
+An admin creates a role with `POST /api/permission/roles`:
 
-### Step 3: Assign Users or Groups
+```bash
+curl -X POST http://localhost:7007/api/permission/roles \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"memberReferences":["group:default/readers"],"name":"role:default/labreaders"}'
+```
 
-1. Select the groups or users you want to assign to the role.
-2. Click on **Next** to continue.
-![Optional Image Description](/img/rbac/3.png)
+The call returns 201 when the role is created.
 
-### Step 4: Set Role Permissions
+Add policies to the role with `POST /api/permission/policies`. The body must be a JSON array:
 
-1. Choose the permissions that should be assigned to the role.
-2. Click on **Next** to move forward.
-![Optional Image Description](/img/rbac/4.png)
+```bash
+curl -X POST http://localhost:7007/api/permission/policies \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '[{"entityReference":"role:default/labreaders","permission":"catalog.entity.read","policy":"read","effect":"allow"}]'
+```
 
-### Step 5: (Optional) Define Role Conditions
+A single object without the array is rejected with 400. Roles and policies created this way persist across restarts.
 
-1. Use conditions to restrict the role to specific resources if needed.
-2. Click on **Next** to proceed.
-![Optional Image Description](/img/rbac/5.png)
+A user without a matching policy is denied with 403 on the denied action. For example, a user whose role allows only catalog reads can read catalog entities but gets 403 when registering a location.
 
-### Step 6: Review and Confirm
+## Keep role bindings in a CSV file
 
-1. Review all role settings to ensure accuracy.
-2. Click on **Create** to finalize the role creation.
-![Optional Image Description](/img/rbac/6.png)
+Point `policies-csv-file` at a file mounted into the container. Each `p,` line grants a permission to a role, and each `g,` line assigns a user or group to a role:
 
-By following these steps, you can efficiently create and manage roles in DevPortal, ensuring secure and structured access control. If you need further assistance, contact the DevPortal support team.
+```csv
+p, role:default/developer, catalog.entity.read, read, allow
+g, group:default/developers, role:default/developer
+```
 
-:::note
-When adding a custom plugin that registers its own permissions, you must also add the plugin ID to `permission.rbac.pluginsWithPermission` in your `app-config.yaml` (or equivalent layer) for those permissions to be evaluated by the RBAC engine. The distro's `app-config.distro.yaml` pre-registers the `extensions` plugin for this purpose.
-:::
+## Manage roles at /rbac
+
+The RBAC page at `/rbac` sits under **Administration** in the sidebar. The role table has columns **Name**, **Users and groups**, **Accessible plugins** and **Actions**, with **Create**, **Filter** and **Export CSV** controls. **Create** opens a wizard with three steps: "Enter name, description, and owner of role", "Add users and groups", and "Add permission policies". Use the page, the REST calls above, or the CSV file to add and change roles.
+
+## Try roles on the local stack
+
+The devportal-local stack ships an RBAC lab overlay (`docker-compose.rbac-lab.yml` plus `rbac-lab/`) for trying roles locally. It switches the guest identity with `LAB_USER` and `LAB_GROUP` and uses `dangerouslyAllowOutsideDevelopment`, so use it for local testing only.

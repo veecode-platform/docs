@@ -16,7 +16,7 @@ The value engineers actually care about — seeing pod status, triggering a depl
 
 Every plugin activates across three layers. All three must be in place before a developer sees live data.
 
-1. **Load** — the plugin's code is made available to the portal (in DevPortal, via a preset or a `dynamic-plugins.yaml` entry). Loading alone shows nothing.
+1. **Load** — the plugin's code is made available to the portal (in DevPortal, via a dynamic plugin entry; in DevPortal 2.x, via a preset). Loading alone shows nothing.
 2. **Context** — a catalog entity declares, through an **annotation** in its `catalog-info.yaml`, that the plugin applies to it. Plugins are context-aware by design: they attach to the specific entities that opt in, not to a global tab.
 3. **Backend** — configuration tells the plugin where to fetch data (cluster URL, API base URL, credentials).
 

@@ -4,29 +4,27 @@ sidebar_label: Installation Guides
 title: Installation Guides
 ---
 
-You can use VeeCode DevPortal for free in many possible ways. Find here a few setup guides to get started. We definitely recommend you going through them to learn a few concepts along the way.
-
-:::info
-**VeeCode DevPortal** is "[free as in speech](https://www.gnu.org/philosophy/free-sw.html)" software. It preserves the same OSS license of Backstage itself ([Apache License](https://www.apache.org/licenses/LICENSE-2.0)), so you are free to use, modify and distribute it.
-:::
-
 import style from '../style.module.css';
 import DocCard from '@site/src/components/DocCard';
 
+# Choose an installation path
+
+Use one of these guides to install or customize DevPortal 3.x.
+
 <div className={style.wrapper}>
 
-<DocCard title="DevPortal 3.x (Kubernetes)" link="/devportal/v3/intro" style={style}>Install DevPortal 3.x on a Kubernetes cluster with the <code>devportal</code> Helm chart.</DocCard>
+<DocCard title="Local quickstart" link="/devportal/installation-guide/docker-local/intro" style={style}>Run a local DevPortal 3.x portal with `devportal-local`.</DocCard>
 
-<DocCard title="Migrating from 2.x to 3.x" link="/devportal/migrating-from-2x" style={style}>Move a DevPortal 2.x install made with the <code>veecode-devportal-platform</code> chart to 3.x.</DocCard>
+<DocCard title="Kubernetes with Helm" link="/devportal/installation-guide/production-setup" style={style}>Install DevPortal on Kubernetes with the `devportal` Helm chart.</DocCard>
 
-<DocCard title="Docker Run (Quickstart)" link="/devportal/installation-guide/docker-local/intro" style={style}>Quickly run DevPortal locally using Docker. Ideal for testing and exploration without Kubernetes.</DocCard>
+<DocCard title="Upgrade DevPortal 3.x" link="/devportal/installation-guide/production-setup/upgrade" style={style}>Upgrade an existing DevPortal 3.x installation.</DocCard>
 
-<DocCard title="VKDR (Local Kubernetes)" link="/devportal/installation-guide/vkdr-local/vkdr-setup" style={style}>Install DevPortal V2 locally on a lightweight Kubernetes cluster using <code>vkdr devportal-platform install</code>. Best for reproducing production scenarios.</DocCard>
+<DocCard title="Migrate from 2.x" link="/devportal/migrating-from-2x" style={style}>Move a DevPortal 2.x installation to 3.x.</DocCard>
 
-<DocCard title="Kubernetes (Helm chart)" link="/devportal/installation-guide/production-setup" style={style}>Deploy DevPortal V2 to a Kubernetes cluster using the <code>veecode-devportal-platform</code> Helm chart from the <code>next-charts</code> repo.</DocCard>
+<DocCard title="Customization" link="/devportal/customization" style={style}>Customize DevPortal for your platform.</DocCard>
 
-<DocCard title="Customization" link="/devportal/customization" style={style}>Learn how to customize your Developer Portal.</DocCard>
-
-<DocCard title="FAQs" link="/devportal/installation-guide/FAQs" style={style}>Frequently Asked Questions.</DocCard>
+<DocCard title="FAQs" link="/devportal/installation-guide/FAQs" style={style}>Find answers to common installation questions.</DocCard>
 
 </div>
+
+VKDR installs DevPortal 2.x only; its guide is in the 2.x docs at [VKDR setup](/devportal/v2/installation-guide/vkdr-local/vkdr-setup), and a local 3.x portal runs with `devportal-local`.

@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- Add DevPortal docs version `v3` as the default. Serve V2 from its own bundled
+  and remote snapshot. Keep V1 on its existing snapshot.
+- Accept `v1`, `v2`, and `v3` for `--version` and
+  `VEECODE_DOCS_MCP_VERSION`. Invalid values list all three versions.
+- Store refresh data in a separate cache subdirectory for each docs version.
+
 ## 0.2.0
 
 ### Changed

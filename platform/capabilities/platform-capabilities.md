@@ -46,7 +46,7 @@ Each plugin connects to the entity via an annotation in `catalog-info.yaml`. The
 
 **How DevPortal realizes it** (via plugins):
 - **[Kubernetes](/devportal/plugins/kubernetes)** — live pod status, deployment rollout, and logs for the service's workloads
-- **[Vault](/devportal/plugins/vault)** — secrets metadata visible on the entity page (paths and keys, not values)
+- **[Vault](/devportal/v2/plugins/vault)** (DevPortal 2.x only) — secrets metadata visible on the entity page (paths and keys, not values)
 - **IaC templates** — infrastructure provisioned through the portal's scaffolder, so infrastructure creation follows the same Golden Path as application creation
 
 The Kubernetes plugin is the most direct bridge: a service entity with the right label selector annotation shows exactly which pods belong to it and their current health.
