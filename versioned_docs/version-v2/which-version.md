@@ -17,7 +17,7 @@ Look at any **one** of these on your running deployment:
 
 | Signal | You're on **V1** | You're on **V2** | You're on **3.x** |
 |---|---|---|---|
-| Container image | two images: `veecode/devportal-base` + `veecode/devportal` (or `veecode/devportal:1.x`) | one image: `veecode/devportal:2.1.3` | one image: `veecode/devportal:3.x.y` |
+| Container image | two images: `veecode/devportal-base` + `veecode/devportal` (or `veecode/devportal:1.x`) | one image: `veecode/devportal:2.2.3` | one image: `veecode/devportal:3.x.y` |
 | Enablement env var | `VEECODE_PROFILE=<github\|gitlab\|…>` | `VEECODE_PRESETS=<a,b,c>` | neither: default plugins ship in the image and are changed through chart values |
 | Helm chart name | `veecode-devportal` (appVersion `1.x`) | `veecode-devportal-platform` (appVersion `2.1.3`) | `devportal` (appVersion `3.x.y`) |
 | Plugin model | plugins baked into the distro image | plugins disabled by default, enabled by presets / OCI refs | default plugins enabled in the image, overridable per plugin; more from the marketplace |
@@ -47,7 +47,7 @@ covered in [Migrating from 2.x to 3.x](/devportal/migrating-from-2x).
 
 ## You're on V2
 
-You're in the right place — keep reading. The `veecode/devportal:2.1.3` image,
+You're in the right place — keep reading. The `veecode/devportal:2.2.3` image,
 presets, and the `veecode-devportal-platform` Helm chart are documented here.
 
 :::note
