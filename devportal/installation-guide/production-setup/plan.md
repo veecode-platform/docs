@@ -32,7 +32,7 @@ Choose DNS names for the portal and identity provider, and select your Ingress c
 
 ## Guest sign-in
 
-Guest sign-in is enabled by default and maps guests to `user:default/admin`. Set `global.veecode.guestAuth.enabled: false` in the chart values before you expose the portal to users. See [Step 6: Install DevPortal](./setup.md#step-6-install-devportal).
+Guest sign-in maps guests to `user:default/admin`. Chart 1.0.3 and earlier turn it on; from chart 1.0.4 it is off. Set `global.veecode.guestAuth.enabled: false` in the chart values before you expose the portal to users, whichever chart version you install. See [Step 6: Install DevPortal](./setup.md#step-6-install-devportal).
 
 ## RBAC
 

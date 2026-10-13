@@ -18,9 +18,9 @@ Use the [`devportal` Helm chart](./production-setup/setup.md). Start with the [i
 
 No. The chart installs no database, and DevPortal requires PostgreSQL. See the [installation plan](./production-setup/plan.md) and [PostgreSQL setup step](./production-setup/setup.md#step-3-start-postgresql).
 
-## Is guest sign-in enabled by default?
+## Which default does the chart use for guest sign-in?
 
-Yes. Guest sign-in is enabled by default and maps to `user:default/admin`. Set `global.veecode.guestAuth.enabled: false` in the chart values to turn it off. See the [setup guide](./production-setup/setup.md) and its [install values](./production-setup/setup.md#step-6-install-devportal).
+From chart 1.0.4, guest sign-in is off. Chart 1.0.3 and earlier turn it on and map guests to `user:default/admin`. Set `global.veecode.guestAuth.enabled: false` in the chart values to turn it off on any chart version. See the [setup guide](./production-setup/setup.md) and its [install values](./production-setup/setup.md#step-6-install-devportal).
 
 ## How do I move an existing 2.x installation to 3.x?
 

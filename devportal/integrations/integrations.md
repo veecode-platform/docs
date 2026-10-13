@@ -10,7 +10,7 @@ The three mechanisms are independent. You can use GitHub repositories with Keycl
 
 ## Sign-in
 
-Guest sign-in is on by default. It maps every visitor to the administrator identity (`user:default/admin`), with no password. That default is for a first look only. Turn it off before the portal reaches real users by stopping the guest authentication fragment and configuring a real provider instead. The local stack reads that fragment from `config/app-config.veecode-auth.yaml`, and the install guide shows the off switch on Kubernetes.
+Guest sign-in maps every visitor to the administrator identity (`user:default/admin`), with no password. It is for a first look only. On the local stack it comes from the guest authentication fragment, which the stack reads from `config/app-config.veecode-auth.yaml`. The Helm chart turns it on in chart 1.0.3 and earlier, and off from chart 1.0.4; the install guide shows the off switch on Kubernetes. Before the portal reaches real users, stop the guest authentication fragment and configure a real provider instead.
 
 The 3.x image includes these sign-in providers, among others:
 

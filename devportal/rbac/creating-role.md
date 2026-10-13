@@ -16,7 +16,7 @@ In a Role-Based Access Control (RBAC) system, a role is a set of permissions tha
 
 ### Permission checks are off by default
 
-The chart ships with `permission.enabled: false`. With checks off, the permission API returns 404 and no request is checked against roles. For example, a location registration that a reader's role denies with 403 when checks are on passes the permission check when they are off.
+Permission checks are off by default: the chart's default configuration does not set `permission.enabled: true`. With checks off, the permission API returns 404 and no request is checked against roles. For example, a location registration that a reader's role denies with 403 when checks are on passes the permission check when they are off.
 
 ### What enabling RBAC creates
 

@@ -22,6 +22,12 @@ Keep the backup directory private. The database archives can contain sensitive d
 
 The examples upgrade 3.0.2 (chart 1.0.2) to 3.0.3 (chart 1.0.3). To upgrade from another 3.x release, set `CHART_FROM`, `IMAGE_FROM_VERSION`, and `IMAGE_FROM` in Step 1 to that release. The recorded end-to-end run started with chart 0.1.26 and image 3.0.0-beta.10, upgraded to chart 1.0.0 and image 3.0.0, and used PostgreSQL 16.15. It does not cover the paths from 3.0.0 onward. Charts 1.0.1 to 1.0.3 change only the image tag, digest, and version metadata against the chart before them.
 
+Chart 1.0.4 keeps image 3.0.3 and changes two defaults. Check your stored values before you move to it:
+
+- Guest sign-in is off. If the installation relies on guest sign-in and its values do not set `global.veecode.guestAuth.enabled`, set it to `true` before the upgrade, or guest access stops. Guest sign-in maps every visitor to the `admin` user.
+- The plugin catalog index is pinned by digest: `repository` is `veecode/plugin-catalog-index@sha256` and `tag` holds the digest. If the values set `global.catalogIndex.image.tag` without `repository`, for example to a timestamped tag, also set `global.catalogIndex.image.repository: veecode/plugin-catalog-index`, or remove the override to use the chart's digest. Fix this before Step 2: with a tag and no repository, the values schema rejects the upgrade in Step 3, after Step 2 has stopped the portal. See [Configure the plugin catalog index](./catalog-index.md).
+- If the installer pulls the index from a mirror and the values do not set `tag`, it now asks the mirror for the index by digest. Before Step 2, run `export CHART_VERSION="$CHART_TO" PORTAL_IMAGE_TAG="$IMAGE_TO_VERSION"`, then copy the index of the target chart to the mirror as in [Install without internet access](./setup.md#install-without-internet-access), which keeps the digest. If the values override `global.catalogIndex.image.repository`, keep the `@sha256` suffix on it, or also set `tag` to a tag. A repository without the suffix and no `tag` makes the chart request the digest as a tag, and the installer cannot pull the index.
+
 If a 3.0.0 deployment outside this chart runs the image with SQLite, change its image reference to 3.0.3 (the digest is on the release sheet). The backup and restore steps in this guide do not apply to it.
 
 ## Step 1: Prepare the release and backup directory

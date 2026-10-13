@@ -58,7 +58,7 @@ This is a deliberate sequence, not a checklist you complete once.
 
 ### Day-0: Foundation
 
-Catalog populated: services, APIs, and resources registered through catalog locations. Authentication configured through the auth fragment. Guest sign-in is on by default and signs everyone in as the admin user, which is for evaluation only.
+Catalog populated: services, APIs, and resources registered through catalog locations. Authentication configured through the auth fragment. Guest sign-in signs everyone in as the admin user and is for evaluation only. Chart 1.0.3 and earlier turn it on; from chart 1.0.4 the chart turns it off.
 
 ### Day-1: Connecting services to their tooling
 

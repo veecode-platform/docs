@@ -166,6 +166,6 @@ Replace `group:default/backstage-admins` with the users or groups that manage ro
 
 After the upgrade, `GET /api/permission/roles` lists the role from the file with `"source": "csv-file"`, and `GET /api/permission/policies` lists its policies.
 
-The chart ships with `permission.enabled: false`. With checks off, the permission API returns 404 and no request is checked against roles. For example, a location registration that a reader's role denies with 403 when checks are on passes the permission check when they are off.
+Permission checks are off by default: the chart's default configuration does not set `permission.enabled: true`. With checks off, the permission API returns 404 and no request is checked against roles. For example, a location registration that a reader's role denies with 403 when checks are on passes the permission check when they are off.
 
 See [RBAC Permissions](../../rbac/permissions.md) for the permission names.

@@ -19,7 +19,7 @@ The migration goes to a **fresh database**. Nothing is converted in place:
 This guide's procedure was followed end to end, command by command, with:
 
 - DevPortal 2.x: chart `veecode-devportal-platform` 0.5.2 (DevPortal 2.2.3), external PostgreSQL 16, the `recommended` and `keycloak` presets, Keycloak 26, one Ingress.
-- DevPortal 3.x: chart `devportal` 1.0.3, which installs image 3.0.3.
+- DevPortal 3.x: chart `devportal` 1.0.3, which installs image 3.0.3. Chart 1.0.4 installs the same image and changes two defaults: guest sign-in is off, and the plugin catalog index is pinned by digest. The values file in step 4 sets guest sign-in explicitly, and the guide does not change the index.
 - Kubernetes: a single-node k3s v1.31.5+k3s1 cluster. The 3.x portal was reached through `kubectl port-forward`.
 
 Two parts were not run:
@@ -42,8 +42,8 @@ Permissions also differ. See [Permissions are off in 3.x](#permissions-are-off-i
 
 Step 4 translates the settings this guide was tested with: external PostgreSQL, Keycloak sign-in and catalog locations. Any other setting in your 2.x values has no automatic translation. Map it by hand against the `values.yaml` of the 3.x chart.
 
-:::danger Guest sign-in is on by default in 3.x
-The 3.x chart turns guest sign-in on and maps every guest to the `admin` user. Anyone who can reach the portal URL gets an administrator identity without a password, even when the sign-in page shows only your identity provider. The values file in step 4 turns guest sign-in off and configures a real identity provider, and step 6 checks that the guest endpoint is gone. Do not expose the portal before both are in place.
+:::danger Chart 1.0.3 and earlier turn guest sign-in on
+Chart 1.0.3 and earlier turn guest sign-in on and map every guest to the `admin` user. From chart 1.0.4 the chart turns it off by default. With guest sign-in on, anyone who can reach the portal URL gets an administrator identity without a password, even when the sign-in page shows only your identity provider. The values file in step 4 turns guest sign-in off and configures a real identity provider, and step 6 checks that the guest endpoint is gone. Do not expose the portal before both are in place.
 :::
 
 ## Before you start
@@ -216,7 +216,7 @@ How the 2.x settings map:
 | `existingSecret` | `upstream.backstage.extraEnvVarsSecrets`, pointing at the Secret of step 3. |
 | `database.external.enabled: true` | Nothing to set. 3.x always uses your PostgreSQL, through the `PG_*` keys of that Secret. |
 | `appConfig.app`, `appConfig.backend`, `appConfig.catalog.locations` | The same keys under `upstream.backstage.appConfig`. |
-| (new in 3.x) | `global.veecode.guestAuth.enabled: false` turns guest sign-in off. |
+| (new in 3.x) | `global.veecode.guestAuth.enabled: false` turns guest sign-in off. Chart 1.0.4 defaults to this value; chart 1.0.3 and earlier need it set. |
 | (new in 3.x) | `backend.database.prefix` gives the 3.x release its own databases. |
 | (new in 3.x) | `startupProbe.failureThreshold: 30` gives the first start up to 10 minutes. The chart default allows about 90 seconds. |
 
@@ -233,7 +233,7 @@ Add the chart repository and install the release. The first start pulls the imag
 ```bash
 helm repo add veecode https://veecode-platform.github.io/next-charts
 helm repo update
-helm install "$V3_RELEASE" veecode/devportal --version 1.0.3 -n "$NAMESPACE" -f values-v3.yaml --wait --timeout 20m
+helm install "$V3_RELEASE" veecode/devportal --version 1.0.4 -n "$NAMESPACE" -f values-v3.yaml --wait --timeout 20m
 ```
 
 If the command times out and the pod stays at `0/1`, read the backend log with `kubectl -n "$NAMESPACE" logs "deploy/$V3_RELEASE-developer-hub" -c backstage-backend`. On a busy node the first start can fail while it creates the database tables. In an earlier pre-release test, two of three first starts ended with `Plugin 'catalog' startup failed; caused by MigrationLocked`. One pod had been stopped by the startup probe. The other had no restarts, and its log did not establish whether another migrator still held the lock. Do not clear the lock until you have stopped every backend replica and confirmed that no migration is active. The commands below use the catalog database from that test. If the log names another plugin, replace `catalog` in both database commands with that plugin's name. Run the recovery commands in the same terminal so `V3_REPLICAS` remains set.
@@ -328,7 +328,7 @@ Register again the locations you wrote down in step 1: open **Self-service**, ch
 
 The 2.x chart runs with the permission framework on. Members of the `admins` group administer permissions, and users in other groups get a limited role. In the test, a user of the `developers` group got HTTP 403 when deleting a catalog entity, and could not list the roles that only an administrator sees.
 
-The 3.x chart ships with `permission.enabled: false`, so nothing is checked. In the test, the same user deleted the same catalog entity with HTTP 204. Any signed-in user can delete catalog entities, which only administrators could do on 2.x.
+The 3.x chart leaves permission checks off: its default configuration does not set `permission.enabled: true`, so nothing is checked. In the test, the same user deleted the same catalog entity with HTTP 204. Any signed-in user can delete catalog entities, which only administrators could do on 2.x.
 
 Roles and policies that you create at run time through the portal's permission API are stored in the 2.x database, so they do not carry over. The test created the role `role:default/d1-reviewers` on 2.x. On 3.x the permission API answers HTTP 404, so the role does not exist there.
 
