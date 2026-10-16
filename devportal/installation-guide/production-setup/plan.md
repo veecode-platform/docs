@@ -14,7 +14,7 @@ Choose the namespace in [Step 1](./setup.md#step-1-choose-names-and-generate-sec
 
 ## Plugins
 
-Default plugins ship in the image. Add plugins or override image defaults through the chart's `global.dynamic.plugins` values. See [Disable a default plugin](./setup.md#disable-a-default-plugin) for the override form.
+The plugin catalog index enables the default plugins. Add plugins or override the defaults through the chart's `global.dynamic.plugins` values. See [Disable a default plugin](./setup.md#disable-a-default-plugin) for the override form.
 
 You can also install a plugin through the portal's Marketplace. See [Install a plugin from the marketplace](./setup.md#install-a-plugin-from-the-marketplace) for the Kubernetes flow.
 
@@ -36,7 +36,7 @@ Guest sign-in maps guests to `user:default/admin`. Chart 1.0.3 and earlier turn 
 
 ## RBAC
 
-The image includes the RBAC screens and backend. Permission checks are off by default, so every signed-in user can install plugins from the Marketplace. See [What ships by default](./setup.md#what-ships-by-default).
+The default plugins include the RBAC screens, and the RBAC backend is part of the image. Permission checks are off by default, so every signed-in user can install plugins from the Marketplace. See [What ships by default](./setup.md#what-ships-by-default).
 
 ## Checklist before deploying
 

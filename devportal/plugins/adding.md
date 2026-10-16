@@ -10,7 +10,7 @@ This page explains how to add a plugin to a DevPortal 3.x instance: through the 
 
 Decide which plugin you need and find its package reference first. Default plugins list their exact reference on their bundled page. Marketplace plugins expose their reference as a `Package` catalog entity. See [Find the package reference](#find-the-package-reference).
 
-Some plugins need configuration values before the portal starts. For example, enabling the Grafana package without `grafana.domain` set makes the backend log `Config must have required property 'domain' ... at /grafana` during startup while the health check still answers. Add the required settings to your app configuration before you enable such a plugin.
+Some plugins need configuration values before the portal starts. For example, enabling the Grafana package without `grafana.domain` set makes the backend log `Config must have required property 'domain' ... at /grafana` and stop at startup. Add the required settings to your app configuration before you enable such a plugin.
 
 ## Via Marketplace
 
@@ -33,11 +33,11 @@ Add the plugin under `global.dynamic.plugins` in your values file, using a full 
 global:
   dynamic:
     plugins:
-      - package: oci://quay.io/veecode/backstage-community-plugin-github-actions@sha256:fe9cea3a11097339f85bab0bf095ecf1dc95b972194d41e4c9ca0e34c85ecebd
+      - package: oci://quay.io/veecode/backstage-community-plugin-github-actions@sha256:2b4ffde7809fced57ee77f1153d029bbdce1580f1cff926d8be4dafed25b4a72
         disabled: false
 ```
 
-To turn off a default plugin instead, add an entry for that plugin with the `{{inherit}}` tag and the full `!<plugin path>` part, plus `disabled: true`. This example disables the Tech Radar frontend. The installer matches the override to the default plugin by registry, repository, and the plugin path after `!`; the tag is not part of the match, and `{{inherit}}` keeps the version the default plugin file pins. A tag or digest in an override sets that version instead, so a stale digest pins an older artifact. Write the tag as `{{ "{{inherit}}" }}` here because the chart renders this list as a template.
+To turn off a default plugin instead, add an entry for that plugin with the `{{inherit}}` tag and the full `!<plugin path>` part, plus `disabled: true`. This example disables the Tech Radar frontend. The installer matches the override to the default plugin by registry, repository, and the plugin path after `!`; the tag is not part of the match, and `{{inherit}}` takes the version the catalog index gives the plugin. A tag or digest in an override sets that version instead, so a stale digest pins an older artifact. Write the tag as `{{ "{{inherit}}" }}` here because the chart renders this list as a template.
 
 ```yaml
 global:
@@ -47,41 +47,35 @@ global:
         disabled: true
 ```
 
-If your override for a default plugin also sets `pluginConfig`, it replaces that plugin's whole `pluginConfig` instead of merging with it. Copy the complete `pluginConfig` block from the default plugin file and edit values in place. Each bundled page gives the override reference for its plugin.
+If your override for a default plugin also sets `pluginConfig`, it replaces that plugin's whole `pluginConfig` instead of merging with it. Copy the complete `pluginConfig` block from the catalog index's `dynamic-plugins.default.yaml` and edit values in place. Each bundled page gives the override reference for its plugin.
 
 Then upgrade the release. The production setup guide shows the full flow in [Disable a default plugin](../installation-guide/production-setup/setup.md#disable-a-default-plugin).
 
-## Enable a plugin bundled in the image
+## Plugins that 3.0.x bundled in the image
 
-DevPortal 3.0.3 bundles 41 plugins under `/opt/app-root/src/dynamic-plugins/dist`. These bundled plugins are separate from the 20 default plugins. A `./dynamic-plugins/dist/...` entry enables a bundled plugin and does not override a default plugin; to disable or reconfigure a default plugin, use the OCI `{{inherit}}` form described in [Disable a default plugin](../installation-guide/production-setup/setup.md#disable-a-default-plugin). List their directories on the local stack with:
+DevPortal 3.0.3 bundled 41 plugins under `/opt/app-root/src/dynamic-plugins/dist`. The 3.1 image has no `dynamic-plugins/` directory. Plugins that 3.0.x shipped there are OCI artifacts from 3.1 on, and they are disabled by default. An entry with a `./dynamic-plugins/dist/...` path is skipped without an error, so the plugin is missing. Replace each such entry with the plugin's `oci://` reference from the Marketplace or the catalog index.
 
-```bash
-docker compose exec devportal ls /opt/app-root/src/dynamic-plugins/dist
-```
-
-To enable a bundled plugin on the local stack, add its relative path to the operator plugin file and set `disabled` to `false`:
-
-```yaml
-plugins:
-  - package: ./dynamic-plugins/dist/backstage-plugin-scaffolder-backend-module-github-dynamic
-    disabled: false
-```
-
-Apply the change by running `docker compose down` and then `docker compose up -d` with the same Compose files. On Kubernetes, put the same entry under `global.dynamic.plugins`:
+For example, the GitHub scaffolder module is an OCI artifact in the catalog index, disabled by default. On Kubernetes, enable it under `global.dynamic.plugins`:
 
 ```yaml
 global:
   dynamic:
     plugins:
-      - package: ./dynamic-plugins/dist/backstage-plugin-scaffolder-backend-module-github-dynamic
+      - package: oci://quay.io/veecode/backstage-plugin-scaffolder-backend-module-github@sha256:bb3f9763b14b6bd524b99b58e209a3b89d7fdf9ccadcb6d957f8d365c1d5a719
         disabled: false
 ```
 
-The [production setup guide's Keycloak catalog module example](../installation-guide/production-setup/setup.md#step-6-install-devportal) uses this path.
+On the local stack, add the same entry under `plugins:` in the operator plugin file, then apply it with `docker compose down` and `docker compose up -d` using the same Compose files:
+
+```yaml
+plugins:
+  - package: oci://quay.io/veecode/backstage-plugin-scaffolder-backend-module-github@sha256:bb3f9763b14b6bd524b99b58e209a3b89d7fdf9ccadcb6d957f8d365c1d5a719
+    disabled: false
+```
 
 The GitHub scaffolder module loads at startup without extra configuration and adds actions such as `publish:github` and `publish:github:pull-request`. Configure a GitHub integration token before you run those actions.
 
-The Marketplace offers the same upstream module in the `github-scaffolder-actions` collection as a digest-pinned OCI artifact. A bundled path does not require pulling that artifact from a registry, which helps when a cluster cannot reach the registry. The default plugin index lists none of the `./dynamic-plugins/dist` paths, so those paths do not appear there as installable entries. To change which catalog index the portal reads, see [Configure the plugin catalog index](../installation-guide/production-setup/catalog-index.md).
+The Marketplace lists the same upstream module as the `github-scaffolder-actions` plugin, backed by the digest-pinned OCI artifact above. The default plugin index has no `./dynamic-plugins/dist/...` entries. To change which catalog index the portal reads, see [Configure the plugin catalog index](../installation-guide/production-setup/catalog-index.md).
 
 ## On the local stack: the operator plugin file
 
@@ -95,16 +89,16 @@ plugins:
 
 ## Find the package reference
 
-For a default plugin, print the default plugin file from the running portal. It lists all 20 default plugins with their exact references:
+For a default plugin, print the list of default plugin names from the running portal. It lists all 18 default plugins by repository and path. The override reference for one of them is `oci://<repository>:{{inherit}}!<path>`.
 
 ```bash
-docker compose exec devportal cat /opt/app-root/src/dynamic-plugins.veecode.yaml
+docker compose exec devportal cat /opt/app-root/src/factory-plugins.yaml
 ```
 
 For a Marketplace plugin, read the reference from its `Package` catalog entity in the `rhdh` namespace: the `spec.dynamicArtifact` value is the digest-pinned OCI reference to use in a plugin entry. For example, the Grafana package entity carries:
 
 ```json
-{"metadata":{"name":"backstage-community-plugin-grafana","namespace":"rhdh"},"spec":{"dynamicArtifact":"oci://quay.io/veecode/backstage-community-plugin-grafana@sha256:f532f66d796de182d32cbe5f0eb7f0829cc31e61dac09f6cfed646ef6f8bcad3"}}
+{"metadata":{"name":"backstage-community-plugin-grafana","namespace":"rhdh"},"spec":{"dynamicArtifact":"oci://quay.io/veecode/backstage-community-plugin-grafana@sha256:27e84e524b188b84bc46d35783e628c01d63d11293ec86454b34e08a333deceb"}}
 ```
 
 ## Configuring credentials

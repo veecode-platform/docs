@@ -7,6 +7,7 @@ Every 3.x release has a release sheet. It says what changed, which versions of t
 
 The release sheets are:
 
+- [DevPortal 3.1.0 release sheet](./release-sheet-3-1-0.md)
 - [DevPortal 3.0.3 release sheet](./release-sheet-3-0-3.md)
 - [DevPortal 3.0.2 release sheet](./release-sheet-3-0-2.md)
 - [DevPortal 3.0.1 release sheet](./release-sheet-3-0-1.md)
@@ -59,7 +60,7 @@ Use these values together. Pin the image by its digest.
 | Catalog index tag for pinning | `quay.io/veecode/plugin-catalog-index:TIMESTAMPED_TAG` |
 | Qualified on | Kubernetes 1.NN, PostgreSQL NN |
 
-`bs_1.NN.N` is the tag under which the plugins and the catalog index are published, and it names the Backstage version they are built for. The catalog index tag moves when the catalog is republished. During an incident, pin the timestamped tag above so that the marketplace stops changing.
+`bs_1.NN.N` is the tag under which the plugins and the catalog index are published, and it names the Backstage version they are built for. The catalog index tag moves when the catalog is republished. The chart pins the catalog index by digest, so an installation keeps the same index until you move to a new chart version. To pin the index by its timestamped tag, set `global.catalogIndex.image.repository` to `veecode/plugin-catalog-index` and `global.catalogIndex.image.tag` to the timestamped tag above.
 
 ### Backstage packages
 
@@ -67,11 +68,20 @@ Use these values together. Pin the image by its digest.
 | --- | --- |
 | `@backstage/PACKAGE` | `X.Y.Z` |
 
+### Default plugin versions
+
+The catalog index enables these plugins. Protected plugins cannot be disabled from the Marketplace. The other plugins can be disabled from it.
+
+| Artifact | Version | Protected |
+| --- | --- | --- |
+| `quay.io/veecode/PLUGIN` | `X.Y.Z` | yes or no |
+
 ## Vulnerability report
 
 - Image scanned: `docker.io/veecode/devportal@sha256:DIGEST`
 - Scanner: Trivy X.Y.Z, database of YYYY-MM-DD
 - Critical vulnerabilities with a fix and no live exception: 0
+- Qualification run: `https://github.com/veecode-platform/devportal-chart/actions/runs/RUN_ID`.
 
 | Severity | Reported | With a fix | Accepted as an exception |
 | --- | ---: | ---: | ---: |
@@ -113,6 +123,8 @@ The plugins the portal enables by default are separate artifacts. Each one is sc
 | Backstage version and packages | [`docs/dynamic-plugins/versions.md`](https://github.com/veecode-platform/devportal-core/blob/main/docs/dynamic-plugins/versions.md) of the core repository, which lists the Backstage version and the table of packages. |
 | Catalog index and its timestamped tag | The catalog index that the qualification installed. The timestamped tag comes from the same publication. |
 | Qualified on | The Kubernetes and PostgreSQL versions of the qualification run. |
+| Qualification run | The URL of the qualification run in the chart repository that tested this chart version. |
+| Default plugin versions | The catalog index that the chart pins: its `dynamic-plugins.default.yaml` and the package entries in `catalog-entities/`. The protected flag comes from the image's `factory-plugins.yaml`. |
 | Vulnerability report | `scan-summary.md` and `trivy.json`, which the qualification run uploads as the `qualification-scan` artifact. |
 | Exceptions | `.trivyignore.yaml` of the chart repository. Each entry has an `id`, a `statement` (the reason) and an `expired_at` date. |
 | Plugins enabled by default | The scan of each default artifact, in report mode. |

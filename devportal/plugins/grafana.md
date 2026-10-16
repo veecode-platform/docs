@@ -23,23 +23,22 @@ Add the index package reference to your operator file (`dynamic-plugins.local.ya
 ```yaml
 includes:
   - dynamic-plugins.default.yaml
-  - /opt/app-root/src/dynamic-plugins.veecode.yaml
 plugins:
-  - package: oci://quay.io/veecode/backstage-community-plugin-grafana@sha256:f532f66d796de182d32cbe5f0eb7f0829cc31e61dac09f6cfed646ef6f8bcad3
+  - package: oci://quay.io/veecode/backstage-community-plugin-grafana@sha256:27e84e524b188b84bc46d35783e628c01d63d11293ec86454b34e08a333deceb
     disabled: false
 ```
 
-Mount the operator file and recreate the stack as described in [Configure dynamic plugins for the local stack](../installation-guide/docker-local/custom-plugins.md). Enabling the entry alone is not enough: set `grafana.domain` with the configuration below before you start the stack. Without it, the backend logs `Config must have required property 'domain'` at `/grafana`, but the healthcheck still returns 200 and the plugin still loads.
+Mount the operator file and recreate the stack as described in [Configure dynamic plugins for the local stack](../installation-guide/docker-local/custom-plugins.md). Enabling the entry alone is not enough: set `grafana.domain` with the configuration below before you start the stack. Without it, DevPortal 3.1.0 does not start: the backend logs `Config must have required property 'domain'` at `/grafana`, then `Backend startup failed`, and the readiness check keeps failing.
 
 ### On Kubernetes
 
-Add the same package reference under `global.dynamic.plugins` in your chart values. The chart loads the default plugin file (`dynamic-plugins.veecode.yaml`) through `global.dynamic.includes` and takes customer plugin entries from `global.dynamic.plugins`.
+Add the same package reference under `global.dynamic.plugins` in your chart values. The chart loads the catalog index's default plugin file (`dynamic-plugins.default.yaml`) through `global.dynamic.includes` and takes customer plugin entries from `global.dynamic.plugins`.
 
 ---
 
 ## App configuration
 
-The plugin requires `grafana.domain` and the Grafana proxy endpoint. The index plugin config sets `grafana.domain` from the `GRAFANA_DOMAIN` variable. Set the domain before you start the stack: without it, the backend logs `Config must have required property 'domain'` at `/grafana`, but the healthcheck still returns 200 and the plugin still loads.
+The plugin requires `grafana.domain` and the Grafana proxy endpoint. The index plugin config sets `grafana.domain` from the `GRAFANA_DOMAIN` variable. Set the domain before you start the portal. Without it, DevPortal 3.1.0 does not start: the backend logs `Config must have required property 'domain'` at `/grafana`, then `Backend startup failed`, and the readiness check keeps failing.
 
 On the local stack, add a configuration fragment such as `app-config.grafana.yaml`:
 

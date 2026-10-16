@@ -4,7 +4,7 @@ sidebar_label: Custom home plugin
 title: Custom home plugin
 ---
 
-The home page is the VeeCode homepage plugin, one of the default plugins, enabled at route `/` with page size props and a visit recorder on the `application/listener` mount point. The stock Red Hat Developer Hub dynamic home page also ships among the default plugins, but disabled: exactly one page may own `/`, and re-enabling the stock page alongside the VeeCode home breaks the boot. Change the home page by reconfiguring or replacing the VeeCode homepage entry, not by editing the image.
+The home page is the VeeCode homepage plugin, one of the default plugins, enabled at route `/` with page size props and a visit recorder on the `application/listener` mount point. The stock Red Hat Developer Hub dynamic home page also ships among the default plugins, but disabled: exactly one page may own `/`, and re-enabling the stock page alongside the VeeCode home leaves the portal's pages empty. This was observed on 3.0.x and not re-tested on 3.1.0. Change the home page by reconfiguring or replacing the VeeCode homepage entry, not by editing the image.
 
 ## Change the home page settings
 
@@ -40,7 +40,6 @@ On the local stack, put the equivalent entry under `plugins:` in the operator pl
 ```yaml
 includes:
   - dynamic-plugins.default.yaml
-  - /opt/app-root/src/dynamic-plugins.veecode.yaml
 plugins:
   - package: oci://quay.io/veecode/veecode-platform-plugin-veecode-homepage:{{inherit}}!veecode-platform-plugin-veecode-homepage
     disabled: false
@@ -63,7 +62,7 @@ plugins:
                 importName: VisitListener
 ```
 
-Keep the `VisitListener` mount point: it records visits, and without it the recently and top visited cards stay empty. `{{inherit}}` keeps the version that the default plugin file pins, so the override survives upgrades. Always keep the `!<plugin-path>` part after the version.
+Keep the `VisitListener` mount point: it records visits, and without it the recently and top visited cards stay empty. `{{inherit}}` keeps the version that the catalog index gives the plugin, so the override survives upgrades. Always keep the `!<plugin-path>` part after the version.
 
 ## Swap the home page
 

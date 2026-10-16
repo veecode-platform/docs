@@ -31,7 +31,7 @@ This is the Red Hat Developer Hub global header package. The 3.x default plugin 
 
 ## Configuration
 
-The default plugin file (`dynamic-plugins.veecode.yaml`) enables the package and configures the sidebar through menu items:
+The catalog index's default plugin file (`dynamic-plugins.default.yaml`) enables the package and configures the sidebar through menu items. The block is an excerpt: the index holds more entries for this plugin, so copy the complete `pluginConfig` from the index before you override it.
 
 ```yaml
 pluginConfig:

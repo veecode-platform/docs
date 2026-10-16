@@ -17,20 +17,9 @@ yarn new --select scaffolder-backend-module --option moduleId=my-custom-action
 
 This creates the folder `plugins/scaffolder-backend-module-my-custom-action`, as well as an example action in `src/actions`.
 
-## Register the package for export
+## Export the action module
 
-`yarn dev:dynamic` exports only the plugin directories listed in the `dev:dynamic` script in the workspace root `package.json`. It also needs a matching entry in the workspace `dynamic-plugins.yaml`. Register the new package in both places before you export:
-
-1. Append the plugin directory to the `dev:dynamic` script arguments. For example, change `export-dev-dynamic.sh plugins/dummy plugins/dummy-backend` to `export-dev-dynamic.sh plugins/dummy plugins/dummy-backend plugins/scaffolder-backend-module-my-custom-action`.
-2. Add the export entry to `dynamic-plugins.yaml`:
-
-```yaml
-plugins:
-  - package: ./dynamic-plugins/dist/internal-backstage-plugin-scaffolder-backend-module-my-custom-action-dynamic
-    disabled: false
-```
-
-A backend entry has no `pluginConfig`.
+Build and export this package with the commands in [Creating Your Own Plugin](./creating-own-plugins.md). The 3.1 operator entry uses `./dynamic-plugins-src/<exported-directory>`, mounted from `dynamic-plugins-src-dev`. A backend module entry has no `pluginConfig`.
 
 :::note
 You can delete or rename the example action file to `dummy.ts`.
@@ -110,15 +99,9 @@ DevPortal attaches the exported dynamic module to its own Scaffolder plugin auto
 
 ## Test the action
 
-Export the workspace and load it in devportal-local, as described in [Creating Your Own Plugin](./creating-own-plugins.md):
+Export the package, start devportal-local, and apply later edits as described in [Creating Your Own Plugin](./creating-own-plugins.md).
 
-```bash
-yarn tsc
-yarn build:all
-yarn dev:dynamic
-```
-
-Then run the printed Compose command from the devportal-local checkout. Open the action list at http://localhost:3000/create/actions during host development, or at http://localhost:7007/create/actions against devportal-local, to check that the action is loaded:
+Open the action list at http://localhost:3000/create/actions during host development, or at http://localhost:7007/create/actions against devportal-local, to check that the action is loaded:
 
 ![Custom Action](/img/assets/custom-action.png)
 

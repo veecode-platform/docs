@@ -14,7 +14,7 @@ The sample frontend plugin built in [Example: Frontend Plugin](./frontend-plugin
 
 ```yaml
 plugins:
-  - package: ./dynamic-plugins/dist/internal-backstage-plugin-my-front-plugin-dynamic
+  - package: ./dynamic-plugins-src/internal-backstage-plugin-my-front-plugin
     disabled: false
     pluginConfig:
       dynamicPlugins:
@@ -29,7 +29,7 @@ plugins:
                   enabled: true
 ```
 
-The plugin id under `dynamicPlugins.frontend.<plugin-id>` is the npm package name with `@` removed and `/` replaced by `.`. The `package` value above is the local export path used during development. A published plugin uses its OCI reference instead. See [Loading a Dynamic Plugin](./loading.md) and [Configure dynamic plugins for the local stack](../../installation-guide/docker-local/custom-plugins.md) for the entry shapes.
+The plugin id under `dynamicPlugins.frontend.<plugin-id>` is the npm package name with `@` removed and `/` replaced by `.`. The `package` value above points to the exported directory under `devportal-local/dynamic-plugins-src-dev`. The `yarn dev:dynamic` helper creates and prints the Compose override that mounts it; without the helper, create the override as shown in [Creating Your Own Plugin](./creating-own-plugins.md). A published plugin uses its OCI reference instead. See [Loading a Dynamic Plugin](./loading.md) and [Configure dynamic plugins for the local stack](../../installation-guide/docker-local/custom-plugins.md) for the entry shapes.
 
 ## Routes, menu entries, and mount points
 
@@ -63,13 +63,7 @@ Before assuming a customization is not possible, check whether it is exposed as 
 
 ## Test the wiring locally
 
-Export the workspace and load it in devportal-local, as described in [Creating Your Own Plugin](./creating-own-plugins.md):
-
-```bash
-yarn dev:dynamic
-```
-
-Then run the printed Compose command from the devportal-local checkout, open the configured route in the browser, and confirm the sidebar item. If the package is absent from the UI, check `http://localhost:7007/api/dynamic-plugins-info/loaded-plugins` to see whether it loaded.
+Export the package and start devportal-local as described in [Creating Your Own Plugin](./creating-own-plugins.md). Open the configured route in the browser and confirm the sidebar item. If the package is absent from the UI, check `http://localhost:7007/api/dynamic-plugins-info/loaded-plugins` to see whether it loaded.
 
 ## Additional Documentation
 

@@ -34,8 +34,8 @@ The [Plugin Ecosystem](./ecosystem.md) page lists the available plugin packages 
 
 ## Checking what is already installed
 
-The Marketplace **Installed packages** tab lists the packages the portal runs: the 20 default plugins from the image plus anything installed from Marketplace or added through chart values. For the exact reference of a default plugin, print the default plugin file from the running portal:
+The Marketplace **Installed packages** tab lists the packages the portal runs: the 18 default plugins from the catalog index plus anything installed from Marketplace or added through chart values. For the repository and path of each default plugin, print the list of default plugin names from the running portal:
 
 ```bash
-docker compose exec devportal cat /opt/app-root/src/dynamic-plugins.veecode.yaml
+docker compose exec devportal cat /opt/app-root/src/factory-plugins.yaml
 ```

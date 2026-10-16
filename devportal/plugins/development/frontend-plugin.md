@@ -55,12 +55,9 @@ These edits apply to the development host only. They let you iterate on the UI w
 
 ![Custom Frontend Plugin](/img/assets/custom-front.png)
 
-## Register the package for export
+## Export the plugin
 
-`yarn dev:dynamic` exports only the plugin directories listed in the `dev:dynamic` script in the workspace root `package.json`. Before you export, register the frontend package in the two places the backend example uses:
-
-1. Append `plugins/my-front-plugin` to the `dev:dynamic` script arguments, after the directories already listed.
-2. Add the `dynamic-plugins.yaml` entry shown in [Expose the plugin to DevPortal](#expose-the-plugin-to-devportal) below.
+Build and export this package with the commands in [Creating Your Own Plugin](./creating-own-plugins.md). The 3.1 operator entry uses `./dynamic-plugins-src/<exported-directory>`, mounted from `dynamic-plugins-src-dev`.
 
 ## Expose the plugin to DevPortal
 
@@ -68,7 +65,7 @@ Declare where the UI mounts in a `pluginConfig.dynamicPlugins.frontend` block, a
 
 ```yaml
 plugins:
-  - package: ./dynamic-plugins/dist/internal-backstage-plugin-my-front-plugin-dynamic
+  - package: ./dynamic-plugins-src/internal-backstage-plugin-my-front-plugin
     disabled: false
     pluginConfig:
       dynamicPlugins:
@@ -83,13 +80,7 @@ plugins:
                   enabled: true
 ```
 
-Export the workspace and load it in devportal-local, as described in [Creating Your Own Plugin](./creating-own-plugins.md):
-
-```bash
-yarn dev:dynamic
-```
-
-Then run the printed Compose command from the devportal-local checkout, open the configured route in the browser, and confirm the sidebar item. If the page is missing, check `http://localhost:7007/api/dynamic-plugins-info/loaded-plugins` to see whether the package loaded.
+Export the package and start devportal-local as described in [Creating Your Own Plugin](./creating-own-plugins.md). Open the configured route in the browser and confirm the sidebar item. If the page is missing, check `http://localhost:7007/api/dynamic-plugins-info/loaded-plugins` to see whether the package loaded.
 
 Next:
 

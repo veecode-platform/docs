@@ -67,7 +67,7 @@ DevPortal signs a user in only after it imports that user from Keycloak. With th
 
 ### Does DevPortal 3.x use presets?
 
-No. DevPortal 3.x has no preset model. Its default plugins ship in the image, and provider settings are configured explicitly. See the [2.x-to-3.x migration guide](../migrating-from-2x.md).
+No. DevPortal 3.x has no preset model. Its default plugins come from the plugin catalog index, and provider settings are configured explicitly. See the [2.x-to-3.x migration guide](../migrating-from-2x.md).
 
 ## Plugins
 
@@ -75,6 +75,6 @@ No. DevPortal 3.x has no preset model. Its default plugins ship in the image, an
 
 Open Marketplace after the catalog finishes loading and select a plugin to install. For a local portal, you can also add a plugin entry to the operator plugin file. See [Configure dynamic plugins for the local stack](./docker-local/custom-plugins.md). For Kubernetes, configure additions and overrides through chart values. See [Disable a default plugin](./production-setup/setup.md#disable-a-default-plugin).
 
-### Do I need to copy the image's default plugins into chart values?
+### Do I need to copy the default plugins into chart values?
 
-No. The image ships its default plugins. Use chart values for additions or overrides. See [Disable a default plugin](./production-setup/setup.md#disable-a-default-plugin) for the override form.
+No. The plugin catalog index ships its default plugins. Use chart values for additions or overrides. See [Disable a default plugin](./production-setup/setup.md#disable-a-default-plugin) for the override form.

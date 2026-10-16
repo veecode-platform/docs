@@ -17,21 +17,9 @@ yarn build:all
 
 This type-checks the workspace and builds every package.
 
-## Export a dynamic package
+## Export and test a workspace package locally
 
-A dynamic plugin is a plugin that can be loaded at runtime. It is not statically linked to the host project, but is loaded at start time.
-
-Technically, a dynamic plugin is a slightly different repackaging of a regular plugin. To export, run this command at the workspace root *after you have already built it successfully*:
-
-```bash
-yarn dev:dynamic
-```
-
-The command exports every workspace package into `dynamic-plugins-root-dev` and prints the Compose command that loads the export into devportal-local. Use that export for local testing, as described in [Creating Your Own Plugin](./creating-own-plugins.md): no publishing step is needed to see the plugin run.
-
-:::info
-The workspace export uses the Red Hat Developer Hub CLI (`rhdh-cli plugin export`) under the hood. Older material may call it by its previous name, `@janus-idp/cli`.
-:::
+A dynamic plugin is loaded at runtime rather than linked to the host project. For the single step-by-step procedure to export a workspace package and run it in devportal-local, see [Creating Your Own Plugin](./creating-own-plugins.md). The helper uses the Red Hat Developer Hub CLI package `@red-hat-developer-hub/cli` (`rhdh-cli`).
 
 ## Publish as an OCI artifact
 
@@ -71,7 +59,7 @@ An OCI plugin image and its Extensions catalog entry are distinct artifacts. The
 The OCI path above is the default for DevPortal 3.x. You have other options where the plugin owner needs them:
 
 - You can host the `tgz` file produced by `npm pack` on an internal web server and use its URL in the `package` field.
-- You can use a local path in the `package` field with a volume mount into the portal container, which is what `yarn dev:dynamic` plus the devportal-local override does during development.
+- You can use a local path in the `package` field with a volume mount into the portal container. See [Creating Your Own Plugin](./creating-own-plugins.md) for the local development procedure.
 - You can publish the dynamic package to an npm registry, public or private, and pin it with an `integrity` hash. See [Loading a Dynamic Plugin](./loading.md#generating-the-integrity-hash).
 
 You can find more info on these packaging options in [Red Hat Developer Hub documentation](https://docs.redhat.com/en/documentation/red_hat_developer_hub/1.7/html-single/installing_and_viewing_plugins_in_red_hat_developer_hub/index#assembly-package-publish-third-party-dynamic-plugin). Both VeeCode DevPortal and RHDH use the same dynamic loading mechanism.

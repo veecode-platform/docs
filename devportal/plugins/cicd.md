@@ -61,7 +61,7 @@ The simplest CI/CD plugin to enable for GitHub-hosted projects. Add the index re
 
 ```yaml
 plugins:
-  - package: oci://quay.io/veecode/backstage-community-plugin-github-actions@sha256:fe9cea3a11097339f85bab0bf095ecf1dc95b972194d41e4c9ca0e34c85ecebd
+  - package: oci://quay.io/veecode/backstage-community-plugin-github-actions@sha256:2b4ffde7809fced57ee77f1153d029bbdce1580f1cff926d8be4dafed25b4a72
     disabled: false
 ```
 

@@ -10,7 +10,7 @@ title: Why DevPortal?
 
 A Backstage distribution (distro) is a packaged, opinionated build of Backstage that comes with curated plugins, sensible defaults, integrations, and an upgrade path. Instead of stitching together the open-source core, dozens of plugins, auth, RBAC, catalog processors, search backends, and CI/CD yourself, a distro gives you a tested runtime you can deploy and operate reliably.
 
-For 3.x, the default plugins ship in the image. Use chart values to add or override plugins. See [What ships by default](./installation-guide/production-setup/setup.md#what-ships-by-default) and [how to disable a default plugin](./installation-guide/production-setup/setup.md#disable-a-default-plugin).
+For 3.x, the plugin catalog index enables the default plugins; the image carries only their names. Use chart values to add or override plugins. See [What ships by default](./installation-guide/production-setup/setup.md#what-ships-by-default) and [how to disable a default plugin](./installation-guide/production-setup/setup.md#disable-a-default-plugin).
 
 ## Why run a ready-to-use Backstage runtime?
 

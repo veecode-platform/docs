@@ -32,7 +32,7 @@ The About plugin displays version and instance information for the DevPortal dep
 
 ## Configuration
 
-The default plugin file (`dynamic-plugins.veecode.yaml`) enables both packages and configures the frontend route and menu entry:
+The catalog index's default plugin file (`dynamic-plugins.default.yaml`) enables both packages and configures the frontend route and menu entry:
 
 ```yaml
 pluginConfig:

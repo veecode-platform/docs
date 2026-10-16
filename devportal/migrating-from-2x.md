@@ -19,13 +19,14 @@ The migration goes to a **fresh database**. Nothing is converted in place:
 This guide's procedure was followed end to end, command by command, with:
 
 - DevPortal 2.x: chart `veecode-devportal-platform` 0.5.2 (DevPortal 2.2.3), external PostgreSQL 16, the `recommended` and `keycloak` presets, Keycloak 26, one Ingress.
-- DevPortal 3.x: chart `devportal` 1.0.3, which installs image 3.0.3. Chart 1.0.4 installs the same image and changes two defaults: guest sign-in is off, and the plugin catalog index is pinned by digest. The values file in step 4 sets guest sign-in explicitly, and the guide does not change the index.
+- DevPortal 3.x: chart `devportal` 1.0.3, which installs image 3.0.3. Chart 1.0.4 installs the same image and changes two defaults: guest sign-in is off, and the plugin catalog index is pinned by digest. Chart 1.1.0 installs DevPortal 3.1.0 and enables the default plugins from that index. The values file in step 4 sets guest sign-in explicitly, and the guide does not change the index.
 - Kubernetes: a single-node k3s v1.31.5+k3s1 cluster. The 3.x portal was reached through `kubectl port-forward`.
 
-Two parts were not run:
+Three parts were not run:
 
 - **SQLite.** The test used external PostgreSQL only. A 2.x install on SQLite differs in two ways that come from reading the charts, not from a run. The 2.x data lives on a volume that the chart creates, and `helm uninstall` of that release deletes the volume, so never uninstall such a release while you still need it. The 3.x chart always connects to PostgreSQL, so prepare that server before step 2. The data of the SQLite install does not move to it.
 - **An Ingress for 3.x.** Step 6 reaches the portal through a port-forward. Exposing 3.x through an Ingress follows the 3.x install guide.
+- **The data steps with chart 1.1.0.** The full procedure ran with chart 1.0.3 and image 3.0.3. With chart 1.1.0, a fresh install with the step 4 values was run: the portal started and loaded the Keycloak catalog module. Moving 2.x data was not repeated with chart 1.1.0.
 
 ## What comes back and what does not
 
@@ -143,7 +144,7 @@ kubectl -n "$NAMESPACE" get secret "$V2_SECRET" -o json \
 
 ## Step 4: Write the 3.x values
 
-The 3.x chart has no presets. The features the `recommended` preset enabled in 2.x ship with the 3.x image, and the settings that the `keycloak` preset applied become plain configuration. For the removed 2.x pages, see [Presets](/devportal/v2/concepts/presets) and [Docker local presets](/devportal/v2/installation-guide/docker-local/presets). The file below translates a 2.x install with the `recommended` and `keycloak` presets, external PostgreSQL and one catalog location. Save it as `values-v3.yaml` and replace the example addresses with your own:
+The 3.x chart has no presets. The features the `recommended` preset enabled in 2.x are on by default in 3.x, and the settings that the `keycloak` preset applied become plain configuration. For the removed 2.x pages, see [Presets](/devportal/v2/concepts/presets) and [Docker local presets](/devportal/v2/installation-guide/docker-local/presets). The file below translates a 2.x install with the `recommended` and `keycloak` presets, external PostgreSQL and one catalog location. Save it as `values-v3.yaml` and replace the example addresses with your own:
 
 ```yaml title="values-v3.yaml"
 global:
@@ -152,7 +153,7 @@ global:
       enabled: false
   dynamic:
     plugins:
-      - package: ./dynamic-plugins/dist/backstage-community-plugin-catalog-backend-module-keycloak-dynamic
+      - package: oci://quay.io/veecode/backstage-community-plugin-catalog-backend-module-keycloak@sha256:ed92926ccd13c9346c4905fef71b8151420b9e76717e4994f73cdb19b009b0bd
         disabled: false
 upstream:
   backstage:
@@ -211,7 +212,7 @@ How the 2.x settings map:
 
 | 2.x | 3.x in `values-v3.yaml` |
 |---|---|
-| `presets: [recommended]` | Nothing to set. The marketplace, the Tech Radar and the other defaults ship with the image. |
+| `presets: [recommended]` | Nothing to set. The marketplace, the Tech Radar and the other default plugins are enabled by default. |
 | `presets: [keycloak]` | `signInPage`, `auth` and the `keycloakOrg` catalog provider. They read the same `KEYCLOAK_*` and `AUTH_SESSION_SECRET` variables, which the Secret of step 3 carries over. The Keycloak catalog module is a plugin in 3.x, so the `global.dynamic.plugins` entry enables it. |
 | `existingSecret` | `upstream.backstage.extraEnvVarsSecrets`, pointing at the Secret of step 3. |
 | `database.external.enabled: true` | Nothing to set. 3.x always uses your PostgreSQL, through the `PG_*` keys of that Secret. |
@@ -233,7 +234,7 @@ Add the chart repository and install the release. The first start pulls the imag
 ```bash
 helm repo add veecode https://veecode-platform.github.io/next-charts
 helm repo update
-helm install "$V3_RELEASE" veecode/devportal --version 1.0.4 -n "$NAMESPACE" -f values-v3.yaml --wait --timeout 20m
+helm install "$V3_RELEASE" veecode/devportal --version 1.1.0 -n "$NAMESPACE" -f values-v3.yaml --wait --timeout 20m
 ```
 
 If the command times out and the pod stays at `0/1`, read the backend log with `kubectl -n "$NAMESPACE" logs "deploy/$V3_RELEASE-developer-hub" -c backstage-backend`. On a busy node the first start can fail while it creates the database tables. In an earlier pre-release test, two of three first starts ended with `Plugin 'catalog' startup failed; caused by MigrationLocked`. One pod had been stopped by the startup probe. The other had no restarts, and its log did not establish whether another migrator still held the lock. Do not clear the lock until you have stopped every backend replica and confirmed that no migration is active. The commands below use the catalog database from that test. If the log names another plugin, replace `catalog` in both database commands with that plugin's name. Run the recovery commands in the same terminal so `V3_REPLICAS` remains set.
@@ -307,7 +308,7 @@ The command must print `404`.
 
 ## Step 7: Install the marketplace plugins and locations again
 
-Install again each plugin listed in `marketplace-installs-2x.yaml`: choose **Marketplace** in the sidebar, which opens the **Extensions** page at `/marketplace`, search for the plugin on the **Catalog** tab, and choose **Install**. Leave the two entries that ship disabled with 3.x as they are, the Red Hat dynamic Home page and the theme: enabling the Home entry leaves the portal's pages empty, because it registers the same frontend API as the DevPortal home page. The 3.x chart installs plugins when the pod starts, so restart the deployment:
+Install again each plugin listed in `marketplace-installs-2x.yaml`: choose **Marketplace** in the sidebar, which opens the **Extensions** page at `/marketplace`, search for the plugin on the **Catalog** tab, and choose **Install**. Leave the two entries that ship disabled with 3.x as they are, the Red Hat dynamic Home page and the theme. Enabling the Home entry leaves the portal's pages empty, because it registers the same frontend API as the DevPortal home page. The empty pages were observed on 3.0.x and not re-tested on 3.1.0. The 3.x chart installs plugins when the pod starts, so restart the deployment:
 
 ```bash
 kubectl -n "$NAMESPACE" rollout restart "deploy/$V3_RELEASE-developer-hub"

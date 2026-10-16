@@ -13,9 +13,9 @@ These docs cover DevPortal 3.x. Check one signal from your installation against 
 | Signal | V1 | 2.x | 3.x |
 | --- | --- | --- | --- |
 | Container image | Two images, `veecode/devportal-base` and `veecode/devportal`, or the `1.x` image line | `veecode/devportal:2.x` | `veecode/devportal:3.x` |
-| Enablement environment variable | `VEECODE_PROFILE=<profile>` | `VEECODE_PRESETS=<preset-list>` | None for plugin selection. Default plugins ship in the image; chart values configure additions and overrides. |
+| Enablement environment variable | `VEECODE_PROFILE=<profile>` | `VEECODE_PRESETS=<preset-list>` | None for plugin selection. Default plugins come from the plugin catalog index; chart values configure additions and overrides. |
 | Helm chart | `veecode-devportal` | `veecode-devportal-platform` | `devportal` |
-| Plugin model | Plugins are baked into the distribution image. | Presets or OCI references select plugins. | Default plugins ship in the image. Use chart values or Marketplace installs to add or change plugins. |
+| Plugin model | Plugins are baked into the distribution image. | Presets or OCI references select plugins. | Default plugins come from the plugin catalog index. Use chart values or Marketplace installs to add or change plugins. |
 
 Check the image, environment variables, and chart on a running installation with these commands:
 

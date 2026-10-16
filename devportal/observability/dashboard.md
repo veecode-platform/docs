@@ -29,7 +29,7 @@ proxy:
       changeOrigin: true
 ```
 
-Set `grafana.domain` before you start the stack. Without it, the backend logs `Config must have required property 'domain'` at `/grafana`, but the healthcheck still returns 200 and the plugin still loads. Pass the secrets through environment variables on the local stack or a referenced Secret on Kubernetes.
+Set `grafana.domain` before you start the portal. Without it, DevPortal 3.1.0 does not start: the backend logs `Config must have required property 'domain'` at `/grafana`, then `Backend startup failed`, and the readiness check keeps failing. Pass the secrets through environment variables on the local stack or a referenced Secret on Kubernetes.
 
 ---
 

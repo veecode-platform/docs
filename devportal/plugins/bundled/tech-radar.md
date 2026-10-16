@@ -31,7 +31,7 @@ The Tech Radar plugin provides a visual technology adoption radar, helping teams
 
 ## Configuration
 
-The default plugin file (`dynamic-plugins.veecode.yaml`) enables both packages and configures the frontend route and sidebar entry:
+The catalog index's default plugin file (`dynamic-plugins.default.yaml`) enables both packages and configures the frontend route and sidebar entry:
 
 ```yaml
 pluginConfig:

@@ -8,7 +8,7 @@ title: Notifications Plugin
 
 The Notifications plugin gives every user a notification list at `/notifications`, reached from the **Notifications** sidebar entry, and shows a bell with the unread count in the header. Other systems address notifications to users through the backend REST API with a service credential.
 
-**Status:** A default plugin, enabled in the default plugin file (`dynamic-plugins.veecode.yaml`). No `dynamic-plugins.yaml` entry required.
+**Status:** A default plugin, enabled in the catalog index's default plugin file (`dynamic-plugins.default.yaml`). No `dynamic-plugins.yaml` entry required.
 
 ---
 

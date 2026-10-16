@@ -87,9 +87,9 @@ upstream:
                   indicator: '#00b39b'
 ```
 
-## The legacy theme plugin ships disabled
+## The legacy theme plugin is not a default
 
-The default plugin file (`dynamic-plugins.veecode.yaml`) still carries the legacy VeeCode theme plugin, but its entry is `disabled: true`. The RHDH-native theming above replaces it. Leave the entry disabled. Re-enabling it restores the old theme provider, which does not implement the palette contract the 3.x shell requires.
+The 3.x default plugins do not include the legacy VeeCode theme plugin. The RHDH-native theming above replaces it. Adding it back restores the old theme provider, which does not implement the palette contract the 3.x shell requires.
 
 DevPortal 2.x also read theme overrides from the `THEME_CUSTOM_JSON` and `THEME_DOWNLOAD_URL` environment variables, as described in the [2.x theme guide](/devportal/v2/customization/theme-hack). 3.x does not read them; set the palette through app configuration as shown above.
 

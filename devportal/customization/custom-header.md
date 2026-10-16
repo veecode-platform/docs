@@ -43,9 +43,9 @@ upstream:
 
 ## Reconfigure the header plugin
 
-To change the header mount itself, override the default plugin entry for the header package. An override's `pluginConfig` replaces the default plugin's whole `pluginConfig` (no merge), so copy the complete block and edit values in place. Copy the whole `pluginConfig` block for the header package from the default plugin file (`dynamic-plugins.veecode.yaml`) and edit only what you need. Prefer a `disabled: true` override alone when that is enough; reach for a full `pluginConfig` copy only when you must change the mount configuration.
+To change the header mount itself, override the default plugin entry for the header package. An override's `pluginConfig` replaces the default plugin's whole `pluginConfig` (no merge), so copy the complete block and edit values in place. Copy the whole `pluginConfig` block for the header package from the catalog index's `dynamic-plugins.default.yaml` and edit only what you need. Prefer a `disabled: true` override alone when that is enough; reach for a full `pluginConfig` copy only when you must change the mount configuration.
 
-Use `{{inherit}}` for the version so the override keeps the version that the default plugin file pins and survives upgrades. Always keep the `!<plugin-path>` part after the version. In chart values (`global.dynamic.plugins`) the chart renders the list as a template, so write the tag as `{{ "{{inherit}}" }}` there; in the local stack's operator plugin file write `{{inherit}}` as is.
+Use `{{inherit}}` for the version so the override keeps the version that the catalog index gives the plugin and survives upgrades. Always keep the `!<plugin-path>` part after the version. In chart values (`global.dynamic.plugins`) the chart renders the list as a template, so write the tag as `{{ "{{inherit}}" }}` there; in the local stack's operator plugin file write `{{inherit}}` as is.
 
 ## Replace or remove the header
 
@@ -59,7 +59,7 @@ global:
         disabled: true
 ```
 
-On the local stack, put the equivalent `disabled: true` entry in the operator plugin file, as described in [Configure dynamic plugins for the local stack](../installation-guide/docker-local/custom-plugins.md). Write the version as `{{inherit}}` as is, keeping the `!<plugin-path>` part, so the override keeps the version that the default plugin file pins.
+On the local stack, put the equivalent `disabled: true` entry in the operator plugin file, as described in [Configure dynamic plugins for the local stack](../installation-guide/docker-local/custom-plugins.md). Write the version as `{{inherit}}` as is, keeping the `!<plugin-path>` part, so the override keeps the version that the catalog index gives the plugin.
 
 ## Source code
 

@@ -8,23 +8,13 @@ Dynamic plugins can be loaded by VeeCode DevPortal at start time. They are usual
 
 ## Load a local export in devportal-local
 
-The fastest loop is the workspace export into devportal-local, described in [Creating Your Own Plugin](./creating-own-plugins.md):
+For a workspace export, run `yarn dev:dynamic` from the workspace root, with the directory of each package added with `yarn new` as an argument, and follow [Creating Your Own Plugin](./creating-own-plugins.md). The helper uses `@red-hat-developer-hub/cli` (`rhdh-cli`), writes the operator file `dynamic-plugins-root-dev/dynamic-plugins.local.yaml` and Compose override `dynamic-plugins-root-dev/docker-compose.dynamic-plugins-root.local.yml`, and prints the command that uses them. Without the helper, create those two files as shown in the manual fallback on that page. The `devportal-local` checkout supplies `docker-compose.yml` and `docker-compose.dynamic-plugins-root.yml`.
 
-```bash
-# From the plugin workspace
-yarn dev:dynamic
-```
-
-```bash
-# From the devportal-local checkout, using the printed command
-docker compose -f docker-compose.yml -f docker-compose.dynamic-plugins-root.yml -f dynamic-plugins-root-dev/docker-compose.dynamic-plugins-root.local.yml up -d
-```
-
-The export writes `dynamic-plugins-root-dev/docker-compose.dynamic-plugins-root.local.yml` on every run. The override mounts the workspace export directory into the portal, so the portal loads your plugin without rebuilding its image. Re-export and refresh after a frontend change; re-export and restart the portal after a backend change.
+The operator file points to `./dynamic-plugins-src/<exported-directory>`. The Compose override mounts `dynamic-plugins-src-dev` at `/opt/app-root/src/dynamic-plugins-src`. DevPortal 3.1 does not include `/opt/app-root/src/dynamic-plugins/`, so a bare `./dynamic-plugins/dist/...` entry is skipped.
 
 ## Plugin entries
 
-On the local stack, customer plugins are added through an operator plugin file with a top-level `plugins:` list. The file starts with the default plugin index and the product plugin file under `includes:`, and each entry uses a full digest-pinned OCI reference. See [Configure dynamic plugins for the local stack](../../installation-guide/docker-local/custom-plugins.md) for the file and the Compose mount that activates it.
+On the local stack, customer plugins are added through an operator plugin file with a top-level `plugins:` list. The file starts with the default plugin index under `includes:`. Use a local path for a workspace export or a digest-pinned OCI reference for a published package. See [Configure dynamic plugins for the local stack](../../installation-guide/docker-local/custom-plugins.md) for published entries and [Creating Your Own Plugin](./creating-own-plugins.md) for local exports.
 
 A published entry has this shape:
 
@@ -43,7 +33,7 @@ The `integrity:` field is **required for remote npm packages**. The installer do
 It is **not used** for:
 
 - OCI packages (`oci://...`) — these are validated by digest comparison.
-- Local paths (`./dynamic-plugins/dist/...`) — pre-bundled in the image; no download involved.
+- Local exports (`./dynamic-plugins-src/...`) use the Compose source mount and do not need an `integrity` value. The mount supplies the package directory that the 3.1 image does not bundle.
 
 Expected format: `sha512-<base64>`. Two ways to generate it:
 
@@ -91,7 +81,7 @@ There is no `dynamicPlugins.backend.*` key. Backend plugins never wire themselve
 
 ```yaml
 plugins:
-  - package: oci://quay.io/veecode/backstage-community-plugin-sonarqube-backend:bs_1.52.0__1.1.1!backstage-community-plugin-sonarqube-backend
+  - package: oci://quay.io/veecode/backstage-community-plugin-sonarqube-backend@sha256:2ad11a712d8c7183334efff1c72185c683971702067fa357966c339ce644b7ad
     disabled: false
     # No pluginConfig — backend role is auto-discovered
 ```
@@ -107,7 +97,7 @@ Same pattern for `backend-plugin-module` (e.g., a scaffolder action module attac
 
 ```yaml
 plugins:
-  - package: oci://quay.io/veecode/backstage-community-plugin-sonarqube:bs_1.52.0__1.1.0!backstage-community-plugin-sonarqube
+  - package: oci://quay.io/veecode/backstage-community-plugin-scaffolder-backend-module-sonarqube@sha256:eeab43bc491b7726b513df6bef9c4b88e2c06679df75feca9d4b5557fb950539
     disabled: false
     # No pluginConfig — module auto-attaches to the scaffolder backend
 ```
@@ -118,7 +108,7 @@ Frontend plugins must declare where their UI components mount, because Backstage
 
 ```yaml
 plugins:
-  - package: oci://quay.io/veecode/backstage-community-plugin-sonarqube:bs_1.52.0__1.1.0!backstage-community-plugin-sonarqube
+  - package: oci://quay.io/veecode/backstage-community-plugin-sonarqube@sha256:a5eeb1c0634799cde872ff9619d7ea80512288bc964d054c6e91cc45014817af
     disabled: false
     pluginConfig:
       dynamicPlugins:

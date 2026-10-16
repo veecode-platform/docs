@@ -28,7 +28,7 @@ The Pending Changes plugin adds an indicator to the global header that appears a
 
 ## Configuration
 
-The default plugin file (`dynamic-plugins.veecode.yaml`) enables the package and mounts its button into the header:
+The catalog index's default plugin file (`dynamic-plugins.default.yaml`) enables the package and mounts its button into the header:
 
 ```yaml
 pluginConfig:
@@ -44,7 +44,7 @@ pluginConfig:
                 pollingIntervalMs: 30000
 ```
 
-To change the polling interval, copy this whole `pluginConfig` block into an override entry for the same package and edit `pollingIntervalMs` in place. Match the entry by registry, repository, and the plugin path after `!`, and use the `{{inherit}}` tag to keep the version the default plugin file pins. An override that sets `pluginConfig` replaces the whole block (no merge), so keep the mount point entry intact. See [Adding Plugins](../adding.md) for the Kubernetes and local-stack override forms.
+To change the polling interval, copy this whole `pluginConfig` block into an override entry for the same package and edit `pollingIntervalMs` in place. Match the entry by registry, repository, and the plugin path after `!`, and use the `{{inherit}}` tag to keep the version the catalog index gives the plugin. An override that sets `pluginConfig` replaces the whole block (no merge), so keep the mount point entry intact. See [Adding Plugins](../adding.md) for the Kubernetes and local-stack override forms.
 
 ## Turn it off
 

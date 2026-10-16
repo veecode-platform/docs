@@ -19,7 +19,7 @@ Welcome to VeeCode Developer Portal documentation. This guide covers installatio
 
 VeeCode DevPortal is an open-source platform built on top of [Backstage](https://backstage.io), an open-source developer portal framework created by Spotify. Backstage has a growing community and is being used by many organizations, including large technology companies like Google, Microsoft, and Verizon.
 
-VeeCode DevPortal is a Backstage distribution. The 3.x default plugins include Home, Catalog, APIs, Docs, Self-service, Notifications, Tech Radar, and Marketplace. The image also ships TechDocs, Signals, and the RBAC screens. Permission checks stay off until you set `permission.enabled: true` in app configuration. Guest sign-in maps to `user:default/admin` and is for a first look only. The local quickstart signs in as guest. The Helm chart turns it off from chart 1.0.4 (chart 1.0.3 and earlier turn it on). The default install has no demo catalog or software templates. Set up a provider for user sign-in; the install guide uses Keycloak over OIDC.
+VeeCode DevPortal is a Backstage distribution. The 3.x default plugins include Home, Catalog, APIs, Docs, Self-service, Notifications, Tech Radar, and Marketplace. The default plugins also include TechDocs, Signals, and the RBAC screens. Permission checks stay off until you set `permission.enabled: true` in app configuration. Guest sign-in maps to `user:default/admin` and is for a first look only. The local quickstart signs in as guest. The Helm chart turns it off from chart 1.0.4 (chart 1.0.3 and earlier turn it on). The default install has no demo catalog or software templates. Set up a provider for user sign-in; the install guide uses Keycloak over OIDC.
 
 ## Key points about the Developer Portal
 

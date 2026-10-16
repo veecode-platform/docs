@@ -17,7 +17,7 @@ The full path from an empty directory to a running plugin is:
 1. [Set up a workspace](./bootstrap.md): install the required Node and Yarn versions, scaffold the workspace, and start the development host.
 2. Build the plugin inside the workspace: a [frontend plugin](./frontend-plugin.md), a [backend plugin](./backend-plugin.md), or a [custom action](./custom-action.md).
 3. [Make a frontend plugin appear](./wiring.md) through routes, menu items, and mount points in dynamic plugin configuration.
-4. [Load the plugin locally](./loading.md): export the workspace and run it in devportal-local.
+4. [Create your own plugin](./creating-own-plugins.md): export the workspace package and run it in devportal-local. See [Loading a Dynamic Plugin](./loading.md) for plugin entry shapes.
 5. [Package and install](./packaging.md): publish the plugin as an OCI artifact and add a plugin entry.
 
 Read [Basics](./basic.md) first for the required tool versions. [Creating Your Own Plugin](./creating-own-plugins.md) walks the whole loop in order, command by command.
