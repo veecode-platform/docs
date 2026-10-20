@@ -110,13 +110,13 @@ Do not add `--reuse-values` to the Step 3 command. It keeps the previous release
 
 An override in `global.dynamic.plugins` still matches its plugin after the upgrade. `disabled: true` still removes the plugin, and a full `pluginConfig` still replaces the plugin's index configuration. A digest reference keeps the build of that digest, though, so the plugin does not follow the catalog index. For the RBAC plugin this matters most. The RBAC backend in image 3.1.0 refuses the conditional-policy writes that the 3.0.x frontend build sends.
 
-Change each override of a default plugin that stays enabled, in `$BACKUP_DIR/values-1.1.0.yaml`, as follows:
+Change each override of a default plugin, in `$BACKUP_DIR/values-1.1.0.yaml`, as follows. For a plugin you disable, the change is optional, because a disabled plugin is not installed.
 
 1. Replace `@sha256:<digest>` with `:{{ "{{inherit}}" }}`, as the example below shows. Keep the `!<path>` suffix. `{{inherit}}` takes the version that the pinned index gives the plugin.
 2. Keep `disabled` and `pluginConfig` as they are.
 3. If your values replace `upstream.backstage.initContainers`, remove the `DEVPORTAL_FACE_FILE` variable from the `install-dynamic-plugins` container. Chart 1.1.0 no longer sets it. If the variable stays, the install logs a warning that it is no longer read.
 
-The chart renders these values as templates, so write `{{inherit}}` with the escape shown in the example below. A bare `{{inherit}}` makes Helm fail with `function "inherit" not defined`. This form has not been run on a portal with image 3.1.0. After the upgrade, check that each plugin you overrode still loads.
+The chart renders these values as templates, so write `{{inherit}}` with the escape shown in the example below. A bare `{{inherit}}` makes Helm fail with `function "inherit" not defined`. After the upgrade, the `install-dynamic-plugins` container logs a line with `Overriding dynamic plugin configuration` for each overridden plugin that stays enabled, and a line with `Disabling OCI plugin` for each plugin you disable. Check that each enabled plugin still loads.
 
 Before (chart 1.0.x):
 

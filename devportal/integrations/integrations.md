@@ -47,4 +47,4 @@ The catalog and the scaffolder read repositories through the `integrations` conf
 
 ## AI tooling
 
-[MCP Actions](./mcp.md) exposes catalog, scaffolder, TechDocs, and Kubernetes tools to external AI clients over HTTP, behind a static token.
+[MCP Actions](./mcp.md) exposes catalog, scaffolder, TechDocs, and Kubernetes tools to external AI clients over HTTP, behind a static token or per-user OAuth.
