@@ -30,6 +30,42 @@ Chart 1.0.4 keeps image 3.0.3 and changes two defaults. Check your stored values
 
 If a 3.0.0 deployment outside this chart runs the image with SQLite, change its image reference to 3.0.3 (the digest is on the release sheet). The backup and restore steps in this guide do not apply to it.
 
+## Upgrade to chart 1.1.2
+
+Chart 1.1.2 installs DevPortal 3.1.1 and moves the catalog index to `bs_1.54.9_20261021T175344` (`sha256:6b30147c2146dda4bc8f607c04cc37135c02e41cc297a3bfcb4af78ef702aefa`). DevPortal 3.1.1 is 3.1.0 with `certifi` 2026.10.19, which fixes GHSA-6q48-6c7w-9gw2. The new index enables VeeCode homepage 1.0.4, which fixes the spacing of the Home page cards. The [3.1.1 release sheet](../../release-sheets/release-sheet-3-1-1.md#what-changed) describes both fixes.
+
+From chart 1.1.1, replace the six release lines of Step 1 with these. From chart 1.1.0, use the same lines with `CHART_FROM=1.1.0`, since charts 1.1.0 and 1.1.1 install the same image:
+
+```bash
+export CHART_FROM=1.1.1
+export IMAGE_FROM_VERSION=3.1.0
+export IMAGE_FROM=docker.io/veecode/devportal@sha256:fe33373b7e5dc536f04d1878519bb53862a769b46869f78f829b198a30e5246b
+export CHART_TO=1.1.2
+export IMAGE_TO_VERSION=3.1.1
+export IMAGE_TO=docker.io/veecode/devportal@sha256:726cc70543dd5a122e4ffcbc7fe9734f9b25366e39b775cd4a86e9c68f7c6f26
+```
+
+If your values set `global.catalogIndex.image`, point it at the new index or remove the override. If you keep the override, the upgrade keeps the index it names, and the Home page keeps homepage 1.0.3. Do not add `--reuse-values` to the Step 3 command: it keeps the previous release's values, including the 3.1.0 image and the previous index.
+
+In Step 4, the image check compares the portal with the 3.1.1 digest in `IMAGE_TO`. Also check the index, unless you kept an override of `global.catalogIndex.image`:
+
+```bash
+index=$(kubectl --namespace "$NAMESPACE" get "deployment/$RELEASE-developer-hub" \
+  -o jsonpath='{.spec.template.spec.initContainers[?(@.name=="install-dynamic-plugins")].env[?(@.name=="CATALOG_INDEX_IMAGE")].value}')
+printf '%s\n' "$index"
+test "$index" = "quay.io/veecode/plugin-catalog-index@sha256:6b30147c2146dda4bc8f607c04cc37135c02e41cc297a3bfcb4af78ef702aefa"
+```
+
+From chart 1.0.x or 3.0.x, follow [Upgrade to chart 1.1.0](#upgrade-to-chart-110), with these three Step 1 lines in place of the three lines that section gives:
+
+```bash
+export CHART_TO=1.1.2
+export IMAGE_TO_VERSION=3.1.1
+export IMAGE_TO=docker.io/veecode/devportal@sha256:726cc70543dd5a122e4ffcbc7fe9734f9b25366e39b775cd4a86e9c68f7c6f26
+```
+
+Read the other mentions of chart 1.1.0 and image 3.1.0 in that section as chart 1.1.2 and image 3.1.1, including the `--version` of `helm show values`. The sentences that say what VeeCode tested still describe chart 1.1.0 and image 3.1.0.
+
 ## Upgrade to chart 1.1.1
 
 Chart 1.1.1 keeps DevPortal 3.1.0 and moves only the catalog index, to `bs_1.54.9_20261020T201546` (`sha256:b6e517e20575ec05618efb02ed86f8f4817403bf4763492a757516a0286008e9`). The new index fixes the MCP tools of scaffolder-mcp-extras, techdocs-mcp-extras and announcements-backend, which the index ships disabled. The [3.1.0 release sheet](../../release-sheets/release-sheet-3-1-0.md#fixed-issues) lists the fixes.
@@ -186,6 +222,8 @@ Step 5 returns the portal to the chart in `CHART_FROM`. VeeCode tested a rollbac
 ### Upgrade from 3.0.x for a security fix
 
 DevPortal 3.0.x includes `@backstage/plugin-scaffolder-backend` 4.0.1. That version is in the affected range of [GHSA-g2v8-7jhw-pp8p](https://github.com/advisories/GHSA-g2v8-7jhw-pp8p) (CVE-2026-106501), a critical sensitive-information exposure issue in the Scaffolder with a CVSS score of 9.6. DevPortal 3.1.0 includes `@backstage/plugin-scaffolder-backend` 4.1.0, which fixes the issue.
+
+The 3.0.x and 3.1.0 images also include `certifi` 2024.7.4 in the TechDocs Python environment. That version is in the affected range of [GHSA-6q48-6c7w-9gw2](https://github.com/advisories/GHSA-6q48-6c7w-9gw2), a critical issue published on 2026-10-20. DevPortal 3.1.1 includes `certifi` 2026.10.19, which fixes it, so upgrade to chart 1.1.2 to get both fixes.
 
 ## Step 1: Prepare the release and backup directory
 

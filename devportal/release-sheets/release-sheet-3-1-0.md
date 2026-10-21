@@ -206,8 +206,10 @@ The plugins enabled by default are separate artifacts. Each one is scanned by di
 
 ## Known limitations
 
-The Home page and offline install limitations carry over from 3.0.x. The RBAC limitation is specific to 3.1.0. The Marketplace window was first observed in the upgrade to chart 1.1.0, and it was not checked on 3.0.x.
+The first two items were found after release, and DevPortal 3.1.1 with chart 1.1.2 fixes them. The Red Hat dynamic Home page and offline install limitations carry over from 3.0.x. The RBAC limitation is specific to 3.1.0. The Marketplace window was first observed in the upgrade to chart 1.1.0, and it was not checked on 3.0.x.
 
+- A vulnerability database update on 2026-10-21 reports a critical finding with a fix in the 3.1.0 image: GHSA-6q48-6c7w-9gw2 in `certifi` 2024.7.4. Upgrade to 3.1.1 (use chart 1.1.2 for Helm installs), which fixes it.
+- VeeCode homepage 1.0.3, which charts 1.1.0 and 1.1.1 enable, loses the spacing of the Home page cards when another dynamic plugin sets the `v5-` class name prefix on the MUI copy that the portal shares. The cards then move under the header and past the left edge of the page. Chart 1.1.2 enables homepage 1.0.4, which fixes it.
 - After an upgrade, the Marketplace can list the packages of the previous catalog index for up to 30 minutes. A package installed from the Marketplace during that window keeps the previous artifact until you reinstall it, and a former `./dynamic-plugins/dist/` entry is skipped. Wait until the Marketplace shows the 3.1 versions before you install plugins.
 - The default plugins ship the Red Hat dynamic Home page entry disabled. Enabling it leaves the portal's pages empty. Keep it disabled. This was not re-tested on 3.1.0.
 - An offline install must mirror the catalog index as well as the plugin artifacts. This was not re-tested on 3.1.0.
