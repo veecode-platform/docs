@@ -30,6 +30,33 @@ Chart 1.0.4 keeps image 3.0.3 and changes two defaults. Check your stored values
 
 If a 3.0.0 deployment outside this chart runs the image with SQLite, change its image reference to 3.0.3 (the digest is on the release sheet). The backup and restore steps in this guide do not apply to it.
 
+## Upgrade to chart 1.1.3
+
+Chart 1.1.3 installs DevPortal 3.1.2 and keeps the catalog index of chart 1.1.2. DevPortal 3.1.2 is 3.1.1 with `libbrotli` 1.1.0-8.el10_2.1, which fixes CVE-2026-111497, and with `compression` 1.8.2, `qs` 6.16.1 and `ip-address` 10.7.4. The [3.1.2 release sheet](../../release-sheets/release-sheet-3-1-2.md#fixed-security-issues) lists the fixes.
+
+From chart 1.1.2, replace the six release lines of Step 1 with these:
+
+```bash
+export CHART_FROM=1.1.2
+export IMAGE_FROM_VERSION=3.1.1
+export IMAGE_FROM=docker.io/veecode/devportal@sha256:726cc70543dd5a122e4ffcbc7fe9734f9b25366e39b775cd4a86e9c68f7c6f26
+export CHART_TO=1.1.3
+export IMAGE_TO_VERSION=3.1.2
+export IMAGE_TO=docker.io/veecode/devportal@sha256:869b8f3eb9f543dd87b3dbd474073c1d0cfbd6816121cf8dd03058bf498fa691
+```
+
+Do not add `--reuse-values` to the Step 3 command: it keeps the previous release's values, including the 3.1.1 image. In Step 4, the image check compares the portal with the 3.1.2 digest in `IMAGE_TO`.
+
+From chart 1.1.1 or 1.1.0, follow [Upgrade to chart 1.1.2](#upgrade-to-chart-112), with these three Step 1 lines in place of its `CHART_TO`, `IMAGE_TO_VERSION` and `IMAGE_TO` lines. Its index check still applies, because chart 1.1.3 installs the same index as chart 1.1.2:
+
+```bash
+export CHART_TO=1.1.3
+export IMAGE_TO_VERSION=3.1.2
+export IMAGE_TO=docker.io/veecode/devportal@sha256:869b8f3eb9f543dd87b3dbd474073c1d0cfbd6816121cf8dd03058bf498fa691
+```
+
+From chart 1.0.x or 3.0.x, follow [Upgrade to chart 1.1.0](#upgrade-to-chart-110) with the same three lines, and read the other mentions of chart 1.1.0 and image 3.1.0 in that section as chart 1.1.3 and image 3.1.2, including the `--version` of `helm show values`.
+
 ## Upgrade to chart 1.1.2
 
 Chart 1.1.2 installs DevPortal 3.1.1 and moves the catalog index to `bs_1.54.9_20261021T175344` (`sha256:6b30147c2146dda4bc8f607c04cc37135c02e41cc297a3bfcb4af78ef702aefa`). DevPortal 3.1.1 is 3.1.0 with `certifi` 2026.10.19, which fixes GHSA-6q48-6c7w-9gw2. The new index enables VeeCode homepage 1.0.4, which fixes the spacing of the Home page cards. The [3.1.1 release sheet](../../release-sheets/release-sheet-3-1-1.md#what-changed) describes both fixes.

@@ -234,7 +234,7 @@ Add the chart repository and install the release. The first start pulls the imag
 ```bash
 helm repo add veecode https://veecode-platform.github.io/next-charts
 helm repo update
-helm install "$V3_RELEASE" veecode/devportal --version 1.1.2 -n "$NAMESPACE" -f values-v3.yaml --wait --timeout 20m
+helm install "$V3_RELEASE" veecode/devportal --version 1.1.3 -n "$NAMESPACE" -f values-v3.yaml --wait --timeout 20m
 ```
 
 If the command times out and the pod stays at `0/1`, read the backend log with `kubectl -n "$NAMESPACE" logs "deploy/$V3_RELEASE-developer-hub" -c backstage-backend`. On a busy node the first start can fail while it creates the database tables. In an earlier pre-release test, two of three first starts ended with `Plugin 'catalog' startup failed; caused by MigrationLocked`. One pod had been stopped by the startup probe. The other had no restarts, and its log did not establish whether another migrator still held the lock. Do not clear the lock until you have stopped every backend replica and confirmed that no migration is active. The commands below use the catalog database from that test. If the log names another plugin, replace `catalog` in both database commands with that plugin's name. Run the recovery commands in the same terminal so `V3_REPLICAS` remains set.

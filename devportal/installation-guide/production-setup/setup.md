@@ -40,8 +40,8 @@ Run every command in one terminal session. Later steps use the shell variables t
 export NAMESPACE=devportal
 export DEVPORTAL_HOST=devportal.example.com
 export KEYCLOAK_HOST=keycloak.example.com
-export CHART_VERSION=1.1.2
-export PORTAL_IMAGE_TAG=3.1.1
+export CHART_VERSION=1.1.3
+export PORTAL_IMAGE_TAG=3.1.2
 
 export DB_PASSWORD="$(openssl rand -hex 16)"
 export BACKEND_SECRET="$(openssl rand -hex 16)"

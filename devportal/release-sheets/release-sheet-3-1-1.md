@@ -189,8 +189,9 @@ The plugins enabled by default are separate artifacts. Each one is scanned by di
 
 ## Known limitations
 
-The 3.1.0 release sheet also lists the following limitations. The 3.1.1 changes do not address them, and they were not re-tested on 3.1.1.
+The first item was found after release, and DevPortal 3.1.2 with chart 1.1.3 fixes it. The 3.1.0 release sheet also lists the other limitations. The 3.1.1 changes do not address them, and they were not re-tested on 3.1.1.
 
+- Node.js in the 3.1.1 image decompresses Brotli data with `libbrotli` 1.1.0-8.el10_2, which has CVE-2026-111497 (important).
 - After an upgrade, the Marketplace can list the packages of the previous catalog index for up to 30 minutes. A package installed from the Marketplace during that window keeps the previous artifact until you reinstall it, and a former `./dynamic-plugins/dist/` entry is skipped. Wait until the Marketplace shows the 3.1 versions before you install plugins.
 - The default plugins ship the Red Hat dynamic Home page entry disabled. Enabling it leaves the portal's pages empty. Keep it disabled.
 - An offline install must mirror the catalog index as well as the plugin artifacts.
