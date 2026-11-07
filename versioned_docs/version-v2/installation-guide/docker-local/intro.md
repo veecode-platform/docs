@@ -23,7 +23,7 @@ You can simply run the following command to start a DevPortal instance locally:
 
 ```bash
 # the tag pins one release — replace it with the current release tag
-docker run --rm --name devportal -d -p 7007:7007 veecode/devportal:2.1.3
+docker run --rm --name devportal -d -p 7007:7007 veecode/devportal:2.2.3
 ```
 
 This will start a DevPortal instance running on [http://localhost:7007](http://localhost:7007).
@@ -51,7 +51,7 @@ Create a `docker-compose.yml` file:
 ```yaml
 services:
   devportal:
-    image: veecode/devportal:2.1.3
+    image: veecode/devportal:2.2.3
     ports:
       - "7007:7007"
 ```
@@ -89,7 +89,7 @@ We will talk more about these subjects later on, but understand there are many p
 
 ## What's in the demo catalog
 
-When you run `veecode/devportal:2.1.3` with no custom config, the catalog is **not empty by accident** — it is populated from `/app/examples/` inside the image. Knowing what's in there matters because (a) you can read these files as concrete examples of how every entity kind is declared, and (b) you need a strategy for replacing them when you go beyond the demo.
+When you run `veecode/devportal:2.2.3` with no custom config, the catalog is **not empty by accident** — it is populated from `/app/examples/` inside the image. Knowing what's in there matters because (a) you can read these files as concrete examples of how every entity kind is declared, and (b) you need a strategy for replacing them when you go beyond the demo.
 
 The demo data lives in these files (you can inspect them directly with `docker exec`):
 
