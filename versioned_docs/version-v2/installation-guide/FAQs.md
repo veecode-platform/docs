@@ -14,7 +14,7 @@ The marketplace catalog is downloaded from an OCI image at startup. If the downl
 Force a fresh download on the next startup:
 
 ```bash
-docker run ... -e CATALOG_INDEX_REFRESH=true veecode/devportal:2.1.3
+docker run ... -e CATALOG_INDEX_REFRESH=true veecode/devportal:2.2.3
 ```
 
 The default catalog image is `quay.io/veecode/plugin-catalog-index:latest`. Override it with `CATALOG_INDEX_IMAGE` if you host it internally.
