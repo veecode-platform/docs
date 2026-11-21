@@ -10,7 +10,7 @@ import DocCard from '@site/src/components/DocCard';
 # Intro
 
 :::note Running the older split-image release?
-These docs cover **V2**, the unified `veecode/devportal:2.1.3` image driven by composable presets. If you still run **V1** (the split image `veecode/devportal-base` + `veecode/devportal`, profiles via `VEECODE_PROFILE`), see the [V1 documentation](/devportal/v1/intro). Not sure which you run? See [Which version am I running?](./which-version.md).
+These docs cover **V2**, the unified `veecode/devportal:2.2.3` image driven by composable presets. If you still run **V1** (the split image `veecode/devportal-base` + `veecode/devportal`, profiles via `VEECODE_PROFILE`), see the [V1 documentation](/devportal/v1/intro). Not sure which you run? See [Which version am I running?](./which-version.md).
 :::
 
 :::tip DevPortal 3.x is the current line
